@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700;800&family=Noto+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin:0; }
+    @keyframes scanPulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+    @keyframes popIn { 0% { transform:scale(0.5); opacity:0; } 70% { transform:scale(1.06); opacity:1; } 100% { transform:scale(1); opacity:1; } }
+    @keyframes slideUp { 0% { transform:translateY(14px); opacity:0; } 100% { transform:translateY(0); opacity:1; } }
+    #evidence-photo { width:100% !important; height:170px !important; display:block !important; }
+  </style>
+</helmet>
+
+<div style="min-height:100vh; width:100%; background:#DDD6CB; font-family:'Noto Sans Thai','Noto Sans',sans-serif; display:flex; flex-direction:column; position:relative;">
+
+  <sc-if value="{{isAdminMode}}">
+    <div style="width:100%; max-width:1180px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; padding:20px 20px 0;">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <div style="width:44px; height:44px; border-radius:12px; background:#0E7C66; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800; font-size:18px;">คถ</div>
+        <div>
+          <div style="font-size:19px; font-weight:800; color:#1E2A26; line-height:1.2;">บันทึกยอดขาย คลองถม</div>
+          <div style="font-size:13px; color:#7A8580;">แดชบอร์ดแอดมิน</div>
+        </div>
+      </div>
+      <div style="display:flex; background:#EFE9DC; border-radius:100px; padding:4px; gap:4px; flex-shrink:0;">
+        <div style="{{staffToggleStyle}}" onClick="{{goStaffMode}}">มุมมองพนักงาน</div>
+        <div style="{{adminToggleStyle}}" onClick="{{goAdminMode}}">มุมมองแอดมิน</div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{isStaffMode}}" hint-placeholder-val="{{true}}">
+    <div style="flex:1; display:flex; flex-direction:column; min-height:100vh; max-width:768px; width:100%; margin:0 auto; background:#FAF6EF; overflow:hidden; box-shadow:0 0 40px rgba(0,0,0,0.12);">
+
+      <div style="flex:1; overflow-y:auto; background:#FAF6EF; display:flex; flex-direction:column;">
+
+        <sc-if value="{{screenIsScan}}" hint-placeholder-val="{{true}}">
+          <div style="display:flex; flex-direction:column; height:100%;">
+            <sc-if value="{{isLoggedIn}}" hint-placeholder-val="{{false}}">
+              <div style="padding:16px 18px; display:flex; align-items:center; justify-content:space-between;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <div onClick="{{openProfileMenu}}" style="width:34px; height:34px; border-radius:100px; background:#0E7C66; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; flex-shrink:0; cursor:pointer;">{{employeeInitial}}</div>
+                  <div style="font-size:14px; font-weight:600; color:#1E2A26;">{{employeeName}}</div>
+                </div>
+                <div style="display:flex; align-items:center; gap:12px; flex-shrink:0;">
+                  <sc-if value="{{isAdminUser}}" hint-placeholder-val="{{false}}">
+                    <div onClick="{{goToAdminReport}}" style="font-size:12.5px; font-weight:700; color:#0E7C66; background:#F1EDE1; padding:8px 12px; border-radius:100px; cursor:pointer; white-space:nowrap;">รายงานแอดมิน →</div>
+                  </sc-if>
+                  <div onClick="{{doLogout}}" style="font-size:13px; color:#B04A3B; font-weight:600; cursor:pointer; white-space:nowrap;">ออกจากระบบ</div>
+                </div>
+              </div>
+            </sc-if>
+            <sc-if value="{{notLoggedIn}}" hint-placeholder-val="{{true}}">
+              <div style="padding:20px 18px 4px; font-size:16px; font-weight:800; color:#1E2A26;">เริ่มต้นบันทึกยอดขาย</div>
+            </sc-if>
+
+            <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px 24px; gap:20px; text-align:center;">
+              <div style="font-size:20px; font-weight:700; color:#1E2A26;">สแกน QR รหัสร้านค้า</div>
+              <div onClick="{{startScan}}" style="position:relative; width:220px; height:220px; border-radius:20px; background:#12201B; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; cursor:pointer; user-select:none;">
+                <div style="position:absolute; inset:18px; border:3px solid #67D9B4; border-radius:12px; animation:scanPulse 1.6s ease-in-out infinite;"></div>
+                <svg width="60" height="60" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1" stroke="#67D9B4" stroke-width="1.6"/><rect x="14" y="3" width="7" height="7" rx="1" stroke="#67D9B4" stroke-width="1.6"/><rect x="3" y="14" width="7" height="7" rx="1" stroke="#67D9B4" stroke-width="1.6"/><path d="M14 14h3v3h-3zM19 14h2v2h-2zM14 19h2v2h-2zM19 19h2v2h-2z" fill="#67D9B4"/></svg>
+                <div style="font-size:13px; font-weight:600; color:rgba(103,217,180,0.85); position:relative;">แตะเพื่อเปิดกล้อง</div>
+              </div>
+              <sc-if value="{{isDev}}">
+                <div onClick="{{simulateScan}}" style="width:100%; background:#EFE9DC; color:#4E5854; font-size:14px; font-weight:600; padding:12px; border-radius:12px; cursor:pointer; border:1.5px dashed #C8C0B0;">
+                  🛠 DEV — จำลองผลสแกน ({{demoStoreLabel}})
+                </div>
+              </sc-if>
+              <div onClick="{{toggleManualPick}}" style="font-size:14px; color:#0E7C66; font-weight:700; text-decoration:underline; cursor:pointer;">หรือเลือกร้านค้าด้วยตนเอง</div>
+            </div>
+
+            <sc-if value="{{manualPick}}" hint-placeholder-val="{{false}}">
+              <div style="border-top:1px solid #E7E1D6; max-height:320px; overflow-y:auto;">
+                <sc-for list="{{stores}}" as="store" hint-placeholder-count="4">
+                  <div onClick="{{store.select}}" style="display:flex; align-items:center; gap:12px; padding:13px 18px; border-bottom:1px solid #F0EBDF; cursor:pointer;">
+                    <div style="width:38px; height:38px; border-radius:10px; background:#EFE9DC; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12.5px; color:#0E7C66; flex-shrink:0;">{{store.code}}</div>
+                    <div style="font-size:15px; color:#1E2A26; font-weight:600;">{{store.name}}</div>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{screenIsLogin}}" hint-placeholder-val="{{false}}">
+          <div style="display:flex; flex-direction:column; height:100%;">
+            <div style="padding:14px 18px; display:flex; align-items:center; background:#fff; border-bottom:1px solid #EEE8DB; flex-shrink:0;">
+              <div onClick="{{backToScan}}" style="display:flex; align-items:center; gap:6px; font-size:14px; font-weight:700; color:#0E7C66; cursor:pointer;">
+                <span style="font-size:18px; line-height:1;">←</span> เปลี่ยนร้านค้า
+              </div>
+            </div>
+            <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:36px 28px; gap:20px; text-align:center;">
+              <div style="width:72px; height:72px; border-radius:20px; background:#0E7C66; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800; font-size:26px;">คถ</div>
+              <div>
+                <div style="font-size:15px; color:#7A8580; margin-bottom:6px;">ร้านค้าที่เลือก</div>
+                <div style="font-size:20px; font-weight:800; color:#1E2A26;">{{formStoreLabel}}</div>
+              </div>
+              <div style="font-size:15px; color:#4E5854;">กรุณาเข้าสู่ระบบเพื่อยืนยันตัวตนก่อนบันทึกยอด</div>
+              <div onClick="{{doLogin}}" style="width:100%; background:#06C755; color:#fff; font-size:18px; font-weight:700; padding:16px; border-radius:14px; display:flex; align-items:center; justify-content:center; gap:10px; cursor:pointer;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2C6.5 2 2 5.6 2 10c0 3.9 3.5 7.2 8.3 7.9.3.1.8.2.9.6.1.3.1.8 0 1.1l-.2 1c-.1.4-.3 1.3 1.1.7 1.4-.6 7.6-4.5 10.4-7.7C24 12.2 22 10 22 10c0-4.4-4.5-8-10-8z" fill="#fff"/></svg>
+                เข้าสู่ระบบด้วย LINE
+              </div>
+              <sc-if value="{{isDev}}">
+                <div style="width:100%; border-top:1px dashed #DDD5C4; padding-top:16px; display:flex; flex-direction:column; gap:8px;">
+                  <div style="font-size:12px; color:#9AA39D;">🛠 DEV เท่านั้น — จำลองสิทธิ์ผู้ใช้</div>
+                  <div style="display:flex; gap:8px;">
+                    <div onClick="{{setRoleStaff}}" style="{{roleStaffStyle}}">พนักงานทั่วไป</div>
+                    <div onClick="{{setRoleAdmin}}" style="{{roleAdminStyle}}">แอดมิน</div>
+                  </div>
+                </div>
+              </sc-if>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{screenIsForm}}" hint-placeholder-val="{{false}}">
+          <div style="display:flex; flex-direction:column; height:100%;">
+            <div style="padding:16px 18px; display:flex; align-items:center; justify-content:space-between; background:#fff; border-bottom:1px solid #EEE8DB;">
+              <div onClick="{{backToScan}}" style="font-size:20px; color:#1E2A26; cursor:pointer; width:24px;">←</div>
+              <div style="font-size:16px; font-weight:700; color:#1E2A26;">บันทึกยอดขาย</div>
+              <div onClick="{{openProfileMenu}}" style="width:30px; height:30px; border-radius:100px; background:#0E7C66; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12.5px; flex-shrink:0; cursor:pointer;">{{employeeInitial}}</div>
+            </div>
+
+            <div style="flex:1; overflow-y:auto; padding:18px; display:flex; flex-direction:column; gap:18px;">
+
+              <div style="background:#fff; border:1px solid #EEE8DB; border-radius:16px; padding:14px 16px; display:flex; align-items:center; justify-content:space-between;">
+                <div>
+                  <div style="font-size:12px; color:#9AA39D; font-weight:600;">ร้านค้า · เข้าสู่ระบบเป็น {{employeeName}}</div>
+                  <div style="font-size:17px; font-weight:800; color:#1E2A26;">{{formStoreLabel}}</div>
+                </div>
+                <div onClick="{{backToScan}}" style="font-size:13px; color:#0E7C66; font-weight:700; text-decoration:underline; cursor:pointer; white-space:nowrap;">เปลี่ยนร้าน</div>
+              </div>
+
+              <div>
+                <div style="font-size:14px; font-weight:700; color:#1E2A26; margin-bottom:8px;">วันที่</div>
+                <div style="display:flex; gap:8px;">
+                  <select value="{{fdDv}}" onChange="{{fdOd}}" style="width:56px; font-size:16px; padding:13px 4px; border-radius:14px; border:1.5px solid #DDD5C4; background:#fff; color:#1E2A26; font-family:inherit; text-align:center;">
+                    <sc-for list="{{fdDd}}" as="opt" hint-placeholder-count="31"><option value="{{opt.value}}">{{opt.label}}</option></sc-for>
+                  </select>
+                  <select value="{{fdMv}}" onChange="{{fdOm}}" style="flex:1; font-size:16px; padding:13px 10px; border-radius:14px; border:1.5px solid #DDD5C4; background:#fff; color:#1E2A26; font-family:inherit;">
+                    <sc-for list="{{fdMd}}" as="opt" hint-placeholder-count="12"><option value="{{opt.value}}">{{opt.label}}</option></sc-for>
+                  </select>
+                  <select value="{{fdYv}}" onChange="{{fdOy}}" style="width:80px; font-size:16px; padding:13px 4px; border-radius:14px; border:1.5px solid #DDD5C4; background:#fff; color:#1E2A26; font-family:inherit; text-align:center;">
+                    <sc-for list="{{fdYd}}" as="opt" hint-placeholder-count="5"><option value="{{opt.value}}">{{opt.label}}</option></sc-for>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <div style="font-size:14px; font-weight:700; color:#1E2A26; margin-bottom:8px;">รอบ</div>
+                <div style="display:flex; gap:8px;">
+                  <sc-for list="{{periods}}" as="p" hint-placeholder-count="3">
+                    <div onClick="{{p.select}}" style="{{p.style}}">{{p.label}}</div>
+                  </sc-for>
+                </div>
+              </div>
+
+              <div>
+                <div style="font-size:14px; font-weight:700; color:#1E2A26; margin-bottom:8px;">นำส่งยอด เงินสด <span style="color:#C1483A;">*</span></div>
+                <div style="display:flex; align-items:center; border-radius:14px; border:1.5px solid {{cashBorderColor}}; background:#fff; overflow:hidden;">
+                  <div style="padding:14px 14px; font-size:20px; font-weight:800; color:#0E7C66; background:#F1EDE1;">฿</div>
+                  <input type="text" inputmode="numeric" placeholder="0" value="{{cash}}" onChange="{{setCash}}" style="flex:1; border:none; outline:none; font-size:22px; font-weight:700; padding:12px 14px; color:#1E2A26; font-family:inherit; min-width:0;"/>
+                </div>
+                <sc-if value="{{cashError}}" hint-placeholder-val="{{false}}">
+                  <div style="color:#C1483A; font-size:13px; margin-top:6px; font-weight:600;">กรุณากรอกยอดเงินสดที่นำส่ง</div>
+                </sc-if>
+              </div>
+
+              <div>
+                <div style="font-size:14px; font-weight:700; color:#1E2A26; margin-bottom:8px;">นำส่งยอด เงินโอน</div>
+                <div style="display:flex; align-items:center; border-radius:14px; border:1.5px solid #DDD5C4; background:#fff; overflow:hidden;">
+                  <div style="padding:14px 14px; font-size:20px; font-weight:800; color:#0E7C66; background:#F1EDE1;">฿</div>
+                  <input type="text" inputmode="numeric" placeholder="0" value="{{transfer}}" onChange="{{setTransfer}}" style="flex:1; border:none; outline:none; font-size:22px; font-weight:700; padding:12px 14px; color:#1E2A26; font-family:inherit; min-width:0;"/>
+                </div>
+              </div>
+
+              <div style="background:#0E7C66; border-radius:14px; padding:14px 16px; display:flex; align-items:center; justify-content:space-between;">
+                <div style="font-size:14px; font-weight:700; color:#D6F2E8;">รวมนำส่งทั้งหมด</div>
+                <div style="font-size:22px; font-weight:800; color:#fff;">฿{{totalFormDisplay}}</div>
+              </div>
+
+              <div>
+                <div style="font-size:14px; font-weight:700; color:#1E2A26; margin-bottom:8px;">หลักฐานนำส่งเงินประจำวัน</div>
+                <x-import component-from-global-scope="image-slot" from="./image-slot.js" id="evidence-photo" style="width:100%; height:170px; display:block;" shape="rounded" radius="14" placeholder="แตะเพื่อถ่ายภาพ หรือเลือกจากคลังภาพ" hint-size="100%,170px"></x-import>
+              </div>
+
+              <div>
+                <div style="font-size:14px; font-weight:700; color:#1E2A26; margin-bottom:8px;">หมายเหตุ</div>
+                <input type="text" placeholder="เช่น ยอดขาดเพราะทอนเงิน" value="{{note}}" onChange="{{setNote}}" style="width:100%; font-size:16px; padding:14px 16px; border-radius:14px; border:1.5px solid #DDD5C4; background:#fff; color:#1E2A26; font-family:inherit;"/>
+              </div>
+
+              <div onClick="{{submitForm}}" style="width:100%; background:#0E7C66; color:#fff; font-size:18px; font-weight:800; padding:17px; border-radius:14px; text-align:center; cursor:pointer; margin-top:6px;">
+                ส่งยอดขาย
+              </div>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{screenIsHistory}}" hint-placeholder-val="{{false}}">
+          <div style="display:flex; flex-direction:column; height:100%;">
+            <div style="padding:16px 18px; display:flex; align-items:center; gap:12px; background:#fff; border-bottom:1px solid #EEE8DB;">
+              <div onClick="{{backFromHistory}}" style="font-size:20px; color:#1E2A26; cursor:pointer;">←</div>
+              <div style="font-size:16px; font-weight:700; color:#1E2A26; flex:1;">ประวัติการส่งยอด</div>
+              <sc-if value="{{isAdminUser}}" hint-placeholder-val="{{false}}">
+                <div onClick="{{goToAdminReport}}" style="font-size:12.5px; font-weight:700; color:#0E7C66; background:#F1EDE1; padding:8px 12px; border-radius:100px; cursor:pointer; white-space:nowrap;">ดูรายงานแอดมิน →</div>
+              </sc-if>
+            </div>
+
+            <div style="padding:14px 16px 0;">
+              <sc-if value="{{justSubmitted}}" hint-placeholder-val="{{false}}">
+                <div style="background:#E3F3EB; border:1px solid #B7E1CC; border-radius:14px; padding:12px 14px; display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px; animation:slideUp 0.3s ease;">
+                  <div style="font-size:13.5px; font-weight:700; color:#178A5A;">ส่งยอดสำเร็จ · {{lastStoreLabel}} · ฿{{lastTotalDisplay}}</div>
+                  <div onClick="{{dismissBanner}}" style="cursor:pointer; color:#178A5A; font-weight:700;">✕</div>
+                </div>
+              </sc-if>
+
+              <div style="margin-bottom:12px;">
+                <div style="font-size:12.5px; font-weight:700; color:#9AA39D; margin-bottom:6px;">ประวัติของ</div>
+                <select value="{{selectedHistoryEmployee}}" onChange="{{setHistoryEmployee}}" disabled="{{historyDropdownDisabled}}" style="{{historyDropdownStyle}}">
+                  <sc-for list="{{employeeOptions}}" as="opt" hint-placeholder-count="1">
+                    <option value="{{opt.value}}">{{opt.label}}</option>
+                  </sc-for>
+                </select>
+              </div>
+
+              <div style="margin-bottom:12px;">
+                <div style="font-size:12.5px; font-weight:700; color:#9AA39D; margin-bottom:6px;">กรองตามช่วงวันที่</div>
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                  <div>
+                    <div style="font-size:11.5px; font-weight:600; color:#B3A98F; margin-bottom:4px;">ตั้งแต่</div>
+                    <div style="display:flex; gap:6px;">
+                      <select value="{{hfDv}}" onChange="{{hfOd}}" style="width:52px; font-size:14px; padding:9px 4px; border-radius:10px; border:1.5px solid #DDD5C4; background:#fff; color:#1E2A26; font-family:inherit; text-align:center;">
+                        <sc-for list="{{hfDd}}" as="opt" hint-placeholder-count="31"><option value="{{opt.value}}">{{opt.label}}</option></sc-for>
+                      </select>
+                      <select value="{{hfMv}}" onChange="{{hfOm}}" style="flex:1; font-size:14px; padding:9px 6px; border-radius:10px; border:1.5px solid #DDD5C4; background:#fff; color:#1E2A26; font-family:inherit;">
+                        <sc-for list="{{hfMd}}" as="opt" hint-placeholder-count="12"><option value="{{opt.value}}">{{opt.label}}</option></sc-for>
+                      </select>
+                      <select value="{{hfYv}}" onChange="{{hfOy}}" style="width:72px; font-size:14px; padding:9px 4px; border-radius:10px; border:1.5px solid #DDD5C4; background:#fff; color:#1E2A26; font-family:inherit; text-align:center;">
+                        <sc-for list="{{hfYd}}" as="opt" hint-placeholder-count="5"><option value="{{opt.value}}">{{opt.label}}</option></sc-for>
+                      </select>
+                    </div>
+                  </div>
+                  <div>
+                    <div style="font-size:11.5px; font-weight:600; color:#B3A98F; margin-bottom:4px;">ถึง</div>
+                    <div style="display:flex; gap:6px;">
+                      <select value="{{htDv}}" onChange="{{htOd}}" style="width:52px; font-size:14px; padding:9px 4px; border-radius:10px; border:1.5px solid #DDD5C4; background:#fff; color:#1E2A26; font-family:inherit; text-align:center;">
+                        <sc-for list="{{htDd}}" as="opt" hint-placeholder-count="31"><option value="{{opt.value}}">{{opt.label}}</option></sc-for>
+                      </select>
+                      <select value="{{htMv}}" onChange="{{htOm}}" style="flex:1; font-size:14px; padding:9px 6px; border-radius:10px; border:1.5px solid #DDD5C4; background:#fff; color:#1E2A26; font-family:inherit;">
+                        <sc-for list="{{htMd}}" as="opt" hint-placeholder-count="12"><option value="{{opt.value}}">{{opt.label}}</option></sc-for>
+                      </select>
+                      <select value="{{htYv}}" onChange="{{htOy}}" style="width:72px; font-size:14px; padding:9px 4px; border-radius:10px; border:1.5px solid #DDD5C4; background:#fff; color:#1E2A26; font-family:inherit; text-align:center;">
+                        <sc-for list="{{htYd}}" as="opt" hint-placeholder-count="5"><option value="{{opt.value}}">{{opt.label}}</option></sc-for>
+                      </select>
+                    </div>
+                  </div>
+                  <sc-if value="{{hasHistoryDateFilter}}" hint-placeholder-val="{{false}}">
+                    <div onClick="{{clearHistoryDateFilter}}" style="padding:9px 12px; font-size:13px; font-weight:700; color:#0E7C66; border:1.5px solid #DDD5C4; border-radius:10px; cursor:pointer; text-align:center;">ล้างตัวกรอง</div>
+                  </sc-if>
+                </div>
+              </div>
+            </div>
+
+            <div style="flex:1; overflow-y:auto; padding:0 16px 16px; display:flex; flex-direction:column; gap:10px;">
+              <sc-for list="{{filteredHistory}}" as="h" hint-placeholder-count="3">
+                <div style="background:#fff; border:1px solid #EEE8DB; border-radius:14px; padding:14px; display:flex; flex-direction:column; gap:6px;">
+                  <div style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onClick="{{h.select}}">
+                    <div style="font-size:15px; font-weight:800; color:#1E2A26;">{{h.storeLabel}}</div>
+                    <div onClick="{{h.viewPhoto}}" style="display:inline-flex; align-items:center; gap:6px; background:#F1EDE1; padding:5px 12px; border-radius:100px; font-size:11.5px; font-weight:700; color:#0E7C66; cursor:pointer; white-space:nowrap;">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="#0E7C66" stroke-width="1.8"/><circle cx="12" cy="12" r="3.2" stroke="#0E7C66" stroke-width="1.8"/></svg>
+                      ดูรูป
+                    </div>
+                  </div>
+                  <div onClick="{{h.select}}" style="cursor:pointer; display:flex; flex-direction:column; gap:6px;">
+                    <div style="font-size:13px; color:#7A8580;">{{h.dateDisplay}} · รอบ{{h.period}}</div>
+                    <div style="font-size:15px; font-weight:700; color:#0E7C66;">รวม ฿{{h.totalDisplay}}</div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{screenIsHistoryDetail}}" hint-placeholder-val="{{false}}">
+          <div style="display:flex; flex-direction:column; height:100%;">
+            <div style="padding:16px 18px; display:flex; align-items:center; gap:12px; background:#fff; border-bottom:1px solid #EEE8DB;">
+              <div onClick="{{backFromDetail}}" style="font-size:20px; color:#1E2A26; cursor:pointer;">←</div>
+              <div style="font-size:16px; font-weight:700; color:#1E2A26;">รายละเอียดการส่งยอด</div>
+            </div>
+            <div style="flex:1; overflow-y:auto; padding:18px; display:flex; flex-direction:column; gap:14px;">
+              <div style="background:#fff; border:1px solid #EEE8DB; border-radius:16px; padding:16px; display:flex; flex-direction:column; gap:8px;">
+                <div style="display:flex; justify-content:space-between; font-size:14px;"><span style="color:#9AA39D;">พนักงาน</span><span style="font-weight:700; color:#1E2A26;">{{detailEmployee}}</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:14px;"><span style="color:#9AA39D;">ร้านค้า</span><span style="font-weight:700; color:#1E2A26;">{{detailStoreLabel}}</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:14px;"><span style="color:#9AA39D;">วันที่</span><span style="font-weight:700; color:#1E2A26;">{{detailDate}}</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:14px;"><span style="color:#9AA39D;">รอบ</span><span style="font-weight:700; color:#1E2A26;">{{detailPeriod}}</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:14px;"><span style="color:#9AA39D;">เงินสด</span><span style="font-weight:700; color:#1E2A26;">฿{{detailCash}}</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:14px;"><span style="color:#9AA39D;">เงินโอน</span><span style="font-weight:700; color:#1E2A26;">฿{{detailTransfer}}</span></div>
+                <div style="display:flex; justify-content:space-between; font-size:15px; border-top:1px solid #F0EBDF; padding-top:8px;"><span style="color:#1E2A26; font-weight:700;">รวม</span><span style="font-weight:800; color:#0E7C66;">฿{{detailTotal}}</span></div>
+              </div>
+              <div>
+                <div style="font-size:14px; font-weight:700; color:#1E2A26; margin-bottom:8px;">หลักฐานนำส่งเงิน</div>
+                <div style="width:100%; height:170px; border-radius:14px; background:#EFE9DC; display:flex; align-items:center; justify-content:center; color:#B3A98F;">
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="#B3A98F" stroke-width="1.6"/><circle cx="12" cy="12" r="3.5" stroke="#B3A98F" stroke-width="1.6"/></svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+
+      </div>
+
+    </div>
+  </sc-if>
+
+  <sc-if value="{{isAdminMode}}" hint-placeholder-val="{{false}}">
+    <div style="width:100%; max-width:1180px; margin:0 auto; padding:20px 20px 60px; display:flex; flex-direction:column; gap:20px;">
+
+      <div style="background:#fff; border:1px solid #EEE8DB; border-radius:16px; padding:16px 20px; display:flex; align-items:flex-end; gap:10px; flex-wrap:wrap;">
+        <div>
+          <div style="font-size:12.5px; font-weight:700; color:#9AA39D; margin-bottom:6px;">ตั้งแต่วันที่</div>
+          <div style="display:flex; gap:6px;">
+            <select value="{{afDv}}" onChange="{{afOd}}" style="width:52px; font-size:14px; padding:9px 6px; border-radius:12px; border:1.5px solid #DDD5C4; background:#fff; color:#1E2A26; font-family:inherit; text-align:center;">
+              <sc-for list="{{afDd}}" as="opt" hint-placeholder-count="31"><option value="{{opt.value}}">{{opt.label}}</option></sc-for>
+            </select>
+            <select value="{{afMv}}" onChange="{{afOm}}" style="font-size:14px; padding:9px 8px; border-radius:12px; border:1.5px solid #DDD5C4; background:#fff; color:#1E2A26; font-family:inherit;">
+              <sc-for list="{{afMd}}" as="opt" hint-placeholder-count="12"><option value="{{opt.value}}">{{opt.label}}</option></sc-for>
+            </select>
+            <select value="{{afYv}}" onChange="{{afOy}}" style="width:76px; font-size:14px; padding:9px 6px; border-radius:12px; border:1.5px solid #DDD5C4; background:#fff; color:#1E2A26; font-family:inherit; text-align:center;">
+              <sc-for list="{{afYd}}" as="opt" hint-placeholder-count="5"><option value="{{opt.value}}">{{opt.label}}</option></sc-for>
+            </select>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:12.5px; font-weight:700; color:#9AA39D; margin-bottom:6px;">ถึงวันที่</div>
+          <div style="display:flex; gap:6px;">
+            <select value="{{atDv}}" onChange="{{atOd}}" style="width:52px; font-size:14px; padding:9px 6px; border-radius:12px; border:1.5px solid #DDD5C4; background:#fff; color:#1E2A26; font-family:inherit; text-align:center;">
+              <sc-for list="{{atDd}}" as="opt" hint-placeholder-count="31"><option value="{{opt.value}}">{{opt.label}}</option></sc-for>
+            </select>
+            <select value="{{atMv}}" onChange="{{atOm}}" style="font-size:14px; padding:9px 8px; border-radius:12px; border:1.5px solid #DDD5C4; background:#fff; color:#1E2A26; font-family:inherit;">
+              <sc-for list="{{atMd}}" as="opt" hint-placeholder-count="12"><option value="{{opt.value}}">{{opt.label}}</option></sc-for>
+            </select>
+            <select value="{{atYv}}" onChange="{{atOy}}" style="width:76px; font-size:14px; padding:9px 6px; border-radius:12px; border:1.5px solid #DDD5C4; background:#fff; color:#1E2A26; font-family:inherit; text-align:center;">
+              <sc-for list="{{atYd}}" as="opt" hint-placeholder-count="5"><option value="{{opt.value}}">{{opt.label}}</option></sc-for>
+            </select>
+          </div>
+        </div>
+        <sc-if value="{{hasAdminDateFilter}}" hint-placeholder-val="{{true}}">
+          <div onClick="{{clearAdminDateFilter}}" style="padding:10px 14px; font-size:13px; font-weight:700; color:#0E7C66; border:1.5px solid #DDD5C4; border-radius:12px; cursor:pointer; white-space:nowrap;">ล้างตัวกรอง</div>
+        </sc-if>
+        <div style="flex:1;"></div>
+        <div style="display:flex; gap:6px; background:#FAF6EF; padding:4px; border-radius:100px;">
+          <div style="{{adminViewListStyle}}" onClick="{{setAdminViewList}}">รายการ</div>
+          <div style="{{adminViewEmployeeStyle}}" onClick="{{setAdminViewEmployee}}">รายพนักงาน</div>
+          <div style="{{adminViewStoreStyle}}" onClick="{{setAdminViewStore}}">รายร้านค้า</div>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px;">
+        <div style="background:#fff; border:1px solid #EEE8DB; border-radius:16px; padding:18px;">
+          <div style="font-size:13px; color:#9AA39D; font-weight:600;">ยอดรวมในช่วงที่เลือก</div>
+          <div style="font-size:26px; font-weight:800; color:#1E2A26; margin-top:6px;">฿{{totalTodayDisplay}}</div>
+        </div>
+        <div style="background:#fff; border:1px solid #EEE8DB; border-radius:16px; padding:18px;">
+          <div style="font-size:13px; color:#9AA39D; font-weight:600;">เงินสด</div>
+          <div style="font-size:26px; font-weight:800; color:#1E2A26; margin-top:6px;">฿{{totalCashTodayDisplay}}</div>
+        </div>
+        <div style="background:#fff; border:1px solid #EEE8DB; border-radius:16px; padding:18px;">
+          <div style="font-size:13px; color:#9AA39D; font-weight:600;">เงินโอน</div>
+          <div style="font-size:26px; font-weight:800; color:#1E2A26; margin-top:6px;">฿{{totalTransferTodayDisplay}}</div>
+        </div>
+        <div style="background:#0E7C66; border-radius:16px; padding:18px;">
+          <div style="font-size:13px; color:#CFEDE1; font-weight:600;">ร้านที่ส่งยอดแล้ว</div>
+          <div style="font-size:26px; font-weight:800; color:#fff; margin-top:6px;">{{reportedCount}}/{{totalStoreCount}}</div>
+        </div>
+      </div>
+
+      <sc-if value="{{hasNotReported}}" hint-placeholder-val="{{true}}">
+        <div style="background:#FBEFEA; border:1px solid #F0CFC2; border-radius:16px; padding:18px;">
+          <div style="font-size:15px; font-weight:800; color:#B0432F; margin-bottom:10px;">ร้านที่ยังไม่ส่งยอดวันนี้ ({{notReportedCount}})</div>
+          <div style="display:flex; flex-wrap:wrap; gap:10px;">
+            <sc-for list="{{notReportedStores}}" as="ns" hint-placeholder-count="4">
+              <div style="background:#fff; border:1px solid #F0CFC2; border-radius:10px; padding:8px 14px; font-size:14px; font-weight:700; color:#8A3323;">{{ns.label}}</div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <div style="background:#fff; border:1px solid #EEE8DB; border-radius:16px; padding:20px;">
+        <div style="font-size:15px; font-weight:800; color:#1E2A26; margin-bottom:16px;">ยอดขายรวมรายวัน (7 วันล่าสุด)</div>
+        <div style="display:flex; align-items:flex-end; gap:14px; height:180px;">
+          <sc-for list="{{chartBars}}" as="bar" hint-placeholder-count="7">
+            <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:8px; height:100%;">
+              <div style="font-size:11.5px; color:#7A8580; font-weight:600;">฿{{bar.valueDisplay}}</div>
+              <div style="{{bar.barStyle}}"></div>
+              <div style="font-size:12px; color:{{bar.labelColor}}; font-weight:700;">{{bar.label}}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <sc-if value="{{adminViewIsList}}" hint-placeholder-val="{{true}}">
+        <div style="background:#fff; border:1px solid #EEE8DB; border-radius:16px; padding:20px; overflow-x:auto;">
+          <div style="font-size:15px; font-weight:800; color:#1E2A26; margin-bottom:14px;">รายการนำส่งยอด</div>
+          <table style="width:100%; border-collapse:collapse; min-width:900px;">
+            <thead>
+              <tr style="text-align:left; border-bottom:2px solid #F0EBDF;">
+                <th style="padding:10px 8px; font-size:13px; color:#9AA39D;">วันที่</th>
+                <th style="padding:10px 8px; font-size:13px; color:#9AA39D;">ร้านค้า</th>
+                <th style="padding:10px 8px; font-size:13px; color:#9AA39D;">พนักงาน</th>
+                <th style="padding:10px 8px; font-size:13px; color:#9AA39D;">เวลา / รอบ</th>
+                <th style="padding:10px 8px; font-size:13px; color:#9AA39D; text-align:right;">เงินสด</th>
+                <th style="padding:10px 8px; font-size:13px; color:#9AA39D; text-align:right;">เงินโอน</th>
+                <th style="padding:10px 8px; font-size:13px; color:#9AA39D; text-align:right;">รวม</th>
+                <th style="padding:10px 8px; font-size:13px; color:#9AA39D;">หลักฐาน</th>
+              </tr>
+            </thead>
+            <tbody>
+              <sc-for list="{{submissionsToday}}" as="sub" hint-placeholder-count="6">
+                <tr style="border-bottom:1px solid #F5F1E7;">
+                  <td style="padding:12px 8px; font-size:13.5px; color:#7A8580; white-space:nowrap;">{{sub.date}}</td>
+                  <td style="padding:12px 8px; font-size:14.5px; font-weight:700; color:#1E2A26;">{{sub.storeLabel}}</td>
+                  <td style="padding:12px 8px; font-size:14px; color:#4E5854;">{{sub.employee}}</td>
+                  <td style="padding:12px 8px; font-size:13.5px; color:#7A8580;">{{sub.timeDisplay}}</td>
+                  <td style="padding:12px 8px; font-size:14px; color:#1E2A26; text-align:right;">฿{{sub.cashDisplay}}</td>
+                  <td style="padding:12px 8px; font-size:14px; color:#1E2A26; text-align:right;">฿{{sub.transferDisplay}}</td>
+                  <td style="padding:12px 8px; font-size:14.5px; font-weight:800; color:#0E7C66; text-align:right;">฿{{sub.totalDisplay}}</td>
+                  <td style="padding:12px 8px;">
+                    <div onClick="{{sub.viewPhoto}}" style="display:inline-flex; align-items:center; gap:6px; background:#F1EDE1; padding:7px 12px; border-radius:100px; font-size:12.5px; font-weight:700; color:#0E7C66; cursor:pointer; white-space:nowrap;">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="#0E7C66" stroke-width="1.8"/><circle cx="12" cy="12" r="3.2" stroke="#0E7C66" stroke-width="1.8"/></svg>
+                      ดูรูป
+                    </div>
+                  </td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{adminViewIsEmployee}}" hint-placeholder-val="{{false}}">
+        <div style="background:#fff; border:1px solid #EEE8DB; border-radius:16px; padding:20px; overflow-x:auto;">
+          <div style="font-size:15px; font-weight:800; color:#1E2A26; margin-bottom:14px;">ยอดขายรายพนักงาน</div>
+          <table style="width:100%; border-collapse:collapse; min-width:600px;">
+            <thead>
+              <tr style="text-align:left; border-bottom:2px solid #F0EBDF;">
+                <th style="padding:10px 8px; font-size:13px; color:#9AA39D;">พนักงาน</th>
+                <th style="padding:10px 8px; font-size:13px; color:#9AA39D; text-align:right;">จำนวนครั้งที่ส่ง</th>
+                <th style="padding:10px 8px; font-size:13px; color:#9AA39D; text-align:right;">เงินสด</th>
+                <th style="padding:10px 8px; font-size:13px; color:#9AA39D; text-align:right;">เงินโอน</th>
+                <th style="padding:10px 8px; font-size:13px; color:#9AA39D; text-align:right;">รวม</th>
+              </tr>
+            </thead>
+            <tbody>
+              <sc-for list="{{groupedByEmployee}}" as="g" hint-placeholder-count="5">
+                <tr style="border-bottom:1px solid #F5F1E7;">
+                  <td style="padding:12px 8px; font-size:14.5px; font-weight:700; color:#1E2A26;">{{g.employee}}</td>
+                  <td style="padding:12px 8px; font-size:14px; color:#4E5854; text-align:right;">{{g.count}}</td>
+                  <td style="padding:12px 8px; font-size:14px; color:#1E2A26; text-align:right;">฿{{g.cashDisplay}}</td>
+                  <td style="padding:12px 8px; font-size:14px; color:#1E2A26; text-align:right;">฿{{g.transferDisplay}}</td>
+                  <td style="padding:12px 8px; font-size:14.5px; font-weight:800; color:#0E7C66; text-align:right;">฿{{g.totalDisplay}}</td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{adminViewIsStore}}" hint-placeholder-val="{{false}}">
+        <div style="background:#fff; border:1px solid #EEE8DB; border-radius:16px; padding:20px; overflow-x:auto;">
+          <div style="font-size:15px; font-weight:800; color:#1E2A26; margin-bottom:14px;">ยอดขายรายร้านค้า</div>
+          <table style="width:100%; border-collapse:collapse; min-width:600px;">
+            <thead>
+              <tr style="text-align:left; border-bottom:2px solid #F0EBDF;">
+                <th style="padding:10px 8px; font-size:13px; color:#9AA39D;">ร้านค้า</th>
+                <th style="padding:10px 8px; font-size:13px; color:#9AA39D; text-align:right;">จำนวนครั้งที่ส่ง</th>
+                <th style="padding:10px 8px; font-size:13px; color:#9AA39D; text-align:right;">เงินสด</th>
+                <th style="padding:10px 8px; font-size:13px; color:#9AA39D; text-align:right;">เงินโอน</th>
+                <th style="padding:10px 8px; font-size:13px; color:#9AA39D; text-align:right;">รวม</th>
+              </tr>
+            </thead>
+            <tbody>
+              <sc-for list="{{groupedByStore}}" as="g" hint-placeholder-count="5">
+                <tr style="border-bottom:1px solid #F5F1E7;">
+                  <td style="padding:12px 8px; font-size:14.5px; font-weight:700; color:#1E2A26;">{{g.storeLabel}}</td>
+                  <td style="padding:12px 8px; font-size:14px; color:#4E5854; text-align:right;">{{g.count}}</td>
+                  <td style="padding:12px 8px; font-size:14px; color:#1E2A26; text-align:right;">฿{{g.cashDisplay}}</td>
+                  <td style="padding:12px 8px; font-size:14px; color:#1E2A26; text-align:right;">฿{{g.transferDisplay}}</td>
+                  <td style="padding:12px 8px; font-size:14.5px; font-weight:800; color:#0E7C66; text-align:right;">฿{{g.totalDisplay}}</td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </div>
+      </sc-if>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{showProfileMenu}}" hint-placeholder-val="{{false}}">
+    <div onClick="{{closeProfileMenu}}" style="{{profileMenuOverlayStyle}}">
+      <div onClick="{{stopPropagation}}" style="background:#fff; border-radius:18px; padding:24px; width:100%; max-width:360px; display:flex; flex-direction:column; gap:16px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div style="font-size:16px; font-weight:800; color:#1E2A26;">โปรไฟล์ของฉัน</div>
+          <div onClick="{{closeProfileMenu}}" style="cursor:pointer; font-size:18px; color:#9AA39D;">✕</div>
+        </div>
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div style="width:52px; height:52px; border-radius:100px; background:#0E7C66; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:20px; flex-shrink:0;">{{employeeInitial}}</div>
+          <div style="font-size:13px; color:#7A8580;">{{profileRoleLabel}}</div>
+        </div>
+        <div>
+          <div style="font-size:13px; font-weight:700; color:#1E2A26; margin-bottom:8px;">ชื่อที่แสดง</div>
+          <input type="text" value="{{nameDraft}}" onChange="{{setNameDraft}}" style="width:100%; font-size:16px; padding:12px 14px; border-radius:12px; border:1.5px solid #DDD5C4; background:#fff; color:#1E2A26; font-family:inherit;"/>
+        </div>
+        <div onClick="{{saveName}}" style="width:100%; background:#0E7C66; color:#fff; font-size:15px; font-weight:700; padding:13px; border-radius:12px; text-align:center; cursor:pointer;">บันทึกชื่อ</div>
+        <sc-if value="{{isAdminUser}}" hint-placeholder-val="{{false}}">
+          <div onClick="{{goToAdminReport}}" style="width:100%; background:#F1EDE1; color:#0E7C66; font-size:15px; font-weight:700; padding:13px; border-radius:12px; text-align:center; cursor:pointer;">ดูรายงานแอดมิน →</div>
+        </sc-if>
+        <div onClick="{{doLogout}}" style="width:100%; border:1.5px solid #DDD5C4; color:#B04A3B; font-size:14.5px; font-weight:700; padding:12px; border-radius:12px; text-align:center; cursor:pointer;">ออกจากระบบ</div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{scannerOpen}}" hint-placeholder-val="{{false}}">
+    <div style="position:fixed; top:0; left:0; right:0; bottom:0; z-index:200; background:#000; display:flex; flex-direction:column;">
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:16px 20px; background:rgba(0,0,0,0.65);">
+        <div style="color:#fff; font-size:16px; font-weight:700;">สแกน QR รหัสร้านค้า</div>
+        <div onClick="{{stopScan}}" style="color:#fff; font-size:28px; line-height:1; cursor:pointer; padding:4px;">✕</div>
+      </div>
+      <div style="flex:1; position:relative; overflow:hidden;">
+        <div id="qr-video-container" style="width:100%; height:100%;"></div>
+        <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; pointer-events:none;">
+          <div style="width:220px; height:220px; border:3px solid #67D9B4; border-radius:16px; box-shadow:0 0 0 9999px rgba(0,0,0,0.45);"></div>
+        </div>
+        <div style="position:absolute; bottom:32px; left:0; right:0; text-align:center; color:rgba(255,255,255,0.65); font-size:14px; pointer-events:none;">เล็งกล้องไปที่ QR Code ในกรอบสีเขียว</div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{showPhotoModal}}" hint-placeholder-val="{{false}}">
+    <div onClick="{{closePhotoModal}}" style="{{photoModalOverlayStyle}}">
+      <div onClick="{{stopPropagation}}" style="background:#fff; border-radius:18px; padding:22px; width:100%; max-width:420px; display:flex; flex-direction:column; gap:14px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div style="font-size:16px; font-weight:800; color:#1E2A26;">หลักฐานนำส่งเงิน — {{photoModalStore}}</div>
+          <div onClick="{{closePhotoModal}}" style="cursor:pointer; font-size:18px; color:#9AA39D;">✕</div>
+        </div>
+        <div style="width:100%; height:260px; border-radius:14px; background:#EFE9DC; display:flex; align-items:center; justify-content:center;">
+          <svg width="52" height="52" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="#B3A98F" stroke-width="1.6"/><circle cx="12" cy="12" r="3.5" stroke="#B3A98F" stroke-width="1.6"/></svg>
+        </div>
+        <div style="font-size:13.5px; color:#7A8580;">พนักงาน {{photoModalEmployee}} · {{photoModalTime}}</div>
+      </div>
+    </div>
+  </sc-if>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  // ตั้งเป็น false ก่อน deploy จริง เพื่อซ่อน dev tools
+  DEV_MODE = ['localhost', '127.0.0.1', ''].includes(location.hostname);
+
+  LIFF_ID = '2010674864-18QwDZSk';
+
+  _liffInitPromise = null;
+
+  initLiff = () => {
+    if (this.DEV_MODE || typeof liff === 'undefined') return;
+    this._liffInitPromise = (async () => {
+      try {
+        await liff.init({ liffId: this.LIFF_ID });
+        if (liff.isLoggedIn()) {
+          const profile = await liff.getProfile();
+          this.setState({ employeeName: profile.displayName, lineUserId: profile.userId, lineProfilePic: profile.pictureUrl || '' });
+        }
+      } catch (err) { console.error('[LIFF] init error:', err); }
+    })();
+  };
+
+  state = {
+    mode: 'staff',
+    screen: 'scan',
+    employeeName: '',
+    isAdminUser: false,
+    pendingRole: 'staff',
+    storeCode: '',
+    storeName: '',
+    date: new Date().toISOString().slice(0, 10),
+    period: 'เย็น',
+    cash: '',
+    transfer: '',
+    note: '',
+    cashError: false,
+    manualPick: false,
+    lastSubmission: null,
+    justSubmitted: false,
+    selectedHistory: null,
+    selectedHistoryEmployee: '',
+    historyDateFrom: '',
+    historyDateTo: '',
+    photoModalSub: null,
+    showProfileMenu: false,
+    nameDraft: '',
+    scrollY: 0,
+    lineUserId: '',
+    lineProfilePic: '',
+    qrShop: '',
+    qrSig: '',
+    scannerOpen: false,
+    allHistory: [
+      { id: 'h1', employee: 'สมชาย ใจดี', date: '2026-07-04', storeCode: 'A3', storeName: 'ต่อ', period: 'เย็น', cash: 5400, transfer: 2200 },
+      { id: 'h2', employee: 'สมชาย ใจดี', date: '2026-07-03', storeCode: 'D1', storeName: 'กร', period: 'เย็น', cash: 6100, transfer: 1800 },
+      { id: 'h3', employee: 'สมชาย ใจดี', date: '2026-07-02', storeCode: 'H1', storeName: 'บุญมี', period: 'ค่ำ', cash: 4700, transfer: 3100 },
+      { id: 'h4', employee: 'วันดี ศรีสุข', date: '2026-07-04', storeCode: 'A2', storeName: 'นิ่ม (เพลง)', period: 'เย็น', cash: 4300, transfer: 2600 },
+      { id: 'h5', employee: 'วันดี ศรีสุข', date: '2026-07-03', storeCode: 'A2', storeName: 'นิ่ม (เพลง)', period: 'เย็น', cash: 4100, transfer: 2400 },
+      { id: 'h6', employee: 'คำแพง สายบัว', date: '2026-07-04', storeCode: 'A3', storeName: 'ต่อ', period: 'เย็น', cash: 6100, transfer: 900 },
+      { id: 'h7', employee: 'อองมิน', date: '2026-07-04', storeCode: 'D1', storeName: 'กร', period: 'เช้า', cash: 3900, transfer: 1500 },
+      { id: 'h8', employee: 'จันทร์เพ็ญ ทองดี', date: '2026-07-04', storeCode: 'D2', storeName: 'จัด', period: 'เย็น', cash: 5700, transfer: 2100 },
+      { id: 'h9', employee: 'มยุรี แก้วมณี', date: '2026-07-04', storeCode: 'H1', storeName: 'บุญมี', period: 'เย็น', cash: 4800, transfer: 1300 },
+      { id: 'h10', employee: 'ทองสุข แสงจันทร์', date: '2026-07-04', storeCode: 'K3', storeName: 'เจน', period: 'เย็น', cash: 5100, transfer: 2400 },
+      { id: 'h11', employee: 'บัวลอย คำมี', date: '2026-07-04', storeCode: 'K8', storeName: 'เสก', period: 'เช้า', cash: 3600, transfer: 1100 },
+      { id: 'h12', employee: 'สมหญิง ใจงาม', date: '2026-07-04', storeCode: 'K9', storeName: 'น้ำหอม', period: 'เย็น', cash: 4900, transfer: 2000 },
+      { id: 'h13', employee: 'คำสิงห์ วงศ์ษา', date: '2026-07-04', storeCode: 'X1', storeName: 'หนุ่ย', period: 'เย็น', cash: 5500, transfer: 1700 },
+    ],
+    submissionsToday: [
+      { id: 's1', date: '2026-07-05', storeCode: 'A1', storeName: 'กอล์ฟ', employee: 'สมชาย ใจดี', cash: 5200, transfer: 1800, time: '18:42', period: 'เย็น' },
+      { id: 's2', date: '2026-07-05', storeCode: 'A2', storeName: 'นิ่ม (เพลง)', employee: 'วันดี ศรีสุข', cash: 4300, transfer: 2600, time: '19:05', period: 'เย็น' },
+      { id: 's3', date: '2026-07-05', storeCode: 'A3', storeName: 'ต่อ', employee: 'คำแพง สายบัว', cash: 6100, transfer: 900, time: '18:20', period: 'เย็น' },
+      { id: 's4', date: '2026-07-05', storeCode: 'D1', storeName: 'กร', employee: 'อองมิน', cash: 3900, transfer: 1500, time: '17:55', period: 'เช้า' },
+      { id: 's5', date: '2026-07-05', storeCode: 'D2', storeName: 'จัด', employee: 'จันทร์เพ็ญ ทองดี', cash: 5700, transfer: 2100, time: '19:15', period: 'เย็น' },
+      { id: 's6', date: '2026-07-05', storeCode: 'H1', storeName: 'บุญมี', employee: 'มยุรี แก้วมณี', cash: 4800, transfer: 1300, time: '18:50', period: 'เย็น' },
+      { id: 's7', date: '2026-07-05', storeCode: 'K3', storeName: 'เจน', employee: 'ทองสุข แสงจันทร์', cash: 5100, transfer: 2400, time: '18:33', period: 'เย็น' },
+      { id: 's8', date: '2026-07-05', storeCode: 'K8', storeName: 'เสก', employee: 'บัวลอย คำมี', cash: 3600, transfer: 1100, time: '17:40', period: 'ค่ำ' },
+      { id: 's9', date: '2026-07-05', storeCode: 'K9', storeName: 'น้ำหอม', employee: 'สมหญิง ใจงาม', cash: 4900, transfer: 2000, time: '19:00', period: 'เย็น' },
+      { id: 's10', date: '2026-07-05', storeCode: 'X1', storeName: 'หนุ่ย', employee: 'คำสิงห์ วงศ์ษา', cash: 5500, transfer: 1700, time: '18:10', period: 'เย็น' },
+    ],
+    adminDateFrom: '2026-07-05',
+    adminDateTo: '2026-07-05',
+    adminView: 'list',
+  };
+
+  STORES = [
+    { code: 'A1', name: 'กอล์ฟ' },
+    { code: 'A2', name: 'นิ่ม (เพลง)' },
+    { code: 'A3', name: 'ต่อ' },
+    { code: 'D1', name: 'กร' },
+    { code: 'D1.1', name: 'กร แก้ว ผ้าปูโต๊ะ' },
+    { code: 'D2', name: 'จัด' },
+    { code: 'H1', name: 'บุญมี' },
+    { code: 'K3', name: 'เจน' },
+    { code: 'K4', name: 'อ้อ' },
+    { code: 'K8', name: 'เสก' },
+    { code: 'K9', name: 'น้ำหอม' },
+    { code: 'SB', name: 'ป้าตุ้ย' },
+    { code: 'X1', name: 'หนุ่ย' },
+    { code: 'X8', name: 'นนท์' },
+  ];
+
+  WEEK_HISTORY = [
+    { d: '28 มิ.ย.', v: 58000 },
+    { d: '29 มิ.ย.', v: 62000 },
+    { d: '30 มิ.ย.', v: 59500 },
+    { d: '1 ก.ค.', v: 64000 },
+    { d: '2 ก.ค.', v: 61000 },
+    { d: '3 ก.ค.', v: 66500 },
+    { d: '4 ก.ค.', v: 63000 },
+  ];
+
+  fmt(n) { return Math.round(n || 0).toLocaleString('th-TH'); }
+  onlyDigits(v) { return (v || '').replace(/[^0-9]/g, ''); }
+
+  onScroll = () => this.setState({ scrollY: window.scrollY || window.pageYOffset || 0 });
+
+  componentDidMount() {
+    window.addEventListener('scroll', this.onScroll, { passive: true });
+    this.onScroll();
+    this.readUrlParams();
+    this.initLiff();
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('scroll', this.onScroll);
+    this.stopScan();
+  }
+
+  THAI_MONTHS_FULL = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+
+  dateSelectFor(stateKey) {
+    const today = new Date();
+    const raw = this.state[stateKey];
+    const val = raw || today.toISOString().slice(0, 10);
+    const [ys, ms, ds] = val.split('-');
+    const y = Number(ys), m = Number(ms);
+    const daysInMonth = new Date(y, m, 0).getDate();
+    const curBE = today.getFullYear() + 543;
+    const upd = (part) => (e) => {
+      const cur = this.state[stateKey] || today.toISOString().slice(0, 10);
+      const [cy, cm, cd] = cur.split('-');
+      let ny = cy, nm = cm, nd = cd;
+      if (part === 'y') ny = e.target.value;
+      if (part === 'm') nm = e.target.value;
+      if (part === 'd') nd = e.target.value;
+      const maxD = new Date(Number(ny), Number(nm), 0).getDate();
+      if (Number(nd) > maxD) nd = String(maxD).padStart(2, '0');
+      this.setState({ [stateKey]: `${ny}-${nm}-${nd}` });
+    };
+    return {
+      dv: ds, mv: ms, yv: ys,
+      dd: Array.from({ length: daysInMonth }, (_, i) => ({ value: String(i + 1).padStart(2, '0'), label: String(i + 1) })),
+      md: this.THAI_MONTHS_FULL.map((n, i) => ({ value: String(i + 1).padStart(2, '0'), label: n })),
+      yd: Array.from({ length: 6 }, (_, i) => curBE - 2 + i).map(be => ({ value: String(be - 543), label: String(be) })),
+      od: upd('d'), om: upd('m'), oy: upd('y'),
+    };
+  }
+
+  goStaffMode = () => this.setState({ mode: 'staff' });
+  goAdminMode = () => this.setState({ mode: 'admin' });
+
+  toggleManualPick = () => this.setState(s => ({ manualPick: !s.manualPick }));
+
+  setRoleStaff = () => this.setState({ pendingRole: 'staff' });
+  setRoleAdmin = () => this.setState({ pendingRole: 'admin' });
+
+  selectStore = (store) => {
+    const next = this.state.employeeName ? 'form' : 'login';
+    this.setState({ storeCode: store.code, storeName: store.name, screen: next, manualPick: false, cash: '', transfer: '', note: '', cashError: false });
+  };
+
+  startScan = async () => {
+    // In LIFF (production): use LINE's built-in QR scanner
+    if (!this.DEV_MODE && typeof liff !== 'undefined' && liff.isLoggedIn()) {
+      try {
+        const result = await liff.scanCodeV2();
+        if (result?.value) this.handleQrResult(result.value);
+      } catch(e) { console.error('[LIFF scan]', e); }
+      return;
+    }
+    // Browser (dev + non-LIFF): camera + jsQR
+    this.setState({ scannerOpen: true });
+    setTimeout(() => this.mountCamera(), 80);
+  };
+
+  mountCamera = async () => {
+    try {
+      const container = document.getElementById('qr-video-container');
+      if (!container) return;
+      const video = document.createElement('video');
+      video.setAttribute('playsinline', '');
+      video.style.cssText = 'width:100%; height:100%; object-fit:cover; display:block;';
+      container.appendChild(video);
+      this._qrVideo = video;
+      this._qrCanvas = document.createElement('canvas');
+      this._qrCtx = this._qrCanvas.getContext('2d', { willReadFrequently: true });
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      this._cameraStream = stream;
+      video.srcObject = stream;
+      video.onloadedmetadata = () => { video.play(); this.scanLoop(); };
+    } catch(e) {
+      console.error('[Camera]', e);
+      this.setState({ scannerOpen: false });
+      alert('ไม่สามารถเปิดกล้องได้: ' + (e.message || e));
+    }
+  };
+
+  scanLoop = () => {
+    const video = this._qrVideo;
+    if (!video || video.readyState < 2) {
+      this._scanRAF = requestAnimationFrame(() => this.scanLoop());
+      return;
+    }
+    const canvas = this._qrCanvas;
+    const ctx = this._qrCtx;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    ctx.drawImage(video, 0, 0);
+    const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const code = typeof jsQR !== 'undefined' && jsQR(img.data, img.width, img.height, { inversionAttempts: 'dontInvert' });
+    if (code?.data) { this.handleQrResult(code.data); return; }
+    this._scanRAF = requestAnimationFrame(() => this.scanLoop());
+  };
+
+  stopScan = () => {
+    if (this._scanRAF) cancelAnimationFrame(this._scanRAF);
+    if (this._cameraStream) { this._cameraStream.getTracks().forEach(t => t.stop()); this._cameraStream = null; }
+    this._qrVideo = null;
+    this._qrCanvas = null;
+    this._qrCtx = null;
+    this.setState({ scannerOpen: false });
+  };
+
+  handleQrResult = (raw) => {
+    this.stopScan();
+    let shopCode = raw.trim();
+    let sig = '';
+    try {
+      const url = new URL(raw);
+      shopCode = url.searchParams.get('shop') || shopCode;
+      sig = url.searchParams.get('sig') || '';
+    } catch(_) { /* raw shop code, not a URL */ }
+    this.setState({ qrShop: shopCode, qrSig: sig });
+    const store = this.STORES.find(s => s.code === shopCode);
+    if (store) {
+      this.selectStore(store);
+    } else {
+      const next = this.state.employeeName ? 'form' : 'login';
+      this.setState({ storeCode: shopCode, storeName: '', screen: next, manualPick: false });
+    }
+  };
+
+  readUrlParams = () => {
+    const params = new URLSearchParams(window.location.search);
+    const shop = params.get('shop') || '';
+    const sig  = params.get('sig')  || '';
+    if (!shop) return;
+    // Store sig for forwarding to backend at submit — do NOT validate here (no secret in frontend)
+    this.setState({ qrShop: shop, qrSig: sig });
+    const store = this.STORES.find(s => s.code === shop);
+    if (store) {
+      this.selectStore(store);
+    } else {
+      // Unknown code — keep it as-is; backend decides if it's valid
+      const next = this.state.employeeName ? 'form' : 'login';
+      this.setState({ storeCode: shop, storeName: '', screen: next, manualPick: false });
+    }
+  };
+
+  simulateScan = () => {
+    const store = this.STORES.find(s => s.code === 'D1.1') || this.STORES[0];
+    this.selectStore(store);
+  };
+
+  backToScan = () => this.setState({ screen: 'scan', manualPick: false });
+
+  doLogin = async () => {
+    if (!this.DEV_MODE) {
+      // Ensure liff.init() has resolved before checking login state
+      if (this._liffInitPromise) await this._liffInitPromise;
+      if (!liff.isLoggedIn()) {
+        liff.login();   // redirects to LINE OAuth → comes back to this URL
+        return;
+      }
+      const profile = await liff.getProfile();
+      this.setState({ employeeName: profile.displayName, lineUserId: profile.userId, lineProfilePic: profile.pictureUrl || '', isAdminUser: false, selectedHistoryEmployee: profile.displayName, screen: 'form' });
+      return;
+    }
+    // DEV mock login — ใช้ role ที่เลือกจาก DEV panel (default: staff)
+    const isAdmin = this.state.pendingRole === 'admin';
+    const name = isAdmin ? 'อรทัย จัดการ (แอดมิน)' : 'สมชาย ใจดี';
+    this.setState({ employeeName: name, isAdminUser: isAdmin, selectedHistoryEmployee: name, screen: 'form' });
+  };
+
+  doLogout = () => {
+    if (!this.DEV_MODE && typeof liff !== 'undefined' && liff.isLoggedIn()) liff.logout();
+    this.setState({
+      employeeName: '', isAdminUser: false, pendingRole: 'staff', selectedHistoryEmployee: '',
+      lineUserId: '', lineProfilePic: '',
+      storeCode: '', storeName: '', cash: '', transfer: '', note: '',
+      cashError: false, manualPick: false, justSubmitted: false, screen: 'scan',
+    });
+  };
+
+  setCash = (e) => this.setState({ cash: this.onlyDigits(e.target.value), cashError: false });
+  setTransfer = (e) => this.setState({ transfer: this.onlyDigits(e.target.value) });
+  setNote = (e) => this.setState({ note: e.target.value });
+  setPeriod = (p) => this.setState({ period: p });
+
+  submitForm = () => {
+    if (!this.state.cash) { this.setState({ cashError: true }); return; }
+    // TODO (ตอนต่อ API จริง): ส่ง qrShop + qrSig ไปให้ backend ตรวจสอบด้วย
+    // crypto.timingSafeEqual(expected_sig, sig) ก่อนบันทึกข้อมูลทุกครั้ง
+    // เพื่อป้องกันการปลอม QR code หรือแก้ไข shop parameter ใน URL
+    const cashNum = Number(this.state.cash || 0);
+    const transferNum = Number(this.state.transfer || 0);
+    const record = {
+      id: 'live-' + Date.now(),
+      storeCode: this.state.storeCode, storeName: this.state.storeName,
+      employee: this.state.employeeName, cash: cashNum, transfer: transferNum,
+      time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
+      period: this.state.period, date: this.state.date,
+    };
+    this.setState(s => ({
+      submissionsToday: [...s.submissionsToday, record],
+      allHistory: [{ id: record.id, employee: record.employee, date: record.date, storeCode: record.storeCode, storeName: record.storeName, period: record.period, cash: record.cash, transfer: record.transfer }, ...s.allHistory],
+      lastSubmission: record,
+      justSubmitted: true,
+      selectedHistoryEmployee: record.employee,
+      screen: 'history',
+      cash: '', transfer: '', note: '',
+    }));
+  };
+
+  dismissBanner = () => this.setState({ justSubmitted: false });
+
+  goHistory = () => this.setState({ screen: 'history' });
+  backFromHistory = () => this.setState({ screen: 'scan' });
+  backFromDetail = () => this.setState({ screen: 'history' });
+  selectHistory = (h) => this.setState({ selectedHistory: h, screen: 'historyDetail' });
+  setHistoryEmployee = (e) => this.setState({ selectedHistoryEmployee: e.target.value });
+  clearHistoryDateFilter = () => this.setState({ historyDateFrom: '', historyDateTo: '' });
+  clearAdminDateFilter = () => this.setState({ adminDateFrom: '', adminDateTo: '' });
+  setAdminView = (v) => this.setState({ adminView: v });
+
+  viewPhoto = (sub) => this.setState({ photoModalSub: sub });
+  closePhotoModal = () => this.setState({ photoModalSub: null });
+  stopPropagation = (e) => e.stopPropagation();
+
+  openProfileMenu = () => this.setState({ showProfileMenu: true, nameDraft: this.state.employeeName });
+  closeProfileMenu = () => this.setState({ showProfileMenu: false });
+  setNameDraft = (e) => this.setState({ nameDraft: e.target.value });
+
+  saveName = () => {
+    const oldName = this.state.employeeName;
+    const newName = (this.state.nameDraft || '').trim() || oldName;
+    if (newName === oldName) { this.setState({ showProfileMenu: false }); return; }
+    this.setState(s => ({
+      employeeName: newName,
+      selectedHistoryEmployee: s.selectedHistoryEmployee === oldName ? newName : s.selectedHistoryEmployee,
+      allHistory: s.allHistory.map(h => h.employee === oldName ? { ...h, employee: newName } : h),
+      submissionsToday: s.submissionsToday.map(r => r.employee === oldName ? { ...r, employee: newName } : r),
+      showProfileMenu: false,
+    }));
+  };
+
+  goToAdminReport = () => this.setState({ mode: 'admin', showProfileMenu: false });
+
+  renderVals() {
+    const s = this.state;
+    const fmt = this.fmt.bind(this);
+
+    const fd = this.dateSelectFor('date');
+    const hf = this.dateSelectFor('historyDateFrom');
+    const ht = this.dateSelectFor('historyDateTo');
+    const af = this.dateSelectFor('adminDateFrom');
+    const at2 = this.dateSelectFor('adminDateTo');
+
+    const stores = this.STORES.map(st => ({ code: st.code, name: st.name, select: () => this.selectStore(st) }));
+
+    const periods = ['เช้า', 'เย็น', 'ค่ำ'].map(p => {
+      const active = s.period === p;
+      return {
+        label: p,
+        select: () => this.setPeriod(p),
+        style: `flex:1; text-align:center; padding:12px 0; border-radius:12px; font-size:15px; font-weight:700; cursor:pointer; background:${active ? '#0E7C66' : '#fff'}; color:${active ? '#fff' : '#1E2A26'}; border:1.5px solid ${active ? '#0E7C66' : '#DDD5C4'};`,
+      };
+    });
+
+    const cashNum = Number(s.cash || 0);
+    const transferNum = Number(s.transfer || 0);
+
+    const dedup = new Map();
+    s.submissionsToday.forEach(r => dedup.set(r.id, r));
+    s.allHistory.forEach(h => { if (!dedup.has(h.id)) dedup.set(h.id, { ...h, time: '' }); });
+    const allSubmissions = [...dedup.values()];
+
+    const adminFiltered = allSubmissions
+      .filter(r => !s.adminDateFrom || r.date >= s.adminDateFrom)
+      .filter(r => !s.adminDateTo || r.date <= s.adminDateTo)
+      .sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time));
+
+    const submissionsToday = adminFiltered.map(sub => ({
+      ...sub,
+      storeLabel: `${sub.storeCode} ${sub.storeName}`,
+      timeDisplay: sub.time ? `${sub.time} · ${sub.period}` : sub.period,
+      cashDisplay: fmt(sub.cash),
+      transferDisplay: fmt(sub.transfer),
+      totalDisplay: fmt(sub.cash + sub.transfer),
+      viewPhoto: () => this.viewPhoto(sub),
+    }));
+
+    const totalCashToday = adminFiltered.reduce((a, b) => a + b.cash, 0);
+    const totalTransferToday = adminFiltered.reduce((a, b) => a + b.transfer, 0);
+    const totalToday = totalCashToday + totalTransferToday;
+
+    const isSingleDay = !!s.adminDateFrom && s.adminDateFrom === s.adminDateTo;
+    const reportedCodes = new Set(adminFiltered.map(x => x.storeCode));
+    const notReportedStores = isSingleDay
+      ? this.STORES.filter(st => !reportedCodes.has(st.code)).map(st => ({ label: `${st.code} ${st.name}` }))
+      : [];
+
+    const empMap = new Map();
+    adminFiltered.forEach(r => {
+      const e = empMap.get(r.employee) || { employee: r.employee, count: 0, cash: 0, transfer: 0 };
+      e.count += 1; e.cash += r.cash; e.transfer += r.transfer;
+      empMap.set(r.employee, e);
+    });
+    const groupedByEmployee = [...empMap.values()]
+      .map(g => ({ ...g, cashDisplay: fmt(g.cash), transferDisplay: fmt(g.transfer), totalDisplay: fmt(g.cash + g.transfer) }))
+      .sort((a, b) => (b.cash + b.transfer) - (a.cash + a.transfer));
+
+    const storeMap = new Map();
+    adminFiltered.forEach(r => {
+      const key = r.storeCode;
+      const g = storeMap.get(key) || { storeLabel: `${r.storeCode} ${r.storeName}`, count: 0, cash: 0, transfer: 0 };
+      g.count += 1; g.cash += r.cash; g.transfer += r.transfer;
+      storeMap.set(key, g);
+    });
+    const groupedByStore = [...storeMap.values()]
+      .map(g => ({ ...g, cashDisplay: fmt(g.cash), transferDisplay: fmt(g.transfer), totalDisplay: fmt(g.cash + g.transfer) }))
+      .sort((a, b) => (b.cash + b.transfer) - (a.cash + a.transfer));
+
+    const weekData = [...this.WEEK_HISTORY, { d: '5 ก.ค. (วันนี้)', v: totalToday, today: true }];
+    const maxV = Math.max(...weekData.map(w => w.v), 1);
+    const chartBars = weekData.map(w => ({
+      label: w.d,
+      valueDisplay: fmt(w.v),
+      labelColor: w.today ? '#0E7C66' : '#9AA39D',
+      barStyle: `width:100%; max-width:44px; height:${Math.max(6, (w.v / maxV) * 130)}px; border-radius:8px 8px 0 0; background:${w.today ? '#0E7C66' : '#CFE3DC'};`,
+    }));
+
+    const isLoggedIn = !!s.employeeName;
+
+    const uniqueEmployees = [...new Set(s.allHistory.map(h => h.employee))];
+    const employeeOptions = s.isAdminUser
+      ? uniqueEmployees.map(name => ({ value: name, label: name }))
+      : [{ value: s.employeeName, label: s.employeeName }];
+
+    const filteredHistory = s.allHistory
+      .filter(h => h.employee === s.selectedHistoryEmployee)
+      .filter(h => !s.historyDateFrom || h.date >= s.historyDateFrom)
+      .filter(h => !s.historyDateTo || h.date <= s.historyDateTo)
+      .map(h => ({
+        ...h,
+        storeLabel: `${h.storeCode} ${h.storeName}`,
+        dateDisplay: h.date,
+        totalDisplay: fmt(h.cash + h.transfer),
+        select: () => this.selectHistory(h),
+        viewPhoto: () => this.viewPhoto(h),
+      }));
+
+    const sh = s.selectedHistory || {};
+    const photoSub = s.photoModalSub;
+
+    return {
+      isDev: this.DEV_MODE,
+      isStaffMode: s.mode === 'staff',
+      isAdminMode: s.mode === 'admin',
+      staffToggleStyle: `padding:9px 18px; border-radius:100px; font-size:13.5px; font-weight:700; cursor:pointer; white-space:nowrap; background:${s.mode === 'staff' ? '#0E7C66' : 'transparent'}; color:${s.mode === 'staff' ? '#fff' : '#4E5854'};`,
+      adminToggleStyle: `padding:9px 18px; border-radius:100px; font-size:13.5px; font-weight:700; cursor:pointer; white-space:nowrap; background:${s.mode === 'admin' ? '#0E7C66' : 'transparent'}; color:${s.mode === 'admin' ? '#fff' : '#4E5854'};`,
+      goStaffMode: this.goStaffMode, goAdminMode: this.goAdminMode,
+
+      screenIsScan: s.screen === 'scan',
+      screenIsLogin: s.screen === 'login',
+      screenIsForm: s.screen === 'form',
+      screenIsHistory: s.screen === 'history',
+      screenIsHistoryDetail: s.screen === 'historyDetail',
+
+      isLoggedIn, notLoggedIn: !isLoggedIn, isAdminUser: s.isAdminUser,
+      employeeName: s.employeeName, employeeInitial: s.employeeName ? s.employeeName[0] : 'ผ',
+      doLogout: this.doLogout,
+
+      scannerOpen: s.scannerOpen, startScan: this.startScan, stopScan: this.stopScan,
+      simulateScan: this.simulateScan, demoStoreLabel: 'D1.1 กร แก้ว ผ้าปูโต๊ะ',
+      toggleManualPick: this.toggleManualPick, manualPick: s.manualPick, stores,
+
+      doLogin: this.doLogin,
+      setRoleStaff: this.setRoleStaff, setRoleAdmin: this.setRoleAdmin,
+      roleStaffStyle: `flex:1; text-align:center; padding:9px 0; border-radius:10px; font-size:12.5px; font-weight:700; cursor:pointer; background:${s.pendingRole === 'staff' ? '#0E7C66' : '#fff'}; color:${s.pendingRole === 'staff' ? '#fff' : '#4E5854'}; border:1.5px solid ${s.pendingRole === 'staff' ? '#0E7C66' : '#DDD5C4'};`,
+      roleAdminStyle: `flex:1; text-align:center; padding:9px 0; border-radius:10px; font-size:12.5px; font-weight:700; cursor:pointer; background:${s.pendingRole === 'admin' ? '#0E7C66' : '#fff'}; color:${s.pendingRole === 'admin' ? '#fff' : '#4E5854'}; border:1.5px solid ${s.pendingRole === 'admin' ? '#0E7C66' : '#DDD5C4'};`,
+
+      formStoreLabel: `${s.storeCode} ${s.storeName}`, backToScan: this.backToScan,
+      fdDv: fd.dv, fdMv: fd.mv, fdYv: fd.yv, fdDd: fd.dd, fdMd: fd.md, fdYd: fd.yd, fdOd: fd.od, fdOm: fd.om, fdOy: fd.oy,
+      periods,
+      cash: s.cash, setCash: this.setCash, cashError: s.cashError,
+      cashBorderColor: s.cashError ? '#C1483A' : '#DDD5C4',
+      transfer: s.transfer, setTransfer: this.setTransfer,
+      totalFormDisplay: fmt(cashNum + transferNum),
+      note: s.note, setNote: this.setNote,
+      submitForm: this.submitForm,
+
+      justSubmitted: s.justSubmitted, dismissBanner: this.dismissBanner,
+      lastStoreLabel: s.lastSubmission ? `${s.lastSubmission.storeCode} ${s.lastSubmission.storeName}` : '',
+      lastTotalDisplay: s.lastSubmission ? fmt(s.lastSubmission.cash + s.lastSubmission.transfer) : '0',
+      goHistory: this.goHistory,
+
+      selectedHistoryEmployee: s.selectedHistoryEmployee, setHistoryEmployee: this.setHistoryEmployee,
+      hfDv: hf.dv, hfMv: hf.mv, hfYv: hf.yv, hfDd: hf.dd, hfMd: hf.md, hfYd: hf.yd, hfOd: hf.od, hfOm: hf.om, hfOy: hf.oy,
+      htDv: ht.dv, htMv: ht.mv, htYv: ht.yv, htDd: ht.dd, htMd: ht.md, htYd: ht.yd, htOd: ht.od, htOm: ht.om, htOy: ht.oy,
+      hasHistoryDateFilter: !!(s.historyDateFrom || s.historyDateTo), clearHistoryDateFilter: this.clearHistoryDateFilter,
+      employeeOptions,
+      historyDropdownDisabled: !s.isAdminUser,
+      historyDropdownStyle: `width:100%; font-size:15px; font-weight:700; padding:12px 14px; border-radius:12px; border:1.5px solid #DDD5C4; background:${s.isAdminUser ? '#fff' : '#F1EDE1'}; color:#1E2A26; font-family:inherit;`,
+      filteredHistory, backFromHistory: this.backFromHistory,
+
+      detailEmployee: sh.employee || '',
+      detailStoreLabel: sh.storeCode ? `${sh.storeCode} ${sh.storeName}` : '', detailDate: sh.date || '',
+      detailPeriod: sh.period || '', detailCash: fmt(sh.cash), detailTransfer: fmt(sh.transfer),
+      detailTotal: fmt((sh.cash || 0) + (sh.transfer || 0)), backFromDetail: this.backFromDetail,
+
+      submissionsToday,
+      totalTodayDisplay: fmt(totalToday), totalCashTodayDisplay: fmt(totalCashToday), totalTransferTodayDisplay: fmt(totalTransferToday),
+      reportedCount: reportedCodes.size, totalStoreCount: this.STORES.length,
+      hasNotReported: notReportedStores.length > 0, notReportedCount: notReportedStores.length, notReportedStores,
+      isSingleDay,
+      chartBars,
+
+      afDv: af.dv, afMv: af.mv, afYv: af.yv, afDd: af.dd, afMd: af.md, afYd: af.yd, afOd: af.od, afOm: af.om, afOy: af.oy,
+      atDv: at2.dv, atMv: at2.mv, atYv: at2.yv, atDd: at2.dd, atMd: at2.md, atYd: at2.yd, atOd: at2.od, atOm: at2.om, atOy: at2.oy,
+      hasAdminDateFilter: !!(s.adminDateFrom || s.adminDateTo), clearAdminDateFilter: this.clearAdminDateFilter,
+
+      adminView: s.adminView,
+      setAdminViewList: () => this.setAdminView('list'),
+      setAdminViewEmployee: () => this.setAdminView('employee'),
+      setAdminViewStore: () => this.setAdminView('store'),
+      adminViewIsList: s.adminView === 'list', adminViewIsEmployee: s.adminView === 'employee', adminViewIsStore: s.adminView === 'store',
+      adminViewListStyle: `padding:9px 16px; border-radius:100px; font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap; background:${s.adminView === 'list' ? '#0E7C66' : '#F1EDE1'}; color:${s.adminView === 'list' ? '#fff' : '#4E5854'};`,
+      adminViewEmployeeStyle: `padding:9px 16px; border-radius:100px; font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap; background:${s.adminView === 'employee' ? '#0E7C66' : '#F1EDE1'}; color:${s.adminView === 'employee' ? '#fff' : '#4E5854'};`,
+      adminViewStoreStyle: `padding:9px 16px; border-radius:100px; font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap; background:${s.adminView === 'store' ? '#0E7C66' : '#F1EDE1'}; color:${s.adminView === 'store' ? '#fff' : '#4E5854'};`,
+      groupedByEmployee, groupedByStore,
+
+      showProfileMenu: s.showProfileMenu, openProfileMenu: this.openProfileMenu, closeProfileMenu: this.closeProfileMenu,
+      profileMenuOverlayStyle: `position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(20,26,23,0.55); display:flex; align-items:center; justify-content:center; z-index:50; padding:20px;`,
+      profileRoleLabel: s.isAdminUser ? 'สิทธิ์ผู้ใช้: แอดมิน' : 'สิทธิ์ผู้ใช้: พนักงานทั่วไป',
+      nameDraft: s.nameDraft, setNameDraft: this.setNameDraft, saveName: this.saveName,
+      goToAdminReport: this.goToAdminReport,
+
+      showPhotoModal: !!photoSub,
+      photoModalOverlayStyle: `position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(20,26,23,0.55); display:flex; align-items:center; justify-content:center; z-index:50; padding:20px;`,
+      photoModalStore: photoSub ? `${photoSub.storeCode} ${photoSub.storeName}` : '',
+      photoModalEmployee: photoSub ? photoSub.employee : '',
+      photoModalTime: photoSub ? (photoSub.time || photoSub.date || '') : '',
+      closePhotoModal: this.closePhotoModal, stopPropagation: this.stopPropagation,
+    };
+  }
+}
+
+</script>
+</body>
+</html>
