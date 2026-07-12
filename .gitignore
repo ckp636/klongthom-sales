@@ -1,0 +1,12 @@
+# Environment — never commit real secrets
+.env
+.env.local
+.env.*.local
+
+# Image slot sidecar (generated at runtime)
+.image-slots.state.json
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+.vscode/
