@@ -580,7 +580,14 @@ class Component extends DCLogic {
         await liff.init({ liffId: this.LIFF_ID });
         if (liff.isLoggedIn()) {
           const profile = await liff.getProfile();
-          this.setState({ employeeName: profile.displayName, lineUserId: profile.userId, lineProfilePic: profile.pictureUrl || '' });
+          const hasStore = !!this.state.storeCode;
+          this.setState({
+            employeeName: profile.displayName,
+            lineUserId: profile.userId,
+            lineProfilePic: profile.pictureUrl || '',
+            selectedHistoryEmployee: profile.displayName,
+            ...(hasStore && { screen: 'form' }),
+          });
         }
       } catch (err) { console.error('[LIFF] init error:', err); }
     })();
