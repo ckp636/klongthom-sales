@@ -567,7 +567,8 @@
 <script type="text/x-dc" data-dc-script>
 class Component extends DCLogic {
   // ตั้งเป็น false ก่อน deploy จริง เพื่อซ่อน dev tools
-  DEV_MODE = ['localhost', '127.0.0.1', ''].includes(location.hostname);
+  DEV_MODE = ['localhost', '127.0.0.1', ''].includes(location.hostname)
+          || new URLSearchParams(location.search).get('dev') === '1';
 
   LIFF_ID = '2010674864-18QwDZSk';
 
