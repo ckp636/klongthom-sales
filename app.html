@@ -96,7 +96,7 @@
         <sc-if value="{{screenIsLogin}}" hint-placeholder-val="{{false}}">
           <div style="display:flex; flex-direction:column; height:100%;">
             <div style="padding:14px 18px; display:flex; align-items:center; background:#fff; border-bottom:1px solid #EEE8DB; flex-shrink:0;">
-              <div onClick="{{backToScan}}" style="display:flex; align-items:center; gap:6px; font-size:14px; font-weight:700; color:#0E7C66; cursor:pointer;">
+              <div onClick="{{goBack}}" style="display:flex; align-items:center; gap:6px; font-size:14px; font-weight:700; color:#0E7C66; cursor:pointer;">
                 <span style="font-size:18px; line-height:1;">←</span> เปลี่ยนร้านค้า
               </div>
             </div>
@@ -115,8 +115,8 @@
                 <div style="width:100%; border-top:1px dashed #DDD5C4; padding-top:16px; display:flex; flex-direction:column; gap:8px;">
                   <div style="font-size:12px; color:#9AA39D;">🛠 DEV เท่านั้น — จำลองสิทธิ์ผู้ใช้</div>
                   <div style="display:flex; gap:8px;">
-                    <div onClick="{{setRoleStaff}}" style="{{roleStaffStyle}}">พนักงานทั่วไป</div>
-                    <div onClick="{{setRoleAdmin}}" style="{{roleAdminStyle}}">แอดมิน</div>
+                    <div onClick="{{devLoginStaff}}" style="flex:1; text-align:center; padding:11px 0; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; background:#EFE9DC; color:#1E2A26; border:1.5px solid #DDD5C4;">พนักงานทั่วไป</div>
+                    <div onClick="{{devLoginAdmin}}" style="flex:1; text-align:center; padding:11px 0; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; background:#0E7C66; color:#fff; border:1.5px solid #0E7C66;">แอดมิน</div>
                   </div>
                 </div>
               </sc-if>
@@ -127,7 +127,7 @@
         <sc-if value="{{screenIsForm}}" hint-placeholder-val="{{false}}">
           <div style="display:flex; flex-direction:column; height:100%;">
             <div style="padding:16px 18px; display:flex; align-items:center; justify-content:space-between; background:#fff; border-bottom:1px solid #EEE8DB;">
-              <div onClick="{{backToScan}}" style="font-size:20px; color:#1E2A26; cursor:pointer; width:24px;">←</div>
+              <div onClick="{{goBack}}" style="font-size:20px; color:#1E2A26; cursor:pointer; width:24px;">←</div>
               <div style="font-size:16px; font-weight:700; color:#1E2A26;">บันทึกยอดขาย</div>
               <div onClick="{{openProfileMenu}}" style="width:30px; height:30px; border-radius:100px; background:#0E7C66; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12.5px; flex-shrink:0; cursor:pointer;">{{employeeInitial}}</div>
             </div>
@@ -143,18 +143,10 @@
               </div>
 
               <div>
-                <div style="font-size:14px; font-weight:700; color:#1E2A26; margin-bottom:8px;">วันที่</div>
-                <div style="display:flex; gap:8px;">
-                  <select value="{{fdDv}}" onChange="{{fdOd}}" style="width:56px; font-size:16px; padding:13px 4px; border-radius:14px; border:1.5px solid #DDD5C4; background:#fff; color:#1E2A26; font-family:inherit; text-align:center;">
-                    <sc-for list="{{fdDd}}" as="opt" hint-placeholder-count="31"><option value="{{opt.value}}">{{opt.label}}</option></sc-for>
-                  </select>
-                  <select value="{{fdMv}}" onChange="{{fdOm}}" style="flex:1; font-size:16px; padding:13px 10px; border-radius:14px; border:1.5px solid #DDD5C4; background:#fff; color:#1E2A26; font-family:inherit;">
-                    <sc-for list="{{fdMd}}" as="opt" hint-placeholder-count="12"><option value="{{opt.value}}">{{opt.label}}</option></sc-for>
-                  </select>
-                  <select value="{{fdYv}}" onChange="{{fdOy}}" style="width:80px; font-size:16px; padding:13px 4px; border-radius:14px; border:1.5px solid #DDD5C4; background:#fff; color:#1E2A26; font-family:inherit; text-align:center;">
-                    <sc-for list="{{fdYd}}" as="opt" hint-placeholder-count="5"><option value="{{opt.value}}">{{opt.label}}</option></sc-for>
-                  </select>
-                </div>
+                <div style="font-size:14px; font-weight:700; color:#1E2A26; margin-bottom:8px;">วันที่ขาย</div>
+                <select value="{{fdDateV}}" onChange="{{fdDateO}}" style="width:100%; font-size:15px; padding:12px 14px; border-radius:14px; border:1.5px solid #DDD5C4; background:#fff; color:#1E2A26; font-family:inherit;">
+                  <sc-for list="{{fdDateOpts}}" as="opt" hint-placeholder-count="2"><option value="{{opt.value}}">{{opt.label}}</option></sc-for>
+                </select>
               </div>
 
               <div>
@@ -192,7 +184,19 @@
 
               <div>
                 <div style="font-size:14px; font-weight:700; color:#1E2A26; margin-bottom:8px;">หลักฐานนำส่งเงินประจำวัน</div>
-                <x-import component-from-global-scope="image-slot" from="./image-slot.js" id="evidence-photo" style="width:100%; height:170px; display:block;" shape="rounded" radius="14" placeholder="แตะเพื่อถ่ายภาพ หรือเลือกจากคลังภาพ" hint-size="100%,170px"></x-import>
+                <div style="position:relative; width:100%; height:110px; border-radius:12px; overflow:hidden; background:#EFE9DC;">
+                  <sc-if value="{{hasEvidence}}" hint-placeholder-val="{{false}}">
+                    <img src="{{evidencePhotoSrc}}" style="width:100%; height:100%; object-fit:cover; display:block;"/>
+                    <div style="position:absolute; bottom:6px; right:8px; background:rgba(0,0,0,0.45); border-radius:7px; padding:3px 9px; font-size:11px; color:#fff; font-weight:600;">เปลี่ยนรูป</div>
+                  </sc-if>
+                  <sc-if value="{{noEvidence}}" hint-placeholder-val="{{true}}">
+                    <div style="width:100%; height:100%; display:flex; flex-direction:row; align-items:center; justify-content:center; gap:10px; pointer-events:none;">
+                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><rect x="2" y="6" width="20" height="14" rx="3" stroke="#B3A98F" stroke-width="1.6"/><circle cx="12" cy="13" r="3.5" stroke="#B3A98F" stroke-width="1.6"/><path d="M8 6V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v1" stroke="#B3A98F" stroke-width="1.6" stroke-linecap="round"/></svg>
+                      <div style="font-size:13px; color:#9AA39D; font-weight:600;">แตะเพื่อถ่ายภาพ หรือเลือกจากคลังภาพ</div>
+                    </div>
+                  </sc-if>
+                  <input type="file" accept="image/*" onChange="{{onEvidenceChange}}" style="position:absolute; inset:0; width:100%; height:100%; opacity:0; cursor:pointer;"/>
+                </div>
               </div>
 
               <div>
@@ -213,8 +217,9 @@
               <div onClick="{{backFromHistory}}" style="font-size:20px; color:#1E2A26; cursor:pointer;">←</div>
               <div style="font-size:16px; font-weight:700; color:#1E2A26; flex:1;">ประวัติการส่งยอด</div>
               <sc-if value="{{isAdminUser}}" hint-placeholder-val="{{false}}">
-                <div onClick="{{goToAdminReport}}" style="font-size:12.5px; font-weight:700; color:#0E7C66; background:#F1EDE1; padding:8px 12px; border-radius:100px; cursor:pointer; white-space:nowrap;">ดูรายงานแอดมิน →</div>
+                <div onClick="{{goToAdminReport}}" style="font-size:12.5px; font-weight:700; color:#0E7C66; background:#F1EDE1; padding:8px 12px; border-radius:100px; cursor:pointer; white-space:nowrap;">รายงานแอดมิน →</div>
               </sc-if>
+              <div onClick="{{openProfileMenu}}" style="width:30px; height:30px; border-radius:100px; background:#0E7C66; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12.5px; flex-shrink:0; cursor:pointer;">{{employeeInitial}}</div>
             </div>
 
             <div style="padding:14px 16px 0;">
@@ -234,40 +239,17 @@
                 </select>
               </div>
 
-              <div style="margin-bottom:12px;">
-                <div style="font-size:12.5px; font-weight:700; color:#9AA39D; margin-bottom:6px;">กรองตามช่วงวันที่</div>
-                <div style="display:flex; flex-direction:column; gap:8px;">
-                  <div>
-                    <div style="font-size:11.5px; font-weight:600; color:#B3A98F; margin-bottom:4px;">ตั้งแต่</div>
-                    <div style="display:flex; gap:6px;">
-                      <select value="{{hfDv}}" onChange="{{hfOd}}" style="width:52px; font-size:14px; padding:9px 4px; border-radius:10px; border:1.5px solid #DDD5C4; background:#fff; color:#1E2A26; font-family:inherit; text-align:center;">
-                        <sc-for list="{{hfDd}}" as="opt" hint-placeholder-count="31"><option value="{{opt.value}}">{{opt.label}}</option></sc-for>
-                      </select>
-                      <select value="{{hfMv}}" onChange="{{hfOm}}" style="flex:1; font-size:14px; padding:9px 6px; border-radius:10px; border:1.5px solid #DDD5C4; background:#fff; color:#1E2A26; font-family:inherit;">
-                        <sc-for list="{{hfMd}}" as="opt" hint-placeholder-count="12"><option value="{{opt.value}}">{{opt.label}}</option></sc-for>
-                      </select>
-                      <select value="{{hfYv}}" onChange="{{hfOy}}" style="width:72px; font-size:14px; padding:9px 4px; border-radius:10px; border:1.5px solid #DDD5C4; background:#fff; color:#1E2A26; font-family:inherit; text-align:center;">
-                        <sc-for list="{{hfYd}}" as="opt" hint-placeholder-count="5"><option value="{{opt.value}}">{{opt.label}}</option></sc-for>
-                      </select>
-                    </div>
-                  </div>
-                  <div>
-                    <div style="font-size:11.5px; font-weight:600; color:#B3A98F; margin-bottom:4px;">ถึง</div>
-                    <div style="display:flex; gap:6px;">
-                      <select value="{{htDv}}" onChange="{{htOd}}" style="width:52px; font-size:14px; padding:9px 4px; border-radius:10px; border:1.5px solid #DDD5C4; background:#fff; color:#1E2A26; font-family:inherit; text-align:center;">
-                        <sc-for list="{{htDd}}" as="opt" hint-placeholder-count="31"><option value="{{opt.value}}">{{opt.label}}</option></sc-for>
-                      </select>
-                      <select value="{{htMv}}" onChange="{{htOm}}" style="flex:1; font-size:14px; padding:9px 6px; border-radius:10px; border:1.5px solid #DDD5C4; background:#fff; color:#1E2A26; font-family:inherit;">
-                        <sc-for list="{{htMd}}" as="opt" hint-placeholder-count="12"><option value="{{opt.value}}">{{opt.label}}</option></sc-for>
-                      </select>
-                      <select value="{{htYv}}" onChange="{{htOy}}" style="width:72px; font-size:14px; padding:9px 4px; border-radius:10px; border:1.5px solid #DDD5C4; background:#fff; color:#1E2A26; font-family:inherit; text-align:center;">
-                        <sc-for list="{{htYd}}" as="opt" hint-placeholder-count="5"><option value="{{opt.value}}">{{opt.label}}</option></sc-for>
-                      </select>
-                    </div>
-                  </div>
-                  <sc-if value="{{hasHistoryDateFilter}}" hint-placeholder-val="{{false}}">
-                    <div onClick="{{clearHistoryDateFilter}}" style="padding:9px 12px; font-size:13px; font-weight:700; color:#0E7C66; border:1.5px solid #DDD5C4; border-radius:10px; cursor:pointer; text-align:center;">ล้างตัวกรอง</div>
-                  </sc-if>
+              <div style="display:flex; align-items:center; gap:5px; margin-bottom:8px; flex-wrap:nowrap;">
+                <div style="font-size:11.5px; font-weight:700; color:#9AA39D; flex-shrink:0;">กรองตามช่วงวันที่</div>
+                <div onClick="{{openHistoryPickerFrom}}" style="flex:none; background:#fff; border:1.5px solid #DDD5C4; border-radius:8px; padding:6px 10px; font-size:11.5px; font-weight:600; color:{{hfDateColor}}; cursor:pointer; white-space:nowrap;">{{hfDateLabel}}</div>
+                <div style="font-size:11px; color:#B3A98F; flex-shrink:0;">–</div>
+                <div onClick="{{openHistoryPickerTo}}" style="flex:none; background:#fff; border:1.5px solid #DDD5C4; border-radius:8px; padding:6px 10px; font-size:11.5px; font-weight:600; color:{{htDateColor}}; cursor:pointer; white-space:nowrap;">{{htDateLabel}}</div>
+                <sc-if value="{{hasHistoryDateFilter}}" hint-placeholder-val="{{false}}">
+                  <div onClick="{{clearHistoryDateFilter}}" style="font-size:12px; font-weight:700; color:#0E7C66; cursor:pointer; flex-shrink:0;">ล้าง</div>
+                </sc-if>
+                <div style="flex:1; display:flex; align-items:center; justify-content:flex-end; gap:4px;">
+                  <div style="font-size:10.5px; font-weight:700; color:#9AA39D; white-space:nowrap;">ยอดขายทั้งสิ้น</div>
+                  <div style="font-size:13px; font-weight:800; color:#0E7C66; white-space:nowrap;">฿{{filteredHistoryTotal}}</div>
                 </div>
               </div>
             </div>
@@ -283,7 +265,7 @@
                     </div>
                   </div>
                   <div onClick="{{h.select}}" style="cursor:pointer; display:flex; flex-direction:column; gap:6px;">
-                    <div style="font-size:13px; color:#7A8580;">{{h.dateDisplay}} · รอบ{{h.period}}</div>
+                    <div style="font-size:13px; color:#7A8580;">{{h.dateDisplay}} · {{h.periodLabel}}</div>
                     <div style="font-size:15px; font-weight:700; color:#0E7C66;">รวม ฿{{h.totalDisplay}}</div>
                   </div>
                 </div>
@@ -515,13 +497,11 @@
         </div>
         <div style="display:flex; align-items:center; gap:12px;">
           <div style="width:52px; height:52px; border-radius:100px; background:#0E7C66; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:20px; flex-shrink:0;">{{employeeInitial}}</div>
-          <div style="font-size:13px; color:#7A8580;">{{profileRoleLabel}}</div>
+          <div>
+            <div style="font-size:16px; font-weight:700; color:#1E2A26;">{{employeeName}}</div>
+            <div style="font-size:13px; color:#7A8580; margin-top:2px;">{{profileRoleLabel}}</div>
+          </div>
         </div>
-        <div>
-          <div style="font-size:13px; font-weight:700; color:#1E2A26; margin-bottom:8px;">ชื่อที่แสดง</div>
-          <input type="text" value="{{nameDraft}}" onChange="{{setNameDraft}}" style="width:100%; font-size:16px; padding:12px 14px; border-radius:12px; border:1.5px solid #DDD5C4; background:#fff; color:#1E2A26; font-family:inherit;"/>
-        </div>
-        <div onClick="{{saveName}}" style="width:100%; background:#0E7C66; color:#fff; font-size:15px; font-weight:700; padding:13px; border-radius:12px; text-align:center; cursor:pointer;">บันทึกชื่อ</div>
         <sc-if value="{{isAdminUser}}" hint-placeholder-val="{{false}}">
           <div onClick="{{goToAdminReport}}" style="width:100%; background:#F1EDE1; color:#0E7C66; font-size:15px; font-weight:700; padding:13px; border-radius:12px; text-align:center; cursor:pointer;">ดูรายงานแอดมิน →</div>
         </sc-if>
@@ -557,6 +537,28 @@
           <svg width="52" height="52" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="#B3A98F" stroke-width="1.6"/><circle cx="12" cy="12" r="3.5" stroke="#B3A98F" stroke-width="1.6"/></svg>
         </div>
         <div style="font-size:13.5px; color:#7A8580;">พนักงาน {{photoModalEmployee}} · {{photoModalTime}}</div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{showHistoryPicker}}" hint-placeholder-val="{{false}}">
+    <div onClick="{{closeHistoryPicker}}" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(20,26,23,0.55); display:flex; align-items:center; justify-content:center; z-index:50; padding:20px;">
+      <div onClick="{{stopPropagation}}" style="background:#fff; border-radius:18px; padding:20px; width:100%; max-width:340px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+          <div onClick="{{historyPickerPrevMonth}}" style="width:36px; height:36px; border-radius:10px; background:#F1EDE1; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:20px; color:#0E7C66; font-weight:700;">‹</div>
+          <div style="font-size:15px; font-weight:800; color:#1E2A26;">{{calMonthLabel}}</div>
+          <div onClick="{{historyPickerNextMonth}}" style="width:36px; height:36px; border-radius:10px; background:#F1EDE1; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:20px; color:#0E7C66; font-weight:700;">›</div>
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(7,1fr); gap:2px; margin-bottom:6px;">
+          <sc-for list="{{calDayHeaders}}" as="dh" hint-placeholder-count="7">
+            <div style="text-align:center; font-size:11px; font-weight:700; color:#9AA39D; padding:4px 0;">{{dh}}</div>
+          </sc-for>
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(7,1fr); gap:2px;">
+          <sc-for list="{{calendarDays}}" as="cd" hint-placeholder-count="35">
+            <div onClick="{{cd.select}}" style="{{cd.style}}">{{cd.label}}</div>
+          </sc-for>
+        </div>
       </div>
     </div>
   </sc-if>
@@ -599,6 +601,7 @@ class Component extends DCLogic {
   state = {
     mode: 'staff',
     screen: 'scan',
+    screenStack: [],
     employeeName: '',
     isAdminUser: false,
     pendingRole: 'staff',
@@ -615,10 +618,11 @@ class Component extends DCLogic {
     justSubmitted: false,
     selectedHistory: null,
     selectedHistoryEmployee: '',
-    historyDateFrom: '',
-    historyDateTo: '',
+    historyDateFrom: (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-01`; })(),
+    historyDateTo: (() => { const n = new Date(); const last = new Date(n.getFullYear(), n.getMonth()+1, 0).getDate(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(last).padStart(2,'0')}`; })(),
     photoModalSub: null,
     showProfileMenu: false,
+    evidencePhoto: null,
     nameDraft: '',
     scrollY: 0,
     lineUserId: '',
@@ -656,6 +660,9 @@ class Component extends DCLogic {
     adminDateFrom: '2026-07-05',
     adminDateTo: '2026-07-05',
     adminView: 'list',
+    historyPickerOpen: null,
+    historyPickerY: new Date().getFullYear(),
+    historyPickerM: new Date().getMonth(),
   };
 
   STORES = [
@@ -703,6 +710,19 @@ class Component extends DCLogic {
   }
 
   THAI_MONTHS_FULL = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+  THAI_MONTHS_SHORT = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  THAI_DAYS_SHORT   = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
+
+  getLast4DayOpts() {
+    const today = new Date();
+    return Array.from({ length: 2 }, (_, i) => {
+      const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() - i);
+      const iso = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      return { value: iso, label: `${d.getDate()} ${this.THAI_MONTHS_SHORT[d.getMonth()]} ${d.getFullYear() + 543} (${this.THAI_DAYS_SHORT[d.getDay()]})` };
+    });
+  }
+
+  setFormDate = (e) => this.setState({ date: e.target.value });
 
   dateSelectFor(stateKey) {
     const today = new Date();
@@ -740,9 +760,12 @@ class Component extends DCLogic {
   setRoleStaff = () => this.setState({ pendingRole: 'staff' });
   setRoleAdmin = () => this.setState({ pendingRole: 'admin' });
 
+  devLoginStaff = () => this.setState(s => ({ employeeName: 'สมชาย ใจดี', isAdminUser: false, selectedHistoryEmployee: 'สมชาย ใจดี', screen: 'form', screenStack: [...s.screenStack, s.screen] }));
+  devLoginAdmin = () => this.setState(s => ({ employeeName: 'อรทัย จัดการ (แอดมิน)', isAdminUser: true, selectedHistoryEmployee: 'อรทัย จัดการ (แอดมิน)', screen: 'form', screenStack: [...s.screenStack, s.screen] }));
+
   selectStore = (store) => {
     const next = this.state.employeeName ? 'form' : 'login';
-    this.setState({ storeCode: store.code, storeName: store.name, screen: next, manualPick: false, cash: '', transfer: '', note: '', cashError: false });
+    this.setState(s => ({ storeCode: store.code, storeName: store.name, screen: next, screenStack: [...s.screenStack, s.screen], manualPick: false, cash: '', transfer: '', note: '', cashError: false, evidencePhoto: null }));
   };
 
   startScan = async () => {
@@ -848,7 +871,7 @@ class Component extends DCLogic {
     this.selectStore(store);
   };
 
-  backToScan = () => this.setState({ screen: 'scan', manualPick: false });
+  backToScan = () => this.setState({ screen: 'scan', screenStack: [], manualPick: false });
 
   doLogin = async () => {
     if (!this.DEV_MODE) {
@@ -859,13 +882,13 @@ class Component extends DCLogic {
         return;
       }
       const profile = await liff.getProfile();
-      this.setState({ employeeName: profile.displayName, lineUserId: profile.userId, lineProfilePic: profile.pictureUrl || '', isAdminUser: false, selectedHistoryEmployee: profile.displayName, screen: 'form' });
+      this.setState(s => ({ employeeName: profile.displayName, lineUserId: profile.userId, lineProfilePic: profile.pictureUrl || '', isAdminUser: false, selectedHistoryEmployee: profile.displayName, screen: 'form', screenStack: [...s.screenStack, s.screen] }));
       return;
     }
     // DEV mock login — ใช้ role ที่เลือกจาก DEV panel (default: staff)
     const isAdmin = this.state.pendingRole === 'admin';
     const name = isAdmin ? 'อรทัย จัดการ (แอดมิน)' : 'สมชาย ใจดี';
-    this.setState({ employeeName: name, isAdminUser: isAdmin, selectedHistoryEmployee: name, screen: 'form' });
+    this.setState(s => ({ employeeName: name, isAdminUser: isAdmin, selectedHistoryEmployee: name, screen: 'form', screenStack: [...s.screenStack, s.screen] }));
   };
 
   doLogout = () => {
@@ -874,7 +897,7 @@ class Component extends DCLogic {
       employeeName: '', isAdminUser: false, pendingRole: 'staff', selectedHistoryEmployee: '',
       lineUserId: '', lineProfilePic: '',
       storeCode: '', storeName: '', cash: '', transfer: '', note: '',
-      cashError: false, manualPick: false, justSubmitted: false, screen: 'scan',
+      cashError: false, manualPick: false, justSubmitted: false, screen: 'scan', screenStack: [], evidencePhoto: null,
     });
   };
 
@@ -904,16 +927,23 @@ class Component extends DCLogic {
       justSubmitted: true,
       selectedHistoryEmployee: record.employee,
       screen: 'history',
-      cash: '', transfer: '', note: '',
+      screenStack: [...s.screenStack, s.screen],
+      cash: '', transfer: '', note: '', evidencePhoto: null,
     }));
   };
 
   dismissBanner = () => this.setState({ justSubmitted: false });
 
-  goHistory = () => this.setState({ screen: 'history' });
-  backFromHistory = () => this.setState({ screen: 'scan' });
-  backFromDetail = () => this.setState({ screen: 'history' });
-  selectHistory = (h) => this.setState({ selectedHistory: h, screen: 'historyDetail' });
+  goBack = () => this.setState(s => {
+    const stack = [...s.screenStack];
+    const prev = stack.pop() || 'scan';
+    return { screen: prev, screenStack: stack };
+  });
+
+  goHistory = () => this.setState(s => ({ screen: 'history', screenStack: [...s.screenStack, s.screen] }));
+  backFromHistory = () => this.goBack();
+  backFromDetail = () => this.goBack();
+  selectHistory = (h) => this.setState(s => ({ selectedHistory: h, screen: 'historyDetail', screenStack: [...s.screenStack, s.screen] }));
   setHistoryEmployee = (e) => this.setState({ selectedHistoryEmployee: e.target.value });
   clearHistoryDateFilter = () => this.setState({ historyDateFrom: '', historyDateTo: '' });
   clearAdminDateFilter = () => this.setState({ adminDateFrom: '', adminDateTo: '' });
@@ -922,6 +952,14 @@ class Component extends DCLogic {
   viewPhoto = (sub) => this.setState({ photoModalSub: sub });
   closePhotoModal = () => this.setState({ photoModalSub: null });
   stopPropagation = (e) => e.stopPropagation();
+
+  onEvidenceChange = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => this.setState({ evidencePhoto: ev.target.result });
+    reader.readAsDataURL(file);
+  };
 
   openProfileMenu = () => this.setState({ showProfileMenu: true, nameDraft: this.state.employeeName });
   closeProfileMenu = () => this.setState({ showProfileMenu: false });
@@ -942,13 +980,32 @@ class Component extends DCLogic {
 
   goToAdminReport = () => this.setState({ mode: 'admin', showProfileMenu: false });
 
+  openHistoryPicker = (which) => {
+    const iso = which === 'from' ? this.state.historyDateFrom : this.state.historyDateTo;
+    const d = iso ? new Date(iso + 'T00:00:00') : new Date();
+    this.setState({ historyPickerOpen: which, historyPickerY: d.getFullYear(), historyPickerM: d.getMonth() });
+  };
+  closeHistoryPicker = () => this.setState({ historyPickerOpen: null });
+  historyPickerPrevMonth = () => this.setState(s => {
+    let m = s.historyPickerM - 1, y = s.historyPickerY;
+    if (m < 0) { m = 11; y--; }
+    return { historyPickerM: m, historyPickerY: y };
+  });
+  historyPickerNextMonth = () => this.setState(s => {
+    let m = s.historyPickerM + 1, y = s.historyPickerY;
+    if (m > 11) { m = 0; y++; }
+    return { historyPickerM: m, historyPickerY: y };
+  });
+  historyPickerSelectDay = (d) => {
+    const { historyPickerOpen: which, historyPickerY: y, historyPickerM: m } = this.state;
+    const iso = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    this.setState({ [which === 'from' ? 'historyDateFrom' : 'historyDateTo']: iso, historyPickerOpen: null });
+  };
+
   renderVals() {
     const s = this.state;
     const fmt = this.fmt.bind(this);
 
-    const fd = this.dateSelectFor('date');
-    const hf = this.dateSelectFor('historyDateFrom');
-    const ht = this.dateSelectFor('historyDateTo');
     const af = this.dateSelectFor('adminDateFrom');
     const at2 = this.dateSelectFor('adminDateTo');
 
@@ -1033,21 +1090,78 @@ class Component extends DCLogic {
       ? uniqueEmployees.map(name => ({ value: name, label: name }))
       : [{ value: s.employeeName, label: s.employeeName }];
 
-    const filteredHistory = s.allHistory
+    const fmtDateDisp = (iso) => {
+      if (!iso) return 'ทุกวัน';
+      const [y2, m2, d2] = iso.split('-');
+      return `${Number(d2)} ${this.THAI_MONTHS_SHORT[Number(m2)-1]} ${Number(y2)+543}`;
+    };
+    const fmtDateShort = (iso) => {
+      if (!iso) return 'ทุกวัน';
+      const [, m2, d2] = iso.split('-');
+      return `${Number(d2)} ${this.THAI_MONTHS_SHORT[Number(m2)-1]}`;
+    };
+
+    const rawFiltered = s.allHistory
       .filter(h => h.employee === s.selectedHistoryEmployee)
       .filter(h => !s.historyDateFrom || h.date >= s.historyDateFrom)
-      .filter(h => !s.historyDateTo || h.date <= s.historyDateTo)
-      .map(h => ({
-        ...h,
-        storeLabel: `${h.storeCode} ${h.storeName}`,
-        dateDisplay: h.date,
-        totalDisplay: fmt(h.cash + h.transfer),
-        select: () => this.selectHistory(h),
-        viewPhoto: () => this.viewPhoto(h),
-      }));
+      .filter(h => !s.historyDateTo || h.date <= s.historyDateTo);
+
+    const groups = {};
+    for (const h of rawFiltered) {
+      const key = `${h.employee}|${h.date}|${h.storeCode}`;
+      if (!groups[key]) groups[key] = { ...h, cash: 0, transfer: 0, periods: [], _first: h };
+      groups[key].cash += h.cash || 0;
+      groups[key].transfer += h.transfer || 0;
+      if (h.period) groups[key].periods.push(h.period);
+    }
+
+    const filteredHistory = Object.values(groups)
+      .sort((a, b) => b.date.localeCompare(a.date))
+      .map(g => {
+        const periodLabel = g.periods.length > 1 ? `${g.periods.length} รอบ` : (g.periods[0] ? `รอบ${g.periods[0]}` : '');
+        const merged = { ...g, period: g.periods.join(', ') };
+        return {
+          ...merged,
+          storeLabel: `${g.storeCode} ${g.storeName}`,
+          dateDisplay: fmtDateDisp(g.date),
+          periodLabel,
+          totalDisplay: fmt(g.cash + g.transfer),
+          select: () => this.selectHistory(merged),
+          viewPhoto: () => this.viewPhoto(g._first),
+        };
+      });
 
     const sh = s.selectedHistory || {};
     const photoSub = s.photoModalSub;
+
+    const pickerOpen = s.historyPickerOpen;
+    const calDayHeaders = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
+    let calMonthLabel = '';
+    let calendarDays = [];
+    if (pickerOpen) {
+      const py = s.historyPickerY, pm = s.historyPickerM;
+      calMonthLabel = `${this.THAI_MONTHS_FULL[pm]} ${py + 543}`;
+      const firstDay = new Date(py, pm, 1).getDay();
+      const daysInMonth = new Date(py, pm + 1, 0).getDate();
+      const selectedISO = pickerOpen === 'from' ? s.historyDateFrom : s.historyDateTo;
+      const tn = new Date();
+      const todayISO = `${tn.getFullYear()}-${String(tn.getMonth()+1).padStart(2,'0')}-${String(tn.getDate()).padStart(2,'0')}`;
+      const cells = [];
+      for (let i = 0; i < firstDay; i++) cells.push(null);
+      for (let dd = 1; dd <= daysInMonth; dd++) cells.push(dd);
+      while (cells.length % 7 !== 0) cells.push(null);
+      calendarDays = cells.map(dd => {
+        if (!dd) return { label: '', style: 'padding:8px 2px;', select: null };
+        const iso2 = `${py}-${String(pm+1).padStart(2,'0')}-${String(dd).padStart(2,'0')}`;
+        const isSel = iso2 === selectedISO;
+        const isToday2 = iso2 === todayISO;
+        return {
+          label: String(dd),
+          select: () => this.historyPickerSelectDay(dd),
+          style: `text-align:center; padding:8px 2px; border-radius:8px; font-size:14px; font-weight:${isSel ? '700' : '400'}; cursor:pointer; background:${isSel ? '#0E7C66' : isToday2 ? '#D6F2E8' : 'transparent'}; color:${isSel ? '#fff' : isToday2 ? '#0E7C66' : '#1E2A26'};`,
+        };
+      });
+    }
 
     return {
       isDev: this.DEV_MODE,
@@ -1073,17 +1187,20 @@ class Component extends DCLogic {
 
       doLogin: this.doLogin,
       setRoleStaff: this.setRoleStaff, setRoleAdmin: this.setRoleAdmin,
-      roleStaffStyle: `flex:1; text-align:center; padding:9px 0; border-radius:10px; font-size:12.5px; font-weight:700; cursor:pointer; background:${s.pendingRole === 'staff' ? '#0E7C66' : '#fff'}; color:${s.pendingRole === 'staff' ? '#fff' : '#4E5854'}; border:1.5px solid ${s.pendingRole === 'staff' ? '#0E7C66' : '#DDD5C4'};`,
-      roleAdminStyle: `flex:1; text-align:center; padding:9px 0; border-radius:10px; font-size:12.5px; font-weight:700; cursor:pointer; background:${s.pendingRole === 'admin' ? '#0E7C66' : '#fff'}; color:${s.pendingRole === 'admin' ? '#fff' : '#4E5854'}; border:1.5px solid ${s.pendingRole === 'admin' ? '#0E7C66' : '#DDD5C4'};`,
+      devLoginStaff: this.devLoginStaff, devLoginAdmin: this.devLoginAdmin,
+      roleStaffStyle: '', roleAdminStyle: '',
 
-      formStoreLabel: `${s.storeCode} ${s.storeName}`, backToScan: this.backToScan,
-      fdDv: fd.dv, fdMv: fd.mv, fdYv: fd.yv, fdDd: fd.dd, fdMd: fd.md, fdYd: fd.yd, fdOd: fd.od, fdOm: fd.om, fdOy: fd.oy,
+      formStoreLabel: `${s.storeCode} ${s.storeName}`, backToScan: this.backToScan, goBack: this.goBack,
+      fdDateV: s.date, fdDateO: this.setFormDate, fdDateOpts: this.getLast4DayOpts(),
       periods,
       cash: s.cash, setCash: this.setCash, cashError: s.cashError,
       cashBorderColor: s.cashError ? '#C1483A' : '#DDD5C4',
       transfer: s.transfer, setTransfer: this.setTransfer,
       totalFormDisplay: fmt(cashNum + transferNum),
       note: s.note, setNote: this.setNote,
+      hasEvidence: !!s.evidencePhoto, noEvidence: !s.evidencePhoto,
+      evidencePhotoSrc: s.evidencePhoto || '',
+      onEvidenceChange: this.onEvidenceChange,
       submitForm: this.submitForm,
 
       justSubmitted: s.justSubmitted, dismissBanner: this.dismissBanner,
@@ -1092,13 +1209,23 @@ class Component extends DCLogic {
       goHistory: this.goHistory,
 
       selectedHistoryEmployee: s.selectedHistoryEmployee, setHistoryEmployee: this.setHistoryEmployee,
-      hfDv: hf.dv, hfMv: hf.mv, hfYv: hf.yv, hfDd: hf.dd, hfMd: hf.md, hfYd: hf.yd, hfOd: hf.od, hfOm: hf.om, hfOy: hf.oy,
-      htDv: ht.dv, htMv: ht.mv, htYv: ht.yv, htDd: ht.dd, htMd: ht.md, htYd: ht.yd, htOd: ht.od, htOm: ht.om, htOy: ht.oy,
       hasHistoryDateFilter: !!(s.historyDateFrom || s.historyDateTo), clearHistoryDateFilter: this.clearHistoryDateFilter,
+      openHistoryPickerFrom: () => this.openHistoryPicker('from'),
+      openHistoryPickerTo: () => this.openHistoryPicker('to'),
+      closeHistoryPicker: this.closeHistoryPicker,
+      historyPickerPrevMonth: this.historyPickerPrevMonth,
+      historyPickerNextMonth: this.historyPickerNextMonth,
+      showHistoryPicker: !!pickerOpen,
+      calMonthLabel, calDayHeaders, calendarDays,
+      hfDateLabel: fmtDateDisp(s.historyDateFrom),
+      htDateLabel: fmtDateDisp(s.historyDateTo),
+      hfDateColor: s.historyDateFrom ? '#1E2A26' : '#B3A98F',
+      htDateColor: s.historyDateTo ? '#1E2A26' : '#B3A98F',
       employeeOptions,
       historyDropdownDisabled: !s.isAdminUser,
       historyDropdownStyle: `width:100%; font-size:15px; font-weight:700; padding:12px 14px; border-radius:12px; border:1.5px solid #DDD5C4; background:${s.isAdminUser ? '#fff' : '#F1EDE1'}; color:#1E2A26; font-family:inherit;`,
       filteredHistory, backFromHistory: this.backFromHistory,
+      filteredHistoryTotal: fmt(filteredHistory.reduce((sum, h) => sum + (h.cash||0) + (h.transfer||0), 0)),
 
       detailEmployee: sh.employee || '',
       detailStoreLabel: sh.storeCode ? `${sh.storeCode} ${sh.storeName}` : '', detailDate: sh.date || '',
