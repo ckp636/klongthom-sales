@@ -177,9 +177,27 @@
                 </div>
               </div>
 
-              <div style="background:#0E7C66; border-radius:14px; padding:14px 16px; display:flex; align-items:center; justify-content:space-between;">
-                <div style="font-size:14px; font-weight:700; color:#D6F2E8;">รวมนำส่งทั้งหมด</div>
-                <div style="font-size:22px; font-weight:800; color:#fff;">฿{{totalFormDisplay}}</div>
+              <div>
+                <div style="font-size:14px; font-weight:700; color:#1E2A26; margin-bottom:8px;">(หัก) ค่าใช้จ่าย</div>
+                <div style="display:flex; align-items:center; border-radius:14px; border:1.5px solid #DDD5C4; background:#fff; overflow:hidden;">
+                  <div style="padding:14px 14px; font-size:20px; font-weight:800; color:#C1483A; background:#FCECEA;">฿</div>
+                  <input type="text" inputmode="numeric" placeholder="0" value="{{expense}}" onChange="{{setExpense}}" style="flex:1; border:none; outline:none; font-size:22px; font-weight:700; padding:12px 14px; color:#1E2A26; font-family:inherit; min-width:0;"/>
+                </div>
+              </div>
+
+              <div style="background:#0E7C66; border-radius:14px; padding:14px 16px; display:flex; flex-direction:column; gap:6px;">
+                <sc-if value="{{hasFormExpense}}" hint-placeholder-val="{{false}}">
+                  <div style="display:flex; justify-content:space-between; font-size:13px; color:#A8DFC9;">
+                    <span>ยอดรวม (สด + โอน)</span><span>฿{{grossFormDisplay}}</span>
+                  </div>
+                  <div style="display:flex; justify-content:space-between; font-size:13px; color:#A8DFC9; border-bottom:1px solid rgba(255,255,255,0.2); padding-bottom:8px;">
+                    <span>(หัก) ค่าใช้จ่าย</span><span>−฿{{expenseFormDisplay}}</span>
+                  </div>
+                </sc-if>
+                <div style="display:flex; align-items:center; justify-content:space-between;">
+                  <div style="font-size:14px; font-weight:700; color:#D6F2E8;">รวมนำส่งทั้งหมด</div>
+                  <div style="font-size:22px; font-weight:800; color:#fff;">฿{{totalFormDisplay}}</div>
+                </div>
               </div>
 
               <div>
@@ -256,17 +274,14 @@
 
             <div style="flex:1; overflow-y:auto; padding:0 16px 16px; display:flex; flex-direction:column; gap:10px;">
               <sc-for list="{{filteredHistory}}" as="h" hint-placeholder-count="3">
-                <div style="background:#fff; border:1px solid #EEE8DB; border-radius:14px; padding:14px; display:flex; flex-direction:column; gap:6px;">
-                  <div style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onClick="{{h.select}}">
-                    <div style="font-size:15px; font-weight:800; color:#1E2A26;">{{h.storeLabel}}</div>
-                    <div onClick="{{h.viewPhoto}}" style="display:inline-flex; align-items:center; gap:6px; background:#F1EDE1; padding:5px 12px; border-radius:100px; font-size:11.5px; font-weight:700; color:#0E7C66; cursor:pointer; white-space:nowrap;">
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="#0E7C66" stroke-width="1.8"/><circle cx="12" cy="12" r="3.2" stroke="#0E7C66" stroke-width="1.8"/></svg>
-                      ดูรูป
-                    </div>
+                <div onClick="{{h.select}}" style="background:#fff; border:1px solid #EEE8DB; border-radius:14px; padding:14px; display:flex; flex-direction:column; gap:8px; cursor:pointer;">
+                  <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+                    <div style="font-size:14px; color:#1E2A26; font-weight:700;">{{h.dateDisplay}} · {{h.storeCode}}</div>
+                    <div style="font-size:16px; font-weight:800; color:#0E7C66; white-space:nowrap;">฿{{h.totalDisplay}}</div>
                   </div>
-                  <div onClick="{{h.select}}" style="cursor:pointer; display:flex; flex-direction:column; gap:6px;">
-                    <div style="font-size:13px; color:#7A8580;">{{h.dateDisplay}} · {{h.periodLabel}}</div>
-                    <div style="font-size:15px; font-weight:700; color:#0E7C66;">รวม ฿{{h.totalDisplay}}</div>
+                  <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                    <div style="font-size:13px; color:#7A8580;">{{h.periodLabel}}</div>
+                    <div style="font-size:12.5px; color:#4E5854; white-space:nowrap;">{{h.subDisplay}}</div>
                   </div>
                 </div>
               </sc-for>
@@ -285,16 +300,21 @@
                 <div style="display:flex; justify-content:space-between; font-size:14px;"><span style="color:#9AA39D;">พนักงาน</span><span style="font-weight:700; color:#1E2A26;">{{detailEmployee}}</span></div>
                 <div style="display:flex; justify-content:space-between; font-size:14px;"><span style="color:#9AA39D;">ร้านค้า</span><span style="font-weight:700; color:#1E2A26;">{{detailStoreLabel}}</span></div>
                 <div style="display:flex; justify-content:space-between; font-size:14px;"><span style="color:#9AA39D;">วันที่</span><span style="font-weight:700; color:#1E2A26;">{{detailDate}}</span></div>
-                <div style="display:flex; justify-content:space-between; font-size:14px;"><span style="color:#9AA39D;">รอบ</span><span style="font-weight:700; color:#1E2A26;">{{detailPeriod}}</span></div>
-                <div style="display:flex; justify-content:space-between; font-size:14px;"><span style="color:#9AA39D;">เงินสด</span><span style="font-weight:700; color:#1E2A26;">฿{{detailCash}}</span></div>
-                <div style="display:flex; justify-content:space-between; font-size:14px;"><span style="color:#9AA39D;">เงินโอน</span><span style="font-weight:700; color:#1E2A26;">฿{{detailTransfer}}</span></div>
-                <div style="display:flex; justify-content:space-between; font-size:15px; border-top:1px solid #F0EBDF; padding-top:8px;"><span style="color:#1E2A26; font-weight:700;">รวม</span><span style="font-weight:800; color:#0E7C66;">฿{{detailTotal}}</span></div>
               </div>
-              <div>
-                <div style="font-size:14px; font-weight:700; color:#1E2A26; margin-bottom:8px;">หลักฐานนำส่งเงิน</div>
-                <div style="width:100%; height:170px; border-radius:14px; background:#EFE9DC; display:flex; align-items:center; justify-content:center; color:#B3A98F;">
-                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="#B3A98F" stroke-width="1.6"/><circle cx="12" cy="12" r="3.5" stroke="#B3A98F" stroke-width="1.6"/></svg>
+              <sc-for list="{{detailRecords}}" as="r" hint-placeholder-count="1">
+                <div style="background:#fff; border:1px solid #EEE8DB; border-radius:16px; padding:16px; display:flex; flex-direction:column; gap:8px;">
+                  <div style="font-size:13px; font-weight:700; color:#0E7C66; background:#F1EDE1; display:inline-block; padding:3px 10px; border-radius:100px; align-self:flex-start;">รอบ{{r.period}}</div>
+                  <div style="display:flex; justify-content:space-between; font-size:14px;"><span style="color:#9AA39D;">เงินสด</span><span style="font-weight:700; color:#1E2A26;">฿{{r.cash}}</span></div>
+                  <div style="display:flex; justify-content:space-between; font-size:14px;"><span style="color:#9AA39D;">เงินโอน</span><span style="font-weight:700; color:#1E2A26;">฿{{r.transfer}}</span></div>
+                  <sc-if value="{{r.hasExpense}}" hint-placeholder-val="{{false}}">
+                    <div style="display:flex; justify-content:space-between; font-size:14px;"><span style="color:#9AA39D;">(หัก) ค่าใช้จ่าย</span><span style="font-weight:700; color:#C1483A;">−฿{{r.expense}}</span></div>
+                  </sc-if>
+                  <div style="display:flex; justify-content:space-between; font-size:15px; border-top:1px solid #F0EBDF; padding-top:8px;"><span style="color:#1E2A26; font-weight:700;">รวม</span><span style="font-weight:800; color:#0E7C66;">฿{{r.total}}</span></div>
                 </div>
+              </sc-for>
+              <div style="background:#0E7C66; border-radius:14px; padding:14px 16px; display:flex; justify-content:space-between; align-items:center;">
+                <div style="font-size:14px; font-weight:700; color:#D6F2E8;">รวมทั้งหมด</div>
+                <div style="font-size:20px; font-weight:800; color:#fff;">฿{{detailTotal}}</div>
               </div>
             </div>
           </div>
@@ -505,6 +525,7 @@
         <sc-if value="{{isAdminUser}}" hint-placeholder-val="{{false}}">
           <div onClick="{{goToAdminReport}}" style="width:100%; background:#F1EDE1; color:#0E7C66; font-size:15px; font-weight:700; padding:13px; border-radius:12px; text-align:center; cursor:pointer;">ดูรายงานแอดมิน →</div>
         </sc-if>
+        <div onClick="{{goToHistory}}" style="width:100%; background:#F1EDE1; color:#0E7C66; font-size:15px; font-weight:700; padding:13px; border-radius:12px; text-align:center; cursor:pointer;">ประวัติส่งยอด →</div>
         <div onClick="{{doLogout}}" style="width:100%; border:1.5px solid #DDD5C4; color:#B04A3B; font-size:14.5px; font-weight:700; padding:12px; border-radius:12px; text-align:center; cursor:pointer;">ออกจากระบบ</div>
       </div>
     </div>
@@ -611,6 +632,7 @@ class Component extends DCLogic {
     period: 'เย็น',
     cash: '',
     transfer: '',
+    expense: '',
     note: '',
     cashError: false,
     manualPick: false,
@@ -765,7 +787,7 @@ class Component extends DCLogic {
 
   selectStore = (store) => {
     const next = this.state.employeeName ? 'form' : 'login';
-    this.setState(s => ({ storeCode: store.code, storeName: store.name, screen: next, screenStack: [...s.screenStack, s.screen], manualPick: false, cash: '', transfer: '', note: '', cashError: false, evidencePhoto: null }));
+    this.setState(s => ({ storeCode: store.code, storeName: store.name, screen: next, screenStack: [...s.screenStack, s.screen], manualPick: false, cash: '', transfer: '', expense: '', note: '', cashError: false, evidencePhoto: null }));
   };
 
   startScan = async () => {
@@ -896,13 +918,14 @@ class Component extends DCLogic {
     this.setState({
       employeeName: '', isAdminUser: false, pendingRole: 'staff', selectedHistoryEmployee: '',
       lineUserId: '', lineProfilePic: '',
-      storeCode: '', storeName: '', cash: '', transfer: '', note: '',
+      storeCode: '', storeName: '', cash: '', transfer: '', expense: '', note: '',
       cashError: false, manualPick: false, justSubmitted: false, screen: 'scan', screenStack: [], evidencePhoto: null,
     });
   };
 
   setCash = (e) => this.setState({ cash: this.onlyDigits(e.target.value), cashError: false });
   setTransfer = (e) => this.setState({ transfer: this.onlyDigits(e.target.value) });
+  setExpense = (e) => this.setState({ expense: this.onlyDigits(e.target.value) });
   setNote = (e) => this.setState({ note: e.target.value });
   setPeriod = (p) => this.setState({ period: p });
 
@@ -913,22 +936,23 @@ class Component extends DCLogic {
     // เพื่อป้องกันการปลอม QR code หรือแก้ไข shop parameter ใน URL
     const cashNum = Number(this.state.cash || 0);
     const transferNum = Number(this.state.transfer || 0);
+    const expenseNum = Number(this.state.expense || 0);
     const record = {
       id: 'live-' + Date.now(),
       storeCode: this.state.storeCode, storeName: this.state.storeName,
-      employee: this.state.employeeName, cash: cashNum, transfer: transferNum,
+      employee: this.state.employeeName, cash: cashNum, transfer: transferNum, expense: expenseNum,
       time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
       period: this.state.period, date: this.state.date,
     };
     this.setState(s => ({
       submissionsToday: [...s.submissionsToday, record],
-      allHistory: [{ id: record.id, employee: record.employee, date: record.date, storeCode: record.storeCode, storeName: record.storeName, period: record.period, cash: record.cash, transfer: record.transfer }, ...s.allHistory],
+      allHistory: [{ id: record.id, employee: record.employee, date: record.date, storeCode: record.storeCode, storeName: record.storeName, period: record.period, cash: record.cash, transfer: record.transfer, expense: record.expense }, ...s.allHistory],
       lastSubmission: record,
       justSubmitted: true,
       selectedHistoryEmployee: record.employee,
       screen: 'history',
       screenStack: [...s.screenStack, s.screen],
-      cash: '', transfer: '', note: '', evidencePhoto: null,
+      cash: '', transfer: '', expense: '', note: '', evidencePhoto: null,
     }));
   };
 
@@ -979,6 +1003,7 @@ class Component extends DCLogic {
   };
 
   goToAdminReport = () => this.setState({ mode: 'admin', showProfileMenu: false });
+  goToHistory = () => this.setState(s => ({ screen: 'history', screenStack: [...s.screenStack, s.screen], showProfileMenu: false }));
 
   openHistoryPicker = (which) => {
     const iso = which === 'from' ? this.state.historyDateFrom : this.state.historyDateTo;
@@ -1022,6 +1047,7 @@ class Component extends DCLogic {
 
     const cashNum = Number(s.cash || 0);
     const transferNum = Number(s.transfer || 0);
+    const expenseNum = Number(s.expense || 0);
 
     const dedup = new Map();
     s.submissionsToday.forEach(r => dedup.set(r.id, r));
@@ -1109,25 +1135,32 @@ class Component extends DCLogic {
     const groups = {};
     for (const h of rawFiltered) {
       const key = `${h.employee}|${h.date}|${h.storeCode}`;
-      if (!groups[key]) groups[key] = { ...h, cash: 0, transfer: 0, periods: [], _first: h };
+      if (!groups[key]) groups[key] = { ...h, cash: 0, transfer: 0, expense: 0, periods: [], _first: h, _records: [] };
       groups[key].cash += h.cash || 0;
       groups[key].transfer += h.transfer || 0;
+      groups[key].expense += h.expense || 0;
       if (h.period) groups[key].periods.push(h.period);
+      groups[key]._records.push(h);
     }
 
     const filteredHistory = Object.values(groups)
       .sort((a, b) => b.date.localeCompare(a.date))
       .map(g => {
-        const periodLabel = g.periods.length > 1 ? `${g.periods.length} รอบ` : (g.periods[0] ? `รอบ${g.periods[0]}` : '');
+        const periodLabel = g.periods.join(', ');
         const merged = { ...g, period: g.periods.join(', ') };
+        const expTotal = g.expense || 0;
+        const subParts = [`สด ฿${fmt(g.cash)}`, `โอน ฿${fmt(g.transfer)}`];
+        if (expTotal > 0) subParts.push(`หัก ฿${fmt(expTotal)}`);
         return {
           ...merged,
           storeLabel: `${g.storeCode} ${g.storeName}`,
           dateDisplay: fmtDateDisp(g.date),
           periodLabel,
-          totalDisplay: fmt(g.cash + g.transfer),
-          select: () => this.selectHistory(merged),
-          viewPhoto: () => this.viewPhoto(g._first),
+          totalDisplay: fmt(g.cash + g.transfer - expTotal),
+          cashDisplay: fmt(g.cash),
+          transferDisplay: fmt(g.transfer),
+          subDisplay: subParts.join(' / '),
+          select: () => this.selectHistory({ ...merged, _records: g._records }),
         };
       });
 
@@ -1196,7 +1229,11 @@ class Component extends DCLogic {
       cash: s.cash, setCash: this.setCash, cashError: s.cashError,
       cashBorderColor: s.cashError ? '#C1483A' : '#DDD5C4',
       transfer: s.transfer, setTransfer: this.setTransfer,
-      totalFormDisplay: fmt(cashNum + transferNum),
+      expense: s.expense, setExpense: this.setExpense,
+      hasFormExpense: expenseNum > 0,
+      grossFormDisplay: fmt(cashNum + transferNum),
+      expenseFormDisplay: fmt(expenseNum),
+      totalFormDisplay: fmt(cashNum + transferNum - expenseNum),
       note: s.note, setNote: this.setNote,
       hasEvidence: !!s.evidencePhoto, noEvidence: !s.evidencePhoto,
       evidencePhotoSrc: s.evidencePhoto || '',
@@ -1228,9 +1265,17 @@ class Component extends DCLogic {
       filteredHistoryTotal: fmt(filteredHistory.reduce((sum, h) => sum + (h.cash||0) + (h.transfer||0), 0)),
 
       detailEmployee: sh.employee || '',
-      detailStoreLabel: sh.storeCode ? `${sh.storeCode} ${sh.storeName}` : '', detailDate: sh.date || '',
-      detailPeriod: sh.period || '', detailCash: fmt(sh.cash), detailTransfer: fmt(sh.transfer),
-      detailTotal: fmt((sh.cash || 0) + (sh.transfer || 0)), backFromDetail: this.backFromDetail,
+      detailStoreLabel: sh.storeCode ? `${sh.storeCode} ${sh.storeName}` : '',
+      detailDate: sh.date ? (() => { const [y2,m2,d2] = sh.date.split('-'); return `${Number(d2)} ${this.THAI_MONTHS_SHORT[Number(m2)-1]} ${Number(y2)+543}`; })() : '',
+      detailRecords: (sh._records || (sh.employee ? [sh] : [])).map(r => ({
+        period: r.period || '',
+        cash: fmt(r.cash),
+        transfer: fmt(r.transfer),
+        expense: fmt(r.expense || 0),
+        hasExpense: (r.expense || 0) > 0,
+        total: fmt((r.cash||0) + (r.transfer||0) - (r.expense||0)),
+      })),
+      detailTotal: fmt((sh.cash || 0) + (sh.transfer || 0) - (sh.expense || 0)), backFromDetail: this.backFromDetail,
 
       submissionsToday,
       totalTodayDisplay: fmt(totalToday), totalCashTodayDisplay: fmt(totalCashToday), totalTransferTodayDisplay: fmt(totalTransferToday),
@@ -1258,6 +1303,7 @@ class Component extends DCLogic {
       profileRoleLabel: s.isAdminUser ? 'สิทธิ์ผู้ใช้: แอดมิน' : 'สิทธิ์ผู้ใช้: พนักงานทั่วไป',
       nameDraft: s.nameDraft, setNameDraft: this.setNameDraft, saveName: this.saveName,
       goToAdminReport: this.goToAdminReport,
+      goToHistory: this.goToHistory,
 
       showPhotoModal: !!photoSub,
       photoModalOverlayStyle: `position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(20,26,23,0.55); display:flex; align-items:center; justify-content:center; z-index:50; padding:20px;`,
