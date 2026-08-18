@@ -353,9 +353,9 @@
         </div>
       </div>
 
-      <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px;">
+      <div style="display:grid; grid-template-columns:repeat(5,1fr); gap:16px;">
         <div style="background:#fff; border:1px solid #EEE8DB; border-radius:16px; padding:18px;">
-          <div style="font-size:13px; color:#9AA39D; font-weight:600;">ยอดรวมในช่วงที่เลือก</div>
+          <div style="font-size:13px; color:#9AA39D; font-weight:600;">ยอดสุทธิในช่วงที่เลือก</div>
           <div style="font-size:26px; font-weight:800; color:#1E2A26; margin-top:6px;">฿{{totalTodayDisplay}}</div>
         </div>
         <div style="background:#fff; border:1px solid #EEE8DB; border-radius:16px; padding:18px;">
@@ -365,6 +365,10 @@
         <div style="background:#fff; border:1px solid #EEE8DB; border-radius:16px; padding:18px;">
           <div style="font-size:13px; color:#9AA39D; font-weight:600;">เงินโอน</div>
           <div style="font-size:26px; font-weight:800; color:#1E2A26; margin-top:6px;">฿{{totalTransferTodayDisplay}}</div>
+        </div>
+        <div style="background:#fff; border:1px solid #F0CFC2; border-radius:16px; padding:18px;">
+          <div style="font-size:13px; color:#B0432F; font-weight:600;">(หัก) ค่าใช้จ่าย</div>
+          <div style="font-size:26px; font-weight:800; color:#B0432F; margin-top:6px;">฿{{totalExpenseTodayDisplay}}</div>
         </div>
         <div style="background:#0E7C66; border-radius:16px; padding:18px;">
           <div style="font-size:13px; color:#CFEDE1; font-weight:600;">ร้านที่ส่งยอดแล้ว</div>
@@ -408,7 +412,8 @@
                 <th style="padding:10px 8px; font-size:13px; color:#9AA39D;">เวลา / รอบ</th>
                 <th style="padding:10px 8px; font-size:13px; color:#9AA39D; text-align:right;">เงินสด</th>
                 <th style="padding:10px 8px; font-size:13px; color:#9AA39D; text-align:right;">เงินโอน</th>
-                <th style="padding:10px 8px; font-size:13px; color:#9AA39D; text-align:right;">รวม</th>
+                <th style="padding:10px 8px; font-size:13px; color:#B0432F; text-align:right;">(หัก)</th>
+                <th style="padding:10px 8px; font-size:13px; color:#9AA39D; text-align:right;">สุทธิ</th>
                 <th style="padding:10px 8px; font-size:13px; color:#9AA39D;">หลักฐาน</th>
               </tr>
             </thead>
@@ -421,7 +426,8 @@
                   <td style="padding:12px 8px; font-size:13.5px; color:#7A8580;">{{sub.timeDisplay}}</td>
                   <td style="padding:12px 8px; font-size:14px; color:#1E2A26; text-align:right;">฿{{sub.cashDisplay}}</td>
                   <td style="padding:12px 8px; font-size:14px; color:#1E2A26; text-align:right;">฿{{sub.transferDisplay}}</td>
-                  <td style="padding:12px 8px; font-size:14.5px; font-weight:800; color:#0E7C66; text-align:right;">฿{{sub.totalDisplay}}</td>
+                  <td style="padding:12px 8px; font-size:14px; color:{{sub.expenseCellColor}}; text-align:right; white-space:nowrap;">{{sub.expenseCell}}</td>
+                  <td style="padding:12px 8px; font-size:14.5px; font-weight:800; color:#0E7C66; text-align:right;">฿{{sub.netDisplay}}</td>
                   <td style="padding:12px 8px;">
                     <div onClick="{{sub.viewPhoto}}" style="display:inline-flex; align-items:center; gap:6px; background:#F1EDE1; padding:7px 12px; border-radius:100px; font-size:12.5px; font-weight:700; color:#0E7C66; cursor:pointer; white-space:nowrap;">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="#0E7C66" stroke-width="1.8"/><circle cx="12" cy="12" r="3.2" stroke="#0E7C66" stroke-width="1.8"/></svg>
@@ -445,7 +451,8 @@
                 <th style="padding:10px 8px; font-size:13px; color:#9AA39D; text-align:right;">จำนวนครั้งที่ส่ง</th>
                 <th style="padding:10px 8px; font-size:13px; color:#9AA39D; text-align:right;">เงินสด</th>
                 <th style="padding:10px 8px; font-size:13px; color:#9AA39D; text-align:right;">เงินโอน</th>
-                <th style="padding:10px 8px; font-size:13px; color:#9AA39D; text-align:right;">รวม</th>
+                <th style="padding:10px 8px; font-size:13px; color:#B0432F; text-align:right;">(หัก)</th>
+                <th style="padding:10px 8px; font-size:13px; color:#9AA39D; text-align:right;">สุทธิ</th>
               </tr>
             </thead>
             <tbody>
@@ -455,7 +462,8 @@
                   <td style="padding:12px 8px; font-size:14px; color:#4E5854; text-align:right;">{{g.count}}</td>
                   <td style="padding:12px 8px; font-size:14px; color:#1E2A26; text-align:right;">฿{{g.cashDisplay}}</td>
                   <td style="padding:12px 8px; font-size:14px; color:#1E2A26; text-align:right;">฿{{g.transferDisplay}}</td>
-                  <td style="padding:12px 8px; font-size:14.5px; font-weight:800; color:#0E7C66; text-align:right;">฿{{g.totalDisplay}}</td>
+                  <td style="padding:12px 8px; font-size:14px; color:{{g.expenseCellColor}}; text-align:right;">{{g.expenseCell}}</td>
+                  <td style="padding:12px 8px; font-size:14.5px; font-weight:800; color:#0E7C66; text-align:right;">฿{{g.netDisplay}}</td>
                 </tr>
               </sc-for>
             </tbody>
@@ -473,7 +481,8 @@
                 <th style="padding:10px 8px; font-size:13px; color:#9AA39D; text-align:right;">จำนวนครั้งที่ส่ง</th>
                 <th style="padding:10px 8px; font-size:13px; color:#9AA39D; text-align:right;">เงินสด</th>
                 <th style="padding:10px 8px; font-size:13px; color:#9AA39D; text-align:right;">เงินโอน</th>
-                <th style="padding:10px 8px; font-size:13px; color:#9AA39D; text-align:right;">รวม</th>
+                <th style="padding:10px 8px; font-size:13px; color:#B0432F; text-align:right;">(หัก)</th>
+                <th style="padding:10px 8px; font-size:13px; color:#9AA39D; text-align:right;">สุทธิ</th>
               </tr>
             </thead>
             <tbody>
@@ -483,7 +492,8 @@
                   <td style="padding:12px 8px; font-size:14px; color:#4E5854; text-align:right;">{{g.count}}</td>
                   <td style="padding:12px 8px; font-size:14px; color:#1E2A26; text-align:right;">฿{{g.cashDisplay}}</td>
                   <td style="padding:12px 8px; font-size:14px; color:#1E2A26; text-align:right;">฿{{g.transferDisplay}}</td>
-                  <td style="padding:12px 8px; font-size:14.5px; font-weight:800; color:#0E7C66; text-align:right;">฿{{g.totalDisplay}}</td>
+                  <td style="padding:12px 8px; font-size:14px; color:{{g.expenseCellColor}}; text-align:right;">{{g.expenseCell}}</td>
+                  <td style="padding:12px 8px; font-size:14.5px; font-weight:800; color:#0E7C66; text-align:right;">฿{{g.netDisplay}}</td>
                 </tr>
               </sc-for>
             </tbody>
@@ -1092,6 +1102,9 @@ class Component extends DCLogic {
       ...sub,
       storeLabel: `${sub.storeCode} ${sub.storeName}`,
       timeDisplay: sub.time ? `${sub.time} · ${sub.period}` : sub.period,
+      expenseCell: (sub.expense || 0) > 0 ? `฿${fmt(sub.expense)}` : '—',
+      expenseCellColor: (sub.expense || 0) > 0 ? '#B0432F' : '#C8C2B4',
+      netDisplay: fmt(sub.cash + sub.transfer - (sub.expense || 0)),
       cashDisplay: fmt(sub.cash),
       transferDisplay: fmt(sub.transfer),
       totalDisplay: fmt(sub.cash + sub.transfer),
@@ -1100,7 +1113,8 @@ class Component extends DCLogic {
 
     const totalCashToday = adminFiltered.reduce((a, b) => a + b.cash, 0);
     const totalTransferToday = adminFiltered.reduce((a, b) => a + b.transfer, 0);
-    const totalToday = totalCashToday + totalTransferToday;
+    const totalExpenseToday = adminFiltered.reduce((a, b) => a + (b.expense || 0), 0);
+    const totalToday = totalCashToday + totalTransferToday - totalExpenseToday;
 
     const isSingleDay = !!s.adminDateFrom && s.adminDateFrom === s.adminDateTo;
     const reportedCodes = new Set(adminFiltered.map(x => x.storeCode));
@@ -1110,24 +1124,24 @@ class Component extends DCLogic {
 
     const empMap = new Map();
     adminFiltered.forEach(r => {
-      const e = empMap.get(r.employee) || { employee: r.employee, count: 0, cash: 0, transfer: 0 };
-      e.count += 1; e.cash += r.cash; e.transfer += r.transfer;
+      const e = empMap.get(r.employee) || { employee: r.employee, count: 0, cash: 0, transfer: 0, expense: 0 };
+      e.count += 1; e.cash += r.cash; e.transfer += r.transfer; e.expense += (r.expense || 0);
       empMap.set(r.employee, e);
     });
     const groupedByEmployee = [...empMap.values()]
-      .map(g => ({ ...g, cashDisplay: fmt(g.cash), transferDisplay: fmt(g.transfer), totalDisplay: fmt(g.cash + g.transfer) }))
-      .sort((a, b) => (b.cash + b.transfer) - (a.cash + a.transfer));
+      .map(g => ({ ...g, cashDisplay: fmt(g.cash), transferDisplay: fmt(g.transfer), expenseCell: g.expense > 0 ? `฿${fmt(g.expense)}` : '—', expenseCellColor: g.expense > 0 ? '#B0432F' : '#C8C2B4', netDisplay: fmt(g.cash + g.transfer - g.expense) }))
+      .sort((a, b) => (b.cash + b.transfer - b.expense) - (a.cash + a.transfer - a.expense));
 
     const storeMap = new Map();
     adminFiltered.forEach(r => {
       const key = r.storeCode;
-      const g = storeMap.get(key) || { storeLabel: `${r.storeCode} ${r.storeName}`, count: 0, cash: 0, transfer: 0 };
-      g.count += 1; g.cash += r.cash; g.transfer += r.transfer;
+      const g = storeMap.get(key) || { storeLabel: `${r.storeCode} ${r.storeName}`, count: 0, cash: 0, transfer: 0, expense: 0 };
+      g.count += 1; g.cash += r.cash; g.transfer += r.transfer; g.expense += (r.expense || 0);
       storeMap.set(key, g);
     });
     const groupedByStore = [...storeMap.values()]
-      .map(g => ({ ...g, cashDisplay: fmt(g.cash), transferDisplay: fmt(g.transfer), totalDisplay: fmt(g.cash + g.transfer) }))
-      .sort((a, b) => (b.cash + b.transfer) - (a.cash + a.transfer));
+      .map(g => ({ ...g, cashDisplay: fmt(g.cash), transferDisplay: fmt(g.transfer), expenseCell: g.expense > 0 ? `฿${fmt(g.expense)}` : '—', expenseCellColor: g.expense > 0 ? '#B0432F' : '#C8C2B4', netDisplay: fmt(g.cash + g.transfer - g.expense) }))
+      .sort((a, b) => (b.cash + b.transfer - b.expense) - (a.cash + a.transfer - a.expense));
 
     const weekData = [...this.WEEK_HISTORY, { d: '5 ก.ค. (วันนี้)', v: totalToday, today: true }];
     const maxV = Math.max(...weekData.map(w => w.v), 1);
@@ -1338,6 +1352,7 @@ class Component extends DCLogic {
 
       submissionsToday,
       totalTodayDisplay: fmt(totalToday), totalCashTodayDisplay: fmt(totalCashToday), totalTransferTodayDisplay: fmt(totalTransferToday),
+      totalExpenseTodayDisplay: fmt(totalExpenseToday), hasAdminExpense: totalExpenseToday > 0,
       reportedCount: reportedCodes.size, totalStoreCount: this.STORES.length,
       hasNotReported: notReportedStores.length > 0, notReportedCount: notReportedStores.length, notReportedStores,
       isSingleDay,
