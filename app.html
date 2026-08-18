@@ -126,9 +126,15 @@
 
         <sc-if value="{{screenIsForm}}" hint-placeholder-val="{{false}}">
           <div style="display:flex; flex-direction:column; height:100%;">
-            <div style="padding:16px 18px; display:flex; align-items:center; justify-content:space-between; background:#fff; border-bottom:1px solid #EEE8DB;">
-              <div onClick="{{goBack}}" style="font-size:20px; color:#1E2A26; cursor:pointer; width:24px;">←</div>
-              <div style="font-size:16px; font-weight:700; color:#1E2A26;">บันทึกยอดขาย</div>
+            <div style="padding:16px 18px; display:flex; align-items:center; gap:10px; background:#fff; border-bottom:1px solid #EEE8DB;">
+              <div onClick="{{goBack}}" style="font-size:20px; color:#1E2A26; cursor:pointer; width:24px; flex-shrink:0;">←</div>
+              <div style="font-size:16px; font-weight:700; color:#1E2A26; flex:1;">บันทึกยอดขาย</div>
+              <sc-if value="{{isAdminUser}}" hint-placeholder-val="{{false}}">
+                <div style="display:flex; background:#EFE9DC; border-radius:100px; padding:3px; gap:3px; flex-shrink:0;">
+                  <div style="{{staffToggleStyleSm}}" onClick="{{goStaffMode}}">พนักงาน</div>
+                  <div style="{{adminToggleStyleSm}}" onClick="{{goAdminMode}}">แอดมิน</div>
+                </div>
+              </sc-if>
               <div onClick="{{openProfileMenu}}" style="width:30px; height:30px; border-radius:100px; background:#0E7C66; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12.5px; flex-shrink:0; cursor:pointer;">{{employeeInitial}}</div>
             </div>
 
@@ -235,7 +241,10 @@
               <div onClick="{{backFromHistory}}" style="font-size:20px; color:#1E2A26; cursor:pointer;">←</div>
               <div style="font-size:16px; font-weight:700; color:#1E2A26; flex:1;">ประวัติการส่งยอด</div>
               <sc-if value="{{isAdminUser}}" hint-placeholder-val="{{false}}">
-                <div onClick="{{goToAdminReport}}" style="font-size:12.5px; font-weight:700; color:#0E7C66; background:#F1EDE1; padding:8px 12px; border-radius:100px; cursor:pointer; white-space:nowrap;">รายงานยอดขาย →</div>
+                <div style="display:flex; background:#EFE9DC; border-radius:100px; padding:3px; gap:3px; flex-shrink:0;">
+                  <div style="{{staffToggleStyleSm}}" onClick="{{goStaffMode}}">พนักงาน</div>
+                  <div style="{{adminToggleStyleSm}}" onClick="{{goAdminMode}}">แอดมิน</div>
+                </div>
               </sc-if>
               <div onClick="{{openProfileMenu}}" style="width:30px; height:30px; border-radius:100px; background:#0E7C66; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12.5px; flex-shrink:0; cursor:pointer;">{{employeeInitial}}</div>
             </div>
@@ -1250,6 +1259,8 @@ class Component extends DCLogic {
       isAdminMode: s.mode === 'admin',
       staffToggleStyle: `padding:9px 18px; border-radius:100px; font-size:13.5px; font-weight:700; cursor:pointer; white-space:nowrap; background:${s.mode === 'staff' ? '#0E7C66' : 'transparent'}; color:${s.mode === 'staff' ? '#fff' : '#4E5854'};`,
       adminToggleStyle: `padding:9px 18px; border-radius:100px; font-size:13.5px; font-weight:700; cursor:pointer; white-space:nowrap; background:${s.mode === 'admin' ? '#0E7C66' : 'transparent'}; color:${s.mode === 'admin' ? '#fff' : '#4E5854'};`,
+      staffToggleStyleSm: `padding:6px 12px; border-radius:100px; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; background:${s.mode === 'staff' ? '#0E7C66' : 'transparent'}; color:${s.mode === 'staff' ? '#fff' : '#4E5854'};`,
+      adminToggleStyleSm: `padding:6px 12px; border-radius:100px; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; background:${s.mode === 'admin' ? '#0E7C66' : 'transparent'}; color:${s.mode === 'admin' ? '#fff' : '#4E5854'};`,
       goStaffMode: this.goStaffMode, goAdminMode: this.goAdminMode,
 
       screenIsScan: s.screen === 'scan',
