@@ -29,13 +29,16 @@
       <div style="display:flex; align-items:center; gap:12px;">
         <div style="width:44px; height:44px; border-radius:12px; background:#0E7C66; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800; font-size:18px;">คถ</div>
         <div>
-          <div style="font-size:19px; font-weight:800; color:#1E2A26; line-height:1.2;">บันทึกยอดขาย คลองถม</div>
-          <div style="font-size:13px; color:#7A8580;">แดชบอร์ดแอดมิน</div>
+          <div style="font-size:19px; font-weight:800; color:#1E2A26; line-height:1.2;">รายงานยอดขาย</div>
+          <div style="font-size:13px; color:#7A8580;">บันทึกยอดขาย คลองถม</div>
         </div>
       </div>
-      <div style="display:flex; background:#EFE9DC; border-radius:100px; padding:4px; gap:4px; flex-shrink:0;">
-        <div style="{{staffToggleStyle}}" onClick="{{goStaffMode}}">มุมมองพนักงาน</div>
-        <div style="{{adminToggleStyle}}" onClick="{{goAdminMode}}">มุมมองแอดมิน</div>
+      <div style="display:flex; align-items:center; gap:12px; flex-shrink:0;">
+        <div style="display:flex; background:#EFE9DC; border-radius:100px; padding:4px; gap:4px;">
+          <div style="{{staffToggleStyle}}" onClick="{{goStaffMode}}">มุมมองพนักงาน</div>
+          <div style="{{adminToggleStyle}}" onClick="{{goAdminMode}}">มุมมองแอดมิน</div>
+        </div>
+        <div onClick="{{openProfileMenu}}" style="width:38px; height:38px; border-radius:100px; background:#0E7C66; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:15px; flex-shrink:0; cursor:pointer;">{{employeeInitial}}</div>
       </div>
     </div>
   </sc-if>
@@ -55,7 +58,7 @@
                 </div>
                 <div style="display:flex; align-items:center; gap:12px; flex-shrink:0;">
                   <sc-if value="{{isAdminUser}}" hint-placeholder-val="{{false}}">
-                    <div onClick="{{goToAdminReport}}" style="font-size:12.5px; font-weight:700; color:#0E7C66; background:#F1EDE1; padding:8px 12px; border-radius:100px; cursor:pointer; white-space:nowrap;">รายงานแอดมิน →</div>
+                    <div onClick="{{goToAdminReport}}" style="font-size:12.5px; font-weight:700; color:#0E7C66; background:#F1EDE1; padding:8px 12px; border-radius:100px; cursor:pointer; white-space:nowrap;">รายงานยอดขาย →</div>
                   </sc-if>
                   <div onClick="{{doLogout}}" style="font-size:13px; color:#B04A3B; font-weight:600; cursor:pointer; white-space:nowrap;">ออกจากระบบ</div>
                 </div>
@@ -235,7 +238,7 @@
               <div onClick="{{backFromHistory}}" style="font-size:20px; color:#1E2A26; cursor:pointer;">←</div>
               <div style="font-size:16px; font-weight:700; color:#1E2A26; flex:1;">ประวัติการส่งยอด</div>
               <sc-if value="{{isAdminUser}}" hint-placeholder-val="{{false}}">
-                <div onClick="{{goToAdminReport}}" style="font-size:12.5px; font-weight:700; color:#0E7C66; background:#F1EDE1; padding:8px 12px; border-radius:100px; cursor:pointer; white-space:nowrap;">รายงานแอดมิน →</div>
+                <div onClick="{{goToAdminReport}}" style="font-size:12.5px; font-weight:700; color:#0E7C66; background:#F1EDE1; padding:8px 12px; border-radius:100px; cursor:pointer; white-space:nowrap;">รายงานยอดขาย →</div>
               </sc-if>
               <div onClick="{{openProfileMenu}}" style="width:30px; height:30px; border-radius:100px; background:#0E7C66; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12.5px; flex-shrink:0; cursor:pointer;">{{employeeInitial}}</div>
             </div>
@@ -328,37 +331,13 @@
   <sc-if value="{{isAdminMode}}" hint-placeholder-val="{{false}}">
     <div style="width:100%; max-width:1180px; margin:0 auto; padding:20px 20px 60px; display:flex; flex-direction:column; gap:20px;">
 
-      <div style="background:#fff; border:1px solid #EEE8DB; border-radius:16px; padding:16px 20px; display:flex; align-items:flex-end; gap:10px; flex-wrap:wrap;">
-        <div>
-          <div style="font-size:12.5px; font-weight:700; color:#9AA39D; margin-bottom:6px;">ตั้งแต่วันที่</div>
-          <div style="display:flex; gap:6px;">
-            <select value="{{afDv}}" onChange="{{afOd}}" style="width:52px; font-size:14px; padding:9px 6px; border-radius:12px; border:1.5px solid #DDD5C4; background:#fff; color:#1E2A26; font-family:inherit; text-align:center;">
-              <sc-for list="{{afDd}}" as="opt" hint-placeholder-count="31"><option value="{{opt.value}}">{{opt.label}}</option></sc-for>
-            </select>
-            <select value="{{afMv}}" onChange="{{afOm}}" style="font-size:14px; padding:9px 8px; border-radius:12px; border:1.5px solid #DDD5C4; background:#fff; color:#1E2A26; font-family:inherit;">
-              <sc-for list="{{afMd}}" as="opt" hint-placeholder-count="12"><option value="{{opt.value}}">{{opt.label}}</option></sc-for>
-            </select>
-            <select value="{{afYv}}" onChange="{{afOy}}" style="width:76px; font-size:14px; padding:9px 6px; border-radius:12px; border:1.5px solid #DDD5C4; background:#fff; color:#1E2A26; font-family:inherit; text-align:center;">
-              <sc-for list="{{afYd}}" as="opt" hint-placeholder-count="5"><option value="{{opt.value}}">{{opt.label}}</option></sc-for>
-            </select>
-          </div>
-        </div>
-        <div>
-          <div style="font-size:12.5px; font-weight:700; color:#9AA39D; margin-bottom:6px;">ถึงวันที่</div>
-          <div style="display:flex; gap:6px;">
-            <select value="{{atDv}}" onChange="{{atOd}}" style="width:52px; font-size:14px; padding:9px 6px; border-radius:12px; border:1.5px solid #DDD5C4; background:#fff; color:#1E2A26; font-family:inherit; text-align:center;">
-              <sc-for list="{{atDd}}" as="opt" hint-placeholder-count="31"><option value="{{opt.value}}">{{opt.label}}</option></sc-for>
-            </select>
-            <select value="{{atMv}}" onChange="{{atOm}}" style="font-size:14px; padding:9px 8px; border-radius:12px; border:1.5px solid #DDD5C4; background:#fff; color:#1E2A26; font-family:inherit;">
-              <sc-for list="{{atMd}}" as="opt" hint-placeholder-count="12"><option value="{{opt.value}}">{{opt.label}}</option></sc-for>
-            </select>
-            <select value="{{atYv}}" onChange="{{atOy}}" style="width:76px; font-size:14px; padding:9px 6px; border-radius:12px; border:1.5px solid #DDD5C4; background:#fff; color:#1E2A26; font-family:inherit; text-align:center;">
-              <sc-for list="{{atYd}}" as="opt" hint-placeholder-count="5"><option value="{{opt.value}}">{{opt.label}}</option></sc-for>
-            </select>
-          </div>
-        </div>
+      <div style="background:#fff; border:1px solid #EEE8DB; border-radius:16px; padding:16px 20px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+        <div style="font-size:12.5px; font-weight:700; color:#9AA39D; flex-shrink:0;">ตั้งแต่วันที่</div>
+        <div onClick="{{openAdminPickerFrom}}" style="background:#FAF6EF; border:1.5px solid #DDD5C4; border-radius:10px; padding:8px 14px; font-size:13.5px; font-weight:600; color:{{afDateColor}}; cursor:pointer; white-space:nowrap;">{{afDateLabel}}</div>
+        <div style="font-size:12px; color:#B3A98F; flex-shrink:0;">–</div>
+        <div onClick="{{openAdminPickerTo}}" style="background:#FAF6EF; border:1.5px solid #DDD5C4; border-radius:10px; padding:8px 14px; font-size:13.5px; font-weight:600; color:{{atDateColor}}; cursor:pointer; white-space:nowrap;">{{atDateLabel}}</div>
         <sc-if value="{{hasAdminDateFilter}}" hint-placeholder-val="{{true}}">
-          <div onClick="{{clearAdminDateFilter}}" style="padding:10px 14px; font-size:13px; font-weight:700; color:#0E7C66; border:1.5px solid #DDD5C4; border-radius:12px; cursor:pointer; white-space:nowrap;">ล้างตัวกรอง</div>
+          <div onClick="{{clearAdminDateFilter}}" style="font-size:13px; font-weight:700; color:#0E7C66; cursor:pointer; flex-shrink:0;">ล้าง</div>
         </sc-if>
         <div style="flex:1;"></div>
         <div style="display:flex; gap:6px; background:#FAF6EF; padding:4px; border-radius:100px;">
@@ -523,7 +502,7 @@
           </div>
         </div>
         <sc-if value="{{isAdminUser}}" hint-placeholder-val="{{false}}">
-          <div onClick="{{goToAdminReport}}" style="width:100%; background:#F1EDE1; color:#0E7C66; font-size:15px; font-weight:700; padding:13px; border-radius:12px; text-align:center; cursor:pointer;">ดูรายงานแอดมิน →</div>
+          <div onClick="{{goToAdminReport}}" style="width:100%; background:#F1EDE1; color:#0E7C66; font-size:15px; font-weight:700; padding:13px; border-radius:12px; text-align:center; cursor:pointer;">รายงานยอดขาย →</div>
         </sc-if>
         <div onClick="{{goToHistory}}" style="width:100%; background:#F1EDE1; color:#0E7C66; font-size:15px; font-weight:700; padding:13px; border-radius:12px; text-align:center; cursor:pointer;">ประวัติส่งยอด →</div>
         <div onClick="{{doLogout}}" style="width:100%; border:1.5px solid #DDD5C4; color:#B04A3B; font-size:14.5px; font-weight:700; padding:12px; border-radius:12px; text-align:center; cursor:pointer;">ออกจากระบบ</div>
@@ -577,6 +556,28 @@
         </div>
         <div style="display:grid; grid-template-columns:repeat(7,1fr); gap:2px;">
           <sc-for list="{{calendarDays}}" as="cd" hint-placeholder-count="35">
+            <div onClick="{{cd.select}}" style="{{cd.style}}">{{cd.label}}</div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{showAdminPicker}}" hint-placeholder-val="{{false}}">
+    <div onClick="{{closeAdminPicker}}" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(20,26,23,0.55); display:flex; align-items:center; justify-content:center; z-index:50; padding:20px;">
+      <div onClick="{{stopPropagation}}" style="background:#fff; border-radius:18px; padding:20px; width:100%; max-width:340px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+          <div onClick="{{adminPickerPrevMonth}}" style="width:36px; height:36px; border-radius:10px; background:#F1EDE1; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:20px; color:#0E7C66; font-weight:700;">‹</div>
+          <div style="font-size:15px; font-weight:800; color:#1E2A26;">{{adminCalMonthLabel}}</div>
+          <div onClick="{{adminPickerNextMonth}}" style="width:36px; height:36px; border-radius:10px; background:#F1EDE1; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:20px; color:#0E7C66; font-weight:700;">›</div>
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(7,1fr); gap:2px; margin-bottom:6px;">
+          <sc-for list="{{calDayHeaders}}" as="dh" hint-placeholder-count="7">
+            <div style="text-align:center; font-size:11px; font-weight:700; color:#9AA39D; padding:4px 0;">{{dh}}</div>
+          </sc-for>
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(7,1fr); gap:2px;">
+          <sc-for list="{{adminCalendarDays}}" as="cd" hint-placeholder-count="35">
             <div onClick="{{cd.select}}" style="{{cd.style}}">{{cd.label}}</div>
           </sc-for>
         </div>
@@ -685,6 +686,9 @@ class Component extends DCLogic {
     historyPickerOpen: null,
     historyPickerY: new Date().getFullYear(),
     historyPickerM: new Date().getMonth(),
+    adminPickerOpen: null,
+    adminPickerY: new Date().getFullYear(),
+    adminPickerM: new Date().getMonth(),
   };
 
   STORES = [
@@ -1027,12 +1031,31 @@ class Component extends DCLogic {
     this.setState({ [which === 'from' ? 'historyDateFrom' : 'historyDateTo']: iso, historyPickerOpen: null });
   };
 
+  openAdminPicker = (which) => {
+    const iso = which === 'from' ? this.state.adminDateFrom : this.state.adminDateTo;
+    const d = iso ? new Date(iso + 'T00:00:00') : new Date();
+    this.setState({ adminPickerOpen: which, adminPickerY: d.getFullYear(), adminPickerM: d.getMonth() });
+  };
+  closeAdminPicker = () => this.setState({ adminPickerOpen: null });
+  adminPickerPrevMonth = () => this.setState(s => {
+    let m = s.adminPickerM - 1, y = s.adminPickerY;
+    if (m < 0) { m = 11; y--; }
+    return { adminPickerM: m, adminPickerY: y };
+  });
+  adminPickerNextMonth = () => this.setState(s => {
+    let m = s.adminPickerM + 1, y = s.adminPickerY;
+    if (m > 11) { m = 0; y++; }
+    return { adminPickerM: m, adminPickerY: y };
+  });
+  adminPickerSelectDay = (d) => {
+    const { adminPickerOpen: which, adminPickerY: y, adminPickerM: m } = this.state;
+    const iso = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    this.setState({ [which === 'from' ? 'adminDateFrom' : 'adminDateTo']: iso, adminPickerOpen: null });
+  };
+
   renderVals() {
     const s = this.state;
     const fmt = this.fmt.bind(this);
-
-    const af = this.dateSelectFor('adminDateFrom');
-    const at2 = this.dateSelectFor('adminDateTo');
 
     const stores = this.STORES.map(st => ({ code: st.code, name: st.name, select: () => this.selectStore(st) }));
 
@@ -1196,6 +1219,34 @@ class Component extends DCLogic {
       });
     }
 
+    const adminPickerOpen = s.adminPickerOpen;
+    let adminCalMonthLabel = '';
+    let adminCalendarDays = [];
+    if (adminPickerOpen) {
+      const py = s.adminPickerY, pm = s.adminPickerM;
+      adminCalMonthLabel = `${this.THAI_MONTHS_FULL[pm]} ${py + 543}`;
+      const firstDay = new Date(py, pm, 1).getDay();
+      const daysInMonth = new Date(py, pm + 1, 0).getDate();
+      const selectedISO = adminPickerOpen === 'from' ? s.adminDateFrom : s.adminDateTo;
+      const tn = new Date();
+      const todayISO = `${tn.getFullYear()}-${String(tn.getMonth()+1).padStart(2,'0')}-${String(tn.getDate()).padStart(2,'0')}`;
+      const cells = [];
+      for (let i = 0; i < firstDay; i++) cells.push(null);
+      for (let dd = 1; dd <= daysInMonth; dd++) cells.push(dd);
+      while (cells.length % 7 !== 0) cells.push(null);
+      adminCalendarDays = cells.map(dd => {
+        if (!dd) return { label: '', style: 'padding:8px 2px;', select: null };
+        const iso2 = `${py}-${String(pm+1).padStart(2,'0')}-${String(dd).padStart(2,'0')}`;
+        const isSel = iso2 === selectedISO;
+        const isToday2 = iso2 === todayISO;
+        return {
+          label: String(dd),
+          select: () => this.adminPickerSelectDay(dd),
+          style: `text-align:center; padding:8px 2px; border-radius:8px; font-size:14px; font-weight:${isSel ? '700' : '400'}; cursor:pointer; background:${isSel ? '#0E7C66' : isToday2 ? '#D6F2E8' : 'transparent'}; color:${isSel ? '#fff' : isToday2 ? '#0E7C66' : '#1E2A26'};`,
+        };
+      });
+    }
+
     return {
       isDev: this.DEV_MODE,
       isStaffMode: s.mode === 'staff',
@@ -1284,9 +1335,18 @@ class Component extends DCLogic {
       isSingleDay,
       chartBars,
 
-      afDv: af.dv, afMv: af.mv, afYv: af.yv, afDd: af.dd, afMd: af.md, afYd: af.yd, afOd: af.od, afOm: af.om, afOy: af.oy,
-      atDv: at2.dv, atMv: at2.mv, atYv: at2.yv, atDd: at2.dd, atMd: at2.md, atYd: at2.yd, atOd: at2.od, atOm: at2.om, atOy: at2.oy,
       hasAdminDateFilter: !!(s.adminDateFrom || s.adminDateTo), clearAdminDateFilter: this.clearAdminDateFilter,
+      openAdminPickerFrom: () => this.openAdminPicker('from'),
+      openAdminPickerTo: () => this.openAdminPicker('to'),
+      closeAdminPicker: this.closeAdminPicker,
+      adminPickerPrevMonth: this.adminPickerPrevMonth,
+      adminPickerNextMonth: this.adminPickerNextMonth,
+      showAdminPicker: !!adminPickerOpen,
+      adminCalMonthLabel, adminCalendarDays,
+      afDateLabel: fmtDateDisp(s.adminDateFrom),
+      atDateLabel: fmtDateDisp(s.adminDateTo),
+      afDateColor: s.adminDateFrom ? '#1E2A26' : '#B3A98F',
+      atDateColor: s.adminDateTo ? '#1E2A26' : '#B3A98F',
 
       adminView: s.adminView,
       setAdminViewList: () => this.setAdminView('list'),
