@@ -429,10 +429,10 @@
         <div style="background:#fff; border:1px solid #EEE8DB; border-radius:16px; position:relative;">
           <sc-if value="{{empTooltipVisible}}" hint-placeholder-val="{{false}}">
             <div style="position:absolute; top:14px; right:16px; z-index:10; background:#fff; border:1.5px solid #C3E0D6; border-radius:10px; padding:10px 14px; box-shadow:0 4px 18px rgba(0,0,0,0.12); display:flex; flex-direction:column; gap:5px; min-width:170px; pointer-events:none;">
-              <div style="font-size:13px; font-weight:700; color:#1E2A26;">{{empTooltipLabel}}</div>
-              <div style="font-size:13px; color:#4E5854; font-weight:600;">รายได้ ฿{{empTooltipInc}}</div>
-              <div style="font-size:13px; color:#0E7C66; font-weight:600;">ยอดสุทธิ ฿{{empTooltipNet}}</div>
-              <div style="font-size:13px; color:#F97316; font-weight:600;">ค่าใช้จ่าย ฿{{empTooltipExp}}</div>
+              <div style="font-size:12px; font-weight:700; color:#1E2A26; margin-bottom:2px;">{{empTooltipLabel}}</div>
+              <div style="font-size:13px; color:#0E7C66; font-weight:600;">รายได้ ฿{{empTooltipInc}}</div>
+              <div style="font-size:13px; color:#B0432F; font-weight:600;">ค่าใช้จ่าย ฿{{empTooltipExp}}</div>
+              <div style="font-size:13px; color:#1E2A26; font-weight:700; text-decoration:underline;">ยอดสุทธิ ฿{{empTooltipNet}}</div>
             </div>
           </sc-if>
           <div style="padding:20px; overflow-x:auto;">
@@ -517,8 +517,8 @@
                 </div>
               </sc-for>
             </div>
-            <div style="position:relative; height:155px; width:560px;">
-              <sc-for list="{{lineChartItems}}" as="li" hint-placeholder-count="40">
+            <div style="position:relative; height:155px; width:614px;">
+              <sc-for list="{{lineChartItems}}" as="li" hint-placeholder-count="50">
                 <div style="{{li.style}}" onMouseEnter="{{li.hoverIn}}" onMouseLeave="{{li.hoverOut}}" onClick="{{li.onClick}}">{{li.label}}</div>
               </sc-for>
             </div>
@@ -1444,8 +1444,8 @@ class Component extends DCLogic {
     });
     const lcWeeks = [...weekMap.entries()].sort(([a], [b]) => a.localeCompare(b));
     const LINE_COLORS_CHART = ['#0E7C66', '#F59E0B', '#6366F1', '#EC4899', '#14B8A6'];
-    const LC_W = 560, LC_H = 120, LC_PAD = 24;
-    const lcStep = (LC_W - LC_PAD * 2) / 6;
+    const LC_AXIS_W = 48, LC_CHART_W = 562, LC_H = 120, LC_PAD = 16;
+    const lcStep = (LC_CHART_W - LC_PAD * 2) / 6;
     const allWkVals = lcWeeks.flatMap(([, v]) => v);
     const maxWkVal = Math.max(...allWkVals, 1);
     // อา จ อ พ พฤ ศ ส = Sun(0) Mon(1) Tue(2) Wed(3) Thu(4) Fri(5) Sat(6)
@@ -1453,9 +1453,19 @@ class Component extends DCLogic {
     const DOW_LC_LABELS = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
     const lineChartItems = [];
     const noop = () => {};
+    // Y-axis ticks
+    const roughStep = maxWkVal / 4;
+    const mag = Math.pow(10, Math.floor(Math.log10(Math.max(roughStep, 1))));
+    const niceStep = Math.max(1, Math.ceil(roughStep / mag) * mag);
+    const fmtTick = (v) => v === 0 ? '0' : v >= 1000 ? `${Math.round(v / 1000)}k` : `${v}`;
+    for (let v = 0; v <= maxWkVal * 1.05; v += niceStep) {
+      const ty = (LC_H - (v / maxWkVal) * (LC_H - 8)).toFixed(1);
+      lineChartItems.push({ style: `position:absolute; left:${LC_AXIS_W}px; width:${LC_CHART_W}px; height:1px; top:${ty}px; background:#F0EBDF; z-index:0;`, label: '', hoverIn: noop, hoverOut: noop, onClick: noop });
+      lineChartItems.push({ style: `position:absolute; left:0; width:${LC_AXIS_W - 5}px; top:${ty}px; transform:translateY(-50%); font-size:10.5px; color:#B3A98F; text-align:right; white-space:nowrap;`, label: fmtTick(v), hoverIn: noop, hoverOut: noop, onClick: noop });
+    }
     DOW_LC_LABELS.forEach((label, i) => {
       lineChartItems.push({
-        style: `position:absolute; left:${(LC_PAD + i * lcStep).toFixed(1)}px; top:${LC_H + 8}px; transform:translateX(-50%); font-size:12px; font-weight:700; color:#9AA39D; white-space:nowrap;`,
+        style: `position:absolute; left:${(LC_AXIS_W + LC_PAD + i * lcStep).toFixed(1)}px; top:${LC_H + 8}px; transform:translateX(-50%); font-size:12px; font-weight:700; color:#9AA39D; white-space:nowrap;`,
         label, hoverIn: noop, hoverOut: noop, onClick: noop,
       });
     });
@@ -1466,7 +1476,7 @@ class Component extends DCLogic {
       const d1 = new Date(d0); d1.setDate(d0.getDate() + 6);
       const weekLabel = `${f2lc(d0)}–${f2lc(d1)}`;
       const pts = DOW_LC_ORDER.map((dow, i) => ({
-        x: LC_PAD + i * lcStep,
+        x: LC_AXIS_W + LC_PAD + i * lcStep,
         y: LC_H - Math.max(0, (vals[dow] / maxWkVal)) * (LC_H - 8),
         v: vals[dow],
         dayLabel: DOW_LC_LABELS[i],
