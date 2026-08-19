@@ -427,13 +427,21 @@
 
       <sc-if value="{{adminViewIsEmployee}}" hint-placeholder-val="{{false}}">
         <div style="background:#fff; border:1px solid #EEE8DB; border-radius:16px; padding:20px; overflow-x:auto;">
-          <div style="font-size:15px; font-weight:800; color:#1E2A26; margin-bottom:16px;">เปรียบเทียบยอดขายรายพนักงาน</div>
-          <div style="display:flex; align-items:flex-end; gap:10px; height:180px; min-width:480px;">
+          <div style="font-size:15px; font-weight:800; color:#1E2A26; margin-bottom:10px;">เปรียบเทียบยอดขายรายพนักงาน</div>
+          <div style="display:flex; gap:12px; margin-bottom:14px;">
+            <div style="display:flex; align-items:center; gap:5px;"><div style="width:12px; height:12px; background:#0E7C66; border-radius:2px;"></div><div style="font-size:12px; color:#7A8580;">ยอดสุทธิ</div></div>
+            <div style="display:flex; align-items:center; gap:5px;"><div style="width:12px; height:12px; background:#F97316; border-radius:2px;"></div><div style="font-size:12px; color:#7A8580;">ค่าใช้จ่าย</div></div>
+          </div>
+          <div style="display:flex; align-items:flex-end; gap:10px; height:185px; min-width:480px;">
             <sc-for list="{{employeeChartBars}}" as="bar" hint-placeholder-count="8">
-              <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:6px; height:100%; min-width:52px;">
+              <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:5px; height:100%; min-width:52px;">
                 <div style="font-size:11px; color:#7A8580; font-weight:600; white-space:nowrap;">฿{{bar.valueDisplay}}</div>
-                <div style="{{bar.barStyle}}"></div>
+                <div style="display:flex; flex-direction:column; align-items:center; width:100%; max-width:48px;">
+                  <div style="{{bar.netBarStyle}}"></div>
+                  <div style="{{bar.expBarStyle}}"></div>
+                </div>
                 <div style="font-size:12px; color:{{bar.labelColor}}; font-weight:700; white-space:nowrap;">{{bar.label}}</div>
+                <div style="font-size:11px; color:#9AA39D; font-weight:500; white-space:nowrap;">{{bar.countLabel}}</div>
               </div>
             </sc-for>
           </div>
@@ -469,14 +477,18 @@
 
       <sc-if value="{{adminViewIsStore}}" hint-placeholder-val="{{false}}">
         <div style="background:#fff; border:1px solid #EEE8DB; border-radius:16px; padding:20px; overflow-x:auto;">
-          <div style="font-size:15px; font-weight:800; color:#1E2A26; margin-bottom:16px;">ยอดขายแบ่งตามวันในสัปดาห์</div>
-          <div style="display:flex; align-items:flex-end; gap:14px; height:180px; min-width:360px;">
-            <sc-for list="{{dowChartBars}}" as="bar" hint-placeholder-count="7">
-              <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:8px; height:100%; min-width:44px;">
-                <div style="font-size:11.5px; color:#7A8580; font-weight:600; white-space:nowrap;">{{bar.valueDisplay}}</div>
-                <div style="{{bar.barStyle}}"></div>
-                <div style="font-size:12px; color:{{bar.labelColor}}; font-weight:700; white-space:nowrap;">{{bar.label}}</div>
+          <div style="font-size:15px; font-weight:800; color:#1E2A26; margin-bottom:10px;">ยอดขายแบ่งตามวันในสัปดาห์</div>
+          <div style="display:flex; gap:14px; margin-bottom:14px; flex-wrap:wrap;">
+            <sc-for list="{{lineChartLegend}}" as="leg" hint-placeholder-count="2">
+              <div style="display:flex; align-items:center; gap:6px;">
+                <div style="{{leg.lineStyle}}"></div>
+                <div style="font-size:12px; color:#7A8580; font-weight:600;">{{leg.label}}</div>
               </div>
+            </sc-for>
+          </div>
+          <div style="position:relative; height:155px; width:560px;">
+            <sc-for list="{{lineChartItems}}" as="li" hint-placeholder-count="40">
+              <div style="{{li.style}}">{{li.label}}</div>
             </sc-for>
           </div>
         </div>
@@ -1264,33 +1276,79 @@ class Component extends DCLogic {
       barStyle: `width:100%; max-width:44px; height:${Math.max(6, (w.v / maxV) * 130)}px; border-radius:8px 8px 0 0; background:${w.today ? '#0E7C66' : '#CFE3DC'};`,
     }));
 
-    const maxEmpNet = Math.max(...groupedByEmployee.map(g => g.cash + g.transfer - g.expense), 1);
+    const maxEmpGross = Math.max(...groupedByEmployee.map(g => g.cash + g.transfer), 1);
     const employeeChartBars = groupedByEmployee.map(g => {
-      const net = g.cash + g.transfer - g.expense;
+      const gross = g.cash + g.transfer;
+      const net = gross - g.expense;
+      const totalH = Math.max(8, (gross / maxEmpGross) * 120);
+      const expH = gross > 0 ? (g.expense / gross) * totalH : 0;
+      const netH = totalH - expH;
       return {
         label: g.employee.split(' ')[0],
+        countLabel: `(${g.count})`,
         valueDisplay: fmt(net),
-        barStyle: `width:100%; max-width:60px; height:${Math.max(6, (net / maxEmpNet) * 130)}px; border-radius:8px 8px 0 0; background:#0E7C66;`,
+        netBarStyle: `width:100%; height:${netH.toFixed(1)}px; border-radius:8px 8px 0 0; background:#0E7C66; flex-shrink:0;`,
+        expBarStyle: `width:100%; height:${Math.max(0, expH).toFixed(1)}px; border-radius:${expH > 1 ? '0 0 4px 4px' : '0'}; background:#F97316; flex-shrink:0;`,
         labelColor: '#1E2A26',
       };
     });
 
-    const DOW_ORDER = [1, 2, 3, 4, 5, 6, 0];
-    const DOW_LABELS = ['จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส', 'อา'];
-    const dowTotals = new Array(7).fill(0);
+    // Line chart for รายร้านค้า — one line per calendar week (Mon–Sun)
+    const weekMap = new Map();
     adminFiltered.forEach(r => {
-      const dow = new Date(r.date + 'T00:00:00').getDay();
-      dowTotals[dow] += r.cash + r.transfer - (r.expense || 0);
+      const d = new Date(r.date + 'T00:00:00');
+      const day = d.getDay();
+      const daysToMon = day === 0 ? -6 : 1 - day;
+      const mon = new Date(d); mon.setDate(d.getDate() + daysToMon);
+      const wk = mon.toISOString().slice(0, 10);
+      if (!weekMap.has(wk)) weekMap.set(wk, new Array(7).fill(0));
+      const DOW_IDX = [1, 2, 3, 4, 5, 6, 0];
+      const idx = DOW_IDX.indexOf(d.getDay());
+      if (idx >= 0) weekMap.get(wk)[idx] += r.cash + r.transfer - (r.expense || 0);
     });
-    const maxDowVal = Math.max(...DOW_ORDER.map(d => dowTotals[d]), 1);
-    const dowChartBars = DOW_ORDER.map((dow, i) => {
-      const val = dowTotals[dow];
-      return {
-        label: DOW_LABELS[i],
-        valueDisplay: val > 0 ? fmt(val) : '—',
-        barStyle: `width:100%; max-width:44px; height:${val > 0 ? Math.max(6, (val / maxDowVal) * 130) : 0}px; border-radius:8px 8px 0 0; background:${val > 0 ? '#0E7C66' : '#E8E2D8'};`,
-        labelColor: val > 0 ? '#1E2A26' : '#C8C2B4',
-      };
+    const lcWeeks = [...weekMap.entries()].sort(([a], [b]) => a.localeCompare(b));
+    const LINE_COLORS_CHART = ['#0E7C66', '#F59E0B', '#6366F1', '#EC4899', '#14B8A6'];
+    const LC_W = 560, LC_H = 120, LC_PAD = 24;
+    const lcStep = (LC_W - LC_PAD * 2) / 6;
+    const allWkVals = lcWeeks.flatMap(([, v]) => v);
+    const maxWkVal = Math.max(...allWkVals, 1);
+    const DOW_LC_LABELS = ['จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส', 'อา'];
+    const lineChartItems = [];
+    DOW_LC_LABELS.forEach((label, i) => {
+      lineChartItems.push({
+        style: `position:absolute; left:${(LC_PAD + i * lcStep).toFixed(1)}px; top:${LC_H + 8}px; transform:translateX(-50%); font-size:12px; font-weight:700; color:#9AA39D; white-space:nowrap;`,
+        label,
+      });
+    });
+    lcWeeks.forEach(([, vals], wi) => {
+      const color = LINE_COLORS_CHART[wi % LINE_COLORS_CHART.length];
+      const pts = vals.map((v, i) => ({
+        x: LC_PAD + i * lcStep,
+        y: LC_H - Math.max(0, (v / maxWkVal)) * (LC_H - 8),
+      }));
+      for (let i = 0; i < pts.length - 1; i++) {
+        const dx = pts[i + 1].x - pts[i].x;
+        const dy = pts[i + 1].y - pts[i].y;
+        const len = Math.sqrt(dx * dx + dy * dy);
+        const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+        lineChartItems.push({
+          style: `position:absolute; left:${pts[i].x.toFixed(1)}px; top:${pts[i].y.toFixed(1)}px; width:${len.toFixed(1)}px; height:2.5px; background:${color}; transform:rotate(${angle.toFixed(2)}deg); transform-origin:0 50%; z-index:1;`,
+          label: '',
+        });
+      }
+      pts.forEach(p => {
+        lineChartItems.push({
+          style: `position:absolute; left:${(p.x - 4).toFixed(1)}px; top:${(p.y - 4).toFixed(1)}px; width:8px; height:8px; border-radius:50%; background:${color}; z-index:2;`,
+          label: '',
+        });
+      });
+    });
+    const lineChartLegend = lcWeeks.map(([wkStart], wi) => {
+      const color = LINE_COLORS_CHART[wi % LINE_COLORS_CHART.length];
+      const d0 = new Date(wkStart + 'T00:00:00');
+      const d1 = new Date(d0); d1.setDate(d0.getDate() + 6);
+      const f2 = (dt) => `${dt.getDate()}/${dt.getMonth() + 1}`;
+      return { color, label: `${f2(d0)}–${f2(d1)}`, lineStyle: `width:20px; height:3px; background:${color}; border-radius:2px; flex-shrink:0;` };
     });
 
     const isLoggedIn = !!s.employeeName;
@@ -1497,7 +1555,7 @@ class Component extends DCLogic {
       reportedCount: reportedCodes.size, totalStoreCount: this.STORES.length,
       hasNotReported: notReportedStores.length > 0, notReportedCount: notReportedStores.length, notReportedStores,
       isSingleDay,
-      chartBars, employeeChartBars, dowChartBars,
+      chartBars, employeeChartBars, lineChartItems, lineChartLegend,
 
       hasAdminDateFilter: !!(s.adminDateFrom || s.adminDateTo), clearAdminDateFilter: this.clearAdminDateFilter,
       openAdminPickerFrom: () => this.openAdminPicker('from'),
