@@ -428,8 +428,9 @@
       <sc-if value="{{adminViewIsEmployee}}" hint-placeholder-val="{{false}}">
         <div style="background:#fff; border:1px solid #EEE8DB; border-radius:16px; position:relative;">
           <sc-if value="{{empTooltipVisible}}" hint-placeholder-val="{{false}}">
-            <div style="position:absolute; top:14px; right:16px; z-index:10; background:#fff; border:1.5px solid #C3E0D6; border-radius:10px; padding:10px 14px; box-shadow:0 4px 18px rgba(0,0,0,0.12); display:flex; flex-direction:column; gap:5px; min-width:160px; pointer-events:none;">
+            <div style="position:absolute; top:14px; right:16px; z-index:10; background:#fff; border:1.5px solid #C3E0D6; border-radius:10px; padding:10px 14px; box-shadow:0 4px 18px rgba(0,0,0,0.12); display:flex; flex-direction:column; gap:5px; min-width:170px; pointer-events:none;">
               <div style="font-size:13px; font-weight:700; color:#1E2A26;">{{empTooltipLabel}}</div>
+              <div style="font-size:13px; color:#4E5854; font-weight:600;">รายได้ ฿{{empTooltipInc}}</div>
               <div style="font-size:13px; color:#0E7C66; font-weight:600;">ยอดสุทธิ ฿{{empTooltipNet}}</div>
               <div style="font-size:13px; color:#F97316; font-weight:600;">ค่าใช้จ่าย ฿{{empTooltipExp}}</div>
             </div>
@@ -501,9 +502,8 @@
             <div style="position:absolute; top:14px; right:16px; z-index:10; background:#fff; border:1.5px solid #C3E0D6; border-radius:10px; padding:10px 14px; box-shadow:0 4px 18px rgba(0,0,0,0.12); display:flex; flex-direction:column; gap:5px; min-width:140px; pointer-events:none;">
               <div style="display:flex; align-items:center; gap:6px;">
                 <div style="width:9px; height:9px; border-radius:50%; background:{{lineTooltipColor}}; flex-shrink:0;"></div>
-                <div style="font-size:13px; font-weight:700; color:#1E2A26;">วัน{{lineTooltipDay}}</div>
+                <div style="font-size:13px; font-weight:700; color:#1E2A26;">วัน{{lineTooltipDay}} ({{lineTooltipDate}})</div>
               </div>
-              <div style="font-size:12px; color:#9AA39D;">{{lineTooltipWeek}}</div>
               <div style="font-size:13px; color:#0E7C66; font-weight:700;">฿{{lineTooltipVal}}</div>
             </div>
           </sc-if>
@@ -1425,9 +1425,9 @@ class Component extends DCLogic {
         expBarStyle: `width:100%; height:${Math.max(0, expH).toFixed(1)}px; border-radius:${expH > 1 ? '0 0 4px 4px' : '0'}; background:${isHovered ? '#D97006' : '#F97316'}; flex-shrink:0; transition:background 0.1s;`,
         labelColor: isHovered ? '#0E7C66' : '#1E2A26',
         colStyle: `flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:5px; height:100%; min-width:52px; cursor:pointer;`,
-        hoverIn: () => this.setState({ empTooltip: { key: g.employee, label: g.employee, netDisplay: fmt(net), expDisplay: fmt(g.expense) } }),
+        hoverIn: () => this.setState({ empTooltip: { key: g.employee, label: g.employee, incDisplay: fmt(gross), netDisplay: fmt(net), expDisplay: fmt(g.expense) } }),
         hoverOut: () => this.setState({ empTooltip: null }),
-        onClick: () => this.setState({ empTooltip: s.empTooltip?.key === g.employee ? null : { key: g.employee, label: g.employee, netDisplay: fmt(net), expDisplay: fmt(g.expense) } }),
+        onClick: () => this.setState({ empTooltip: s.empTooltip?.key === g.employee ? null : { key: g.employee, label: g.employee, incDisplay: fmt(gross), netDisplay: fmt(net), expDisplay: fmt(g.expense) } }),
       };
     });
 
@@ -1481,8 +1481,10 @@ class Component extends DCLogic {
           label: '', hoverIn: noop, hoverOut: noop, onClick: noop,
         });
       }
-      pts.forEach(p => {
-        const tooltipData = { weekLabel, dayLabel: p.dayLabel, valDisplay: fmt(p.v), color };
+      pts.forEach((p, i) => {
+        const dotD = new Date(wkSun + 'T00:00:00'); dotD.setDate(dotD.getDate() + i);
+        const dotDateLabel = `${dotD.getDate()}/${dotD.getMonth()+1}/${String(dotD.getFullYear()+543).slice(-2)}`;
+        const tooltipData = { weekLabel, dayLabel: p.dayLabel, dotDateLabel, valDisplay: fmt(p.v), color };
         const isActive = s.lineTooltip?.weekLabel === weekLabel && s.lineTooltip?.dayLabel === p.dayLabel;
         lineChartItems.push({
           style: `position:absolute; left:${(p.x - 5).toFixed(1)}px; top:${(p.y - 5).toFixed(1)}px; width:${isActive ? 12 : 10}px; height:${isActive ? 12 : 10}px; border-radius:50%; background:${color}; border:2px solid ${isActive ? '#fff' : color}; box-shadow:${isActive ? `0 0 0 2px ${color}` : 'none'}; z-index:2; cursor:pointer; transition:all 0.1s;`,
@@ -1708,12 +1710,14 @@ class Component extends DCLogic {
       empTooltipVisible: !!s.empTooltip,
       empTooltipHidden: !s.empTooltip,
       empTooltipLabel: s.empTooltip?.label || '',
+      empTooltipInc: s.empTooltip?.incDisplay || '',
       empTooltipNet: s.empTooltip?.netDisplay || '',
       empTooltipExp: s.empTooltip?.expDisplay || '',
       lineTooltipVisible: !!s.lineTooltip,
       lineTooltipHidden: !s.lineTooltip,
       lineTooltipWeek: s.lineTooltip?.weekLabel || '',
       lineTooltipDay: s.lineTooltip?.dayLabel || '',
+      lineTooltipDate: s.lineTooltip?.dotDateLabel || '',
       lineTooltipVal: s.lineTooltip?.valDisplay || '',
       lineTooltipColor: s.lineTooltip?.color || '#0E7C66',
 
