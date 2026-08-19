@@ -427,11 +427,11 @@
 
       <sc-if value="{{adminViewIsEmployee}}" hint-placeholder-val="{{false}}">
         <div style="background:#fff; border:1px solid #EEE8DB; border-radius:16px; padding:20px; overflow-x:auto;">
-          <div style="font-size:15px; font-weight:800; color:#1E2A26; margin-bottom:16px;">ยอดขายรวมรายวัน (7 วันล่าสุด)</div>
-          <div style="display:flex; align-items:flex-end; gap:14px; height:180px; min-width:480px;">
-            <sc-for list="{{chartBars}}" as="bar" hint-placeholder-count="7">
-              <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:8px; height:100%; min-width:56px;">
-                <div style="font-size:11.5px; color:#7A8580; font-weight:600; white-space:nowrap;">฿{{bar.valueDisplay}}</div>
+          <div style="font-size:15px; font-weight:800; color:#1E2A26; margin-bottom:16px;">เปรียบเทียบยอดขายรายพนักงาน</div>
+          <div style="display:flex; align-items:flex-end; gap:10px; height:180px; min-width:480px;">
+            <sc-for list="{{employeeChartBars}}" as="bar" hint-placeholder-count="8">
+              <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:6px; height:100%; min-width:52px;">
+                <div style="font-size:11px; color:#7A8580; font-weight:600; white-space:nowrap;">฿{{bar.valueDisplay}}</div>
                 <div style="{{bar.barStyle}}"></div>
                 <div style="font-size:12px; color:{{bar.labelColor}}; font-weight:700; white-space:nowrap;">{{bar.label}}</div>
               </div>
@@ -469,11 +469,11 @@
 
       <sc-if value="{{adminViewIsStore}}" hint-placeholder-val="{{false}}">
         <div style="background:#fff; border:1px solid #EEE8DB; border-radius:16px; padding:20px; overflow-x:auto;">
-          <div style="font-size:15px; font-weight:800; color:#1E2A26; margin-bottom:16px;">ยอดขายรวมรายวัน (7 วันล่าสุด)</div>
-          <div style="display:flex; align-items:flex-end; gap:14px; height:180px; min-width:480px;">
-            <sc-for list="{{chartBars}}" as="bar" hint-placeholder-count="7">
-              <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:8px; height:100%; min-width:56px;">
-                <div style="font-size:11.5px; color:#7A8580; font-weight:600; white-space:nowrap;">฿{{bar.valueDisplay}}</div>
+          <div style="font-size:15px; font-weight:800; color:#1E2A26; margin-bottom:16px;">ยอดขายแบ่งตามวันในสัปดาห์</div>
+          <div style="display:flex; align-items:flex-end; gap:14px; height:180px; min-width:360px;">
+            <sc-for list="{{dowChartBars}}" as="bar" hint-placeholder-count="7">
+              <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:8px; height:100%; min-width:44px;">
+                <div style="font-size:11.5px; color:#7A8580; font-weight:600; white-space:nowrap;">{{bar.valueDisplay}}</div>
                 <div style="{{bar.barStyle}}"></div>
                 <div style="font-size:12px; color:{{bar.labelColor}}; font-weight:700; white-space:nowrap;">{{bar.label}}</div>
               </div>
@@ -1264,6 +1264,35 @@ class Component extends DCLogic {
       barStyle: `width:100%; max-width:44px; height:${Math.max(6, (w.v / maxV) * 130)}px; border-radius:8px 8px 0 0; background:${w.today ? '#0E7C66' : '#CFE3DC'};`,
     }));
 
+    const maxEmpNet = Math.max(...groupedByEmployee.map(g => g.cash + g.transfer - g.expense), 1);
+    const employeeChartBars = groupedByEmployee.map(g => {
+      const net = g.cash + g.transfer - g.expense;
+      return {
+        label: g.employee.split(' ')[0],
+        valueDisplay: fmt(net),
+        barStyle: `width:100%; max-width:60px; height:${Math.max(6, (net / maxEmpNet) * 130)}px; border-radius:8px 8px 0 0; background:#0E7C66;`,
+        labelColor: '#1E2A26',
+      };
+    });
+
+    const DOW_ORDER = [1, 2, 3, 4, 5, 6, 0];
+    const DOW_LABELS = ['จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส', 'อา'];
+    const dowTotals = new Array(7).fill(0);
+    adminFiltered.forEach(r => {
+      const dow = new Date(r.date + 'T00:00:00').getDay();
+      dowTotals[dow] += r.cash + r.transfer - (r.expense || 0);
+    });
+    const maxDowVal = Math.max(...DOW_ORDER.map(d => dowTotals[d]), 1);
+    const dowChartBars = DOW_ORDER.map((dow, i) => {
+      const val = dowTotals[dow];
+      return {
+        label: DOW_LABELS[i],
+        valueDisplay: val > 0 ? fmt(val) : '—',
+        barStyle: `width:100%; max-width:44px; height:${val > 0 ? Math.max(6, (val / maxDowVal) * 130) : 0}px; border-radius:8px 8px 0 0; background:${val > 0 ? '#0E7C66' : '#E8E2D8'};`,
+        labelColor: val > 0 ? '#1E2A26' : '#C8C2B4',
+      };
+    });
+
     const isLoggedIn = !!s.employeeName;
 
     const uniqueEmployees = [...new Set(s.allHistory.map(h => h.employee))];
@@ -1468,7 +1497,7 @@ class Component extends DCLogic {
       reportedCount: reportedCodes.size, totalStoreCount: this.STORES.length,
       hasNotReported: notReportedStores.length > 0, notReportedCount: notReportedStores.length, notReportedStores,
       isSingleDay,
-      chartBars,
+      chartBars, employeeChartBars, dowChartBars,
 
       hasAdminDateFilter: !!(s.adminDateFrom || s.adminDateTo), clearAdminDateFilter: this.clearAdminDateFilter,
       openAdminPickerFrom: () => this.openAdminPicker('from'),
