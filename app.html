@@ -456,8 +456,8 @@
           </div>
         </div>
         <div style="background:#fff; border:1px solid #EEE8DB; border-radius:16px; padding:20px; overflow-x:auto;">
-          <div style="font-size:15px; font-weight:800; color:#1E2A26; margin-bottom:14px;">ยอดขายรายพนักงาน</div>
-          <table style="width:100%; border-collapse:collapse; min-width:600px;">
+          <div style="font-size:15px; font-weight:800; color:#1E2A26; margin-bottom:14px;">รายละเอียดยอดขายรายพนักงาน</div>
+          <table style="width:100%; border-collapse:collapse; min-width:620px;">
             <thead>
               <tr style="text-align:left; border-bottom:2px solid #F0EBDF;">
                 <th style="padding:10px 8px; font-size:13px; color:#9AA39D;">พนักงาน</th>
@@ -466,10 +466,11 @@
                 <th style="padding:10px 8px; font-size:13px; color:#9AA39D; text-align:right;">เงินโอน</th>
                 <th style="padding:10px 8px; font-size:13px; color:#B0432F; text-align:right;">(หัก)</th>
                 <th style="padding:10px 8px; font-size:13px; color:#9AA39D; text-align:right;">สุทธิ</th>
+                <th style="padding:10px 8px;"></th>
               </tr>
             </thead>
             <tbody>
-              <sc-for list="{{groupedByEmployee}}" as="g" hint-placeholder-count="5">
+              <sc-for list="{{empPagedRows}}" as="g" hint-placeholder-count="5">
                 <tr style="border-bottom:1px solid #F5F1E7;">
                   <td style="padding:12px 8px; font-size:14.5px; font-weight:700; color:#1E2A26;">{{g.employee}}</td>
                   <td style="padding:12px 8px; font-size:14px; color:#4E5854; text-align:right;">{{g.count}}</td>
@@ -477,10 +478,20 @@
                   <td style="padding:12px 8px; font-size:14px; color:#1E2A26; text-align:right;">฿{{g.transferDisplay}}</td>
                   <td style="padding:12px 8px; font-size:14px; color:{{g.expenseCellColor}}; text-align:right;">{{g.expenseCell}}</td>
                   <td style="padding:12px 8px; font-size:14.5px; font-weight:800; color:#0E7C66; text-align:right;">฿{{g.netDisplay}}</td>
+                  <td style="padding:8px 6px; text-align:center;">
+                    <div onClick="{{g.openDetail}}" style="width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;background:#F1EDE1;border-radius:8px;cursor:pointer;">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="#0E7C66" strokeWidth="1.8"/><path d="M16.5 16.5L21 21" stroke="#0E7C66" strokeWidth="1.8" strokeLinecap="round"/></svg>
+                    </div>
+                  </td>
                 </tr>
               </sc-for>
             </tbody>
           </table>
+          <div style="display:flex; align-items:center; justify-content:flex-end; gap:8px; margin-top:14px;">
+            <div onClick="{{empPrevPage}}" style="{{empPrevPageStyle}}">‹</div>
+            <div style="font-size:13px; color:#4E5854; font-weight:600; min-width:48px; text-align:center;">{{empPageInfo}}</div>
+            <div onClick="{{empNextPage}}" style="{{empNextPageStyle}}">›</div>
+          </div>
         </div>
       </sc-if>
 
@@ -514,8 +525,8 @@
           </div>
         </div>
         <div style="background:#fff; border:1px solid #EEE8DB; border-radius:16px; padding:20px; overflow-x:auto;">
-          <div style="font-size:15px; font-weight:800; color:#1E2A26; margin-bottom:14px;">ยอดขายรายร้านค้า</div>
-          <table style="width:100%; border-collapse:collapse; min-width:600px;">
+          <div style="font-size:15px; font-weight:800; color:#1E2A26; margin-bottom:14px;">รายละเอียดยอดขายรายร้านค้า</div>
+          <table style="width:100%; border-collapse:collapse; min-width:620px;">
             <thead>
               <tr style="text-align:left; border-bottom:2px solid #F0EBDF;">
                 <th style="padding:10px 8px; font-size:13px; color:#9AA39D;">ร้านค้า</th>
@@ -524,10 +535,11 @@
                 <th style="padding:10px 8px; font-size:13px; color:#9AA39D; text-align:right;">เงินโอน</th>
                 <th style="padding:10px 8px; font-size:13px; color:#B0432F; text-align:right;">(หัก)</th>
                 <th style="padding:10px 8px; font-size:13px; color:#9AA39D; text-align:right;">สุทธิ</th>
+                <th style="padding:10px 8px;"></th>
               </tr>
             </thead>
             <tbody>
-              <sc-for list="{{groupedByStore}}" as="g" hint-placeholder-count="5">
+              <sc-for list="{{storePagedRows}}" as="g" hint-placeholder-count="5">
                 <tr style="border-bottom:1px solid #F5F1E7;">
                   <td style="padding:12px 8px; font-size:14.5px; font-weight:700; color:#1E2A26;">{{g.storeLabel}}</td>
                   <td style="padding:12px 8px; font-size:14px; color:#4E5854; text-align:right;">{{g.count}}</td>
@@ -535,10 +547,86 @@
                   <td style="padding:12px 8px; font-size:14px; color:#1E2A26; text-align:right;">฿{{g.transferDisplay}}</td>
                   <td style="padding:12px 8px; font-size:14px; color:{{g.expenseCellColor}}; text-align:right;">{{g.expenseCell}}</td>
                   <td style="padding:12px 8px; font-size:14.5px; font-weight:800; color:#0E7C66; text-align:right;">฿{{g.netDisplay}}</td>
+                  <td style="padding:8px 6px; text-align:center;">
+                    <div onClick="{{g.openDetail}}" style="width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;background:#F1EDE1;border-radius:8px;cursor:pointer;">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="#0E7C66" strokeWidth="1.8"/><path d="M16.5 16.5L21 21" stroke="#0E7C66" strokeWidth="1.8" strokeLinecap="round"/></svg>
+                    </div>
+                  </td>
                 </tr>
               </sc-for>
             </tbody>
           </table>
+          <div style="display:flex; align-items:center; justify-content:flex-end; gap:8px; margin-top:14px;">
+            <div onClick="{{storePrevPage}}" style="{{storePrevPageStyle}}">‹</div>
+            <div style="font-size:13px; color:#4E5854; font-weight:600; min-width:48px; text-align:center;">{{storePageInfo}}</div>
+            <div onClick="{{storeNextPage}}" style="{{storeNextPageStyle}}">›</div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{showEmpDetail}}" hint-placeholder-val="{{false}}">
+        <div onClick="{{closeEmpDetail}}" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(20,26,23,0.55);z-index:60;display:flex;align-items:center;justify-content:center;padding:20px;">
+          <div onClick="{{stopPropagation}}" style="background:#fff;border-radius:18px;width:100%;max-width:540px;max-height:80vh;display:flex;flex-direction:column;overflow:hidden;">
+            <div style="padding:20px 24px 16px;border-bottom:1px solid #F0EBDF;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+              <div style="font-size:16px;font-weight:800;color:#1E2A26;">{{empDetailName}}</div>
+              <div onClick="{{closeEmpDetail}}" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:#F1EDE1;border-radius:100px;font-size:18px;color:#4E5854;cursor:pointer;">×</div>
+            </div>
+            <div style="overflow-y:auto;padding:0 24px 20px;">
+              <table style="width:100%;border-collapse:collapse;">
+                <thead>
+                  <tr style="border-bottom:2px solid #F0EBDF;">
+                    <th style="padding:12px 8px 10px 0;font-size:13px;color:#9AA39D;font-weight:600;text-align:left;">วันที่</th>
+                    <th style="padding:12px 8px 10px;font-size:13px;color:#9AA39D;font-weight:600;text-align:right;">รายได้</th>
+                    <th style="padding:12px 8px 10px;font-size:13px;color:#B0432F;font-weight:600;text-align:right;">(หัก)</th>
+                    <th style="padding:12px 0 10px 8px;font-size:13px;color:#9AA39D;font-weight:600;text-align:right;">สุทธิ</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <sc-for list="{{empDetailRecords}}" as="dr" hint-placeholder-count="5">
+                    <tr style="border-bottom:1px solid #F5F1E7;">
+                      <td style="padding:11px 8px 11px 0;font-size:13.5px;color:#4E5854;">{{dr.date}}</td>
+                      <td style="padding:11px 8px;font-size:13.5px;color:#1E2A26;text-align:right;">฿{{dr.incomeDisplay}}</td>
+                      <td style="padding:11px 8px;font-size:13.5px;color:{{dr.expColor}};text-align:right;">{{dr.expDisplay}}</td>
+                      <td style="padding:11px 0 11px 8px;font-size:14px;font-weight:800;color:#0E7C66;text-align:right;">฿{{dr.netDisplay}}</td>
+                    </tr>
+                  </sc-for>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{showStoreDetail}}" hint-placeholder-val="{{false}}">
+        <div onClick="{{closeStoreDetail}}" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(20,26,23,0.55);z-index:60;display:flex;align-items:center;justify-content:center;padding:20px;">
+          <div onClick="{{stopPropagation}}" style="background:#fff;border-radius:18px;width:100%;max-width:540px;max-height:80vh;display:flex;flex-direction:column;overflow:hidden;">
+            <div style="padding:20px 24px 16px;border-bottom:1px solid #F0EBDF;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+              <div style="font-size:16px;font-weight:800;color:#1E2A26;">{{storeDetailName}}</div>
+              <div onClick="{{closeStoreDetail}}" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:#F1EDE1;border-radius:100px;font-size:18px;color:#4E5854;cursor:pointer;">×</div>
+            </div>
+            <div style="overflow-y:auto;padding:0 24px 20px;">
+              <table style="width:100%;border-collapse:collapse;">
+                <thead>
+                  <tr style="border-bottom:2px solid #F0EBDF;">
+                    <th style="padding:12px 8px 10px 0;font-size:13px;color:#9AA39D;font-weight:600;text-align:left;">วันที่</th>
+                    <th style="padding:12px 8px 10px;font-size:13px;color:#9AA39D;font-weight:600;text-align:right;">รายได้</th>
+                    <th style="padding:12px 8px 10px;font-size:13px;color:#B0432F;font-weight:600;text-align:right;">(หัก)</th>
+                    <th style="padding:12px 0 10px 8px;font-size:13px;color:#9AA39D;font-weight:600;text-align:right;">สุทธิ</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <sc-for list="{{storeDetailRecords}}" as="dr" hint-placeholder-count="5">
+                    <tr style="border-bottom:1px solid #F5F1E7;">
+                      <td style="padding:11px 8px 11px 0;font-size:13.5px;color:#4E5854;">{{dr.date}}</td>
+                      <td style="padding:11px 8px;font-size:13.5px;color:#1E2A26;text-align:right;">฿{{dr.incomeDisplay}}</td>
+                      <td style="padding:11px 8px;font-size:13.5px;color:{{dr.expColor}};text-align:right;">{{dr.expDisplay}}</td>
+                      <td style="padding:11px 0 11px 8px;font-size:14px;font-weight:800;color:#0E7C66;text-align:right;">฿{{dr.netDisplay}}</td>
+                    </tr>
+                  </sc-for>
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </sc-if>
     </div>
@@ -852,6 +940,10 @@ class Component extends DCLogic {
     adminPickerM: new Date().getMonth(),
     empTooltip: null,
     lineTooltip: null,
+    empPage: 0,
+    storePage: 0,
+    empDetailOpen: null,
+    storeDetailOpen: null,
   };
 
   STORES = [
@@ -1282,13 +1374,31 @@ class Component extends DCLogic {
     const storeMap = new Map();
     adminFiltered.forEach(r => {
       const key = r.storeCode;
-      const g = storeMap.get(key) || { storeLabel: `${r.storeCode} ${r.storeName}`, count: 0, cash: 0, transfer: 0, expense: 0 };
+      const g = storeMap.get(key) || { storeCode: r.storeCode, storeLabel: `${r.storeCode} ${r.storeName}`, count: 0, cash: 0, transfer: 0, expense: 0 };
       g.count += 1; g.cash += r.cash; g.transfer += r.transfer; g.expense += (r.expense || 0);
       storeMap.set(key, g);
     });
     const groupedByStore = [...storeMap.values()]
       .map(g => ({ ...g, cashDisplay: fmt(g.cash), transferDisplay: fmt(g.transfer), expenseCell: g.expense > 0 ? `฿${fmt(g.expense)}` : '—', expenseCellColor: g.expense > 0 ? '#B0432F' : '#C8C2B4', netDisplay: fmt(g.cash + g.transfer - g.expense) }))
       .sort((a, b) => (b.cash + b.transfer - b.expense) - (a.cash + a.transfer - a.expense));
+
+    // Pagination + detail modals
+    const PAGE_SIZE = 10;
+    const fmtD = (iso) => { const [y2,m2,d2] = iso.split('-'); return `${Number(d2)} ${this.THAI_MONTHS_SHORT[Number(m2)-1]} ${Number(y2)+543}`; };
+    const btnOn = 'width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:#F1EDE1;color:#1E2A26;font-size:16px;font-weight:700;cursor:pointer;';
+    const btnOff = 'width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:#F8F5EF;color:#C8C2B4;font-size:16px;font-weight:700;';
+    const empTableRows = groupedByEmployee.map(g => ({ ...g, openDetail: () => this.setState({ empDetailOpen: g.employee }) }));
+    const empTP = Math.max(1, Math.ceil(empTableRows.length / PAGE_SIZE));
+    const empPg = Math.min(s.empPage, empTP - 1);
+    const empPagedRows = empTableRows.slice(empPg * PAGE_SIZE, (empPg + 1) * PAGE_SIZE);
+    const storeTableRows = groupedByStore.map(g => ({ ...g, openDetail: () => this.setState({ storeDetailOpen: g.storeCode }) }));
+    const storeTP = Math.max(1, Math.ceil(storeTableRows.length / PAGE_SIZE));
+    const storePg = Math.min(s.storePage, storeTP - 1);
+    const storePagedRows = storeTableRows.slice(storePg * PAGE_SIZE, (storePg + 1) * PAGE_SIZE);
+    const buildDetailRows = (recs) => recs.sort((a, b) => b.date.localeCompare(a.date)).map(r => { const inc = r.cash + r.transfer; const exp = r.expense || 0; return { date: fmtD(r.date), incomeDisplay: fmt(inc), expDisplay: exp > 0 ? fmt(exp) : '—', expColor: exp > 0 ? '#B0432F' : '#C8C2B4', netDisplay: fmt(inc - exp) }; });
+    const empDetailRecords = s.empDetailOpen ? buildDetailRows(adminFiltered.filter(r => r.employee === s.empDetailOpen)) : [];
+    const storeDetailLabel = s.storeDetailOpen ? (groupedByStore.find(g => g.storeCode === s.storeDetailOpen)?.storeLabel || s.storeDetailOpen) : '';
+    const storeDetailRecords = s.storeDetailOpen ? buildDetailRows(adminFiltered.filter(r => r.storeCode === s.storeDetailOpen)) : [];
 
     const weekData = [...this.WEEK_HISTORY, { d: '5 ก.ค. (วันนี้)', v: totalToday, today: true }];
     const maxV = Math.max(...weekData.map(w => w.v), 1);
@@ -1629,6 +1739,16 @@ class Component extends DCLogic {
       adminViewEmployeeStyle: `padding:9px 16px; border-radius:100px; font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap; background:${s.adminView === 'employee' ? '#0E7C66' : '#F1EDE1'}; color:${s.adminView === 'employee' ? '#fff' : '#4E5854'};`,
       adminViewStoreStyle: `padding:9px 16px; border-radius:100px; font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap; background:${s.adminView === 'store' ? '#0E7C66' : '#F1EDE1'}; color:${s.adminView === 'store' ? '#fff' : '#4E5854'};`,
       groupedByEmployee, groupedByStore,
+      empPagedRows, empPageInfo: `${empPg+1} / ${empTP}`,
+      empPrevPageStyle: empPg > 0 ? btnOn : btnOff, empNextPageStyle: empPg < empTP-1 ? btnOn : btnOff,
+      empPrevPage: () => this.setState(s => ({empPage: Math.max(0, s.empPage-1)})),
+      empNextPage: () => this.setState(s => ({empPage: Math.min(empTP-1, s.empPage+1)})),
+      storePagedRows, storePageInfo: `${storePg+1} / ${storeTP}`,
+      storePrevPageStyle: storePg > 0 ? btnOn : btnOff, storeNextPageStyle: storePg < storeTP-1 ? btnOn : btnOff,
+      storePrevPage: () => this.setState(s => ({storePage: Math.max(0, s.storePage-1)})),
+      storeNextPage: () => this.setState(s => ({storePage: Math.min(storeTP-1, s.storePage+1)})),
+      showEmpDetail: !!s.empDetailOpen, empDetailName: s.empDetailOpen || '', empDetailRecords, closeEmpDetail: () => this.setState({empDetailOpen:null}),
+      showStoreDetail: !!s.storeDetailOpen, storeDetailName: storeDetailLabel, storeDetailRecords, closeStoreDetail: () => this.setState({storeDetailOpen:null}),
 
       showProfileMenu: s.showProfileMenu, openProfileMenu: this.openProfileMenu, closeProfileMenu: this.closeProfileMenu,
       profileMenuOverlayStyle: `position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(20,26,23,0.55); display:flex; align-items:center; justify-content:center; z-index:50; padding:20px;`,
