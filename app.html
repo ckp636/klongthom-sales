@@ -426,34 +426,33 @@
       </sc-if>
 
       <sc-if value="{{adminViewIsEmployee}}" hint-placeholder-val="{{false}}">
-        <div style="background:#fff; border:1px solid #EEE8DB; border-radius:16px; padding:20px; overflow-x:auto;">
-          <div style="font-size:15px; font-weight:800; color:#1E2A26; margin-bottom:10px;">เปรียบเทียบยอดขายรายพนักงาน</div>
-          <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px; flex-wrap:wrap;">
-            <div style="display:flex; align-items:center; gap:5px;"><div style="width:12px; height:12px; background:#0E7C66; border-radius:2px;"></div><div style="font-size:12px; color:#7A8580;">ยอดสุทธิ</div></div>
-            <div style="display:flex; align-items:center; gap:5px;"><div style="width:12px; height:12px; background:#F97316; border-radius:2px;"></div><div style="font-size:12px; color:#7A8580;">ค่าใช้จ่าย</div></div>
-          </div>
+        <div style="background:#fff; border:1px solid #EEE8DB; border-radius:16px; position:relative;">
           <sc-if value="{{empTooltipVisible}}" hint-placeholder-val="{{false}}">
-            <div style="background:#F1F9F6; border:1.5px solid #C3E0D6; border-radius:10px; padding:8px 14px; margin-bottom:12px; display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+            <div style="position:absolute; top:14px; right:16px; z-index:10; background:#fff; border:1.5px solid #C3E0D6; border-radius:10px; padding:10px 14px; box-shadow:0 4px 18px rgba(0,0,0,0.12); display:flex; flex-direction:column; gap:5px; min-width:160px; pointer-events:none;">
               <div style="font-size:13px; font-weight:700; color:#1E2A26;">{{empTooltipLabel}}</div>
               <div style="font-size:13px; color:#0E7C66; font-weight:600;">ยอดสุทธิ ฿{{empTooltipNet}}</div>
               <div style="font-size:13px; color:#F97316; font-weight:600;">ค่าใช้จ่าย ฿{{empTooltipExp}}</div>
             </div>
           </sc-if>
-          <sc-if value="{{empTooltipHidden}}" hint-placeholder-val="{{true}}">
-            <div style="font-size:12px; color:#C8C2B4; margin-bottom:12px;">คลิก หรือ ชี้เมาส์ที่แท่งเพื่อดูรายละเอียด</div>
-          </sc-if>
-          <div style="display:flex; align-items:flex-end; gap:10px; height:185px; min-width:480px;">
-            <sc-for list="{{employeeChartBars}}" as="bar" hint-placeholder-count="8">
-              <div style="{{bar.colStyle}}" onMouseEnter="{{bar.hoverIn}}" onMouseLeave="{{bar.hoverOut}}" onClick="{{bar.onClick}}">
-                <div style="font-size:11px; color:#7A8580; font-weight:600; white-space:nowrap;">฿{{bar.valueDisplay}}</div>
-                <div style="display:flex; flex-direction:column; align-items:center; width:100%; max-width:48px;">
-                  <div style="{{bar.netBarStyle}}"></div>
-                  <div style="{{bar.expBarStyle}}"></div>
+          <div style="padding:20px; overflow-x:auto;">
+            <div style="font-size:15px; font-weight:800; color:#1E2A26; margin-bottom:10px;">เปรียบเทียบยอดขายรายพนักงาน</div>
+            <div style="display:flex; align-items:center; gap:12px; margin-bottom:14px; flex-wrap:wrap;">
+              <div style="display:flex; align-items:center; gap:5px;"><div style="width:12px; height:12px; background:#0E7C66; border-radius:2px;"></div><div style="font-size:12px; color:#7A8580;">ยอดสุทธิ</div></div>
+              <div style="display:flex; align-items:center; gap:5px;"><div style="width:12px; height:12px; background:#F97316; border-radius:2px;"></div><div style="font-size:12px; color:#7A8580;">ค่าใช้จ่าย</div></div>
+            </div>
+            <div style="display:flex; align-items:flex-end; gap:10px; height:185px; min-width:480px;">
+              <sc-for list="{{employeeChartBars}}" as="bar" hint-placeholder-count="8">
+                <div style="{{bar.colStyle}}" onMouseEnter="{{bar.hoverIn}}" onMouseLeave="{{bar.hoverOut}}" onClick="{{bar.onClick}}">
+                  <div style="font-size:11px; color:#7A8580; font-weight:600; white-space:nowrap;">฿{{bar.valueDisplay}}</div>
+                  <div style="display:flex; flex-direction:column; align-items:center; width:100%; max-width:48px;">
+                    <div style="{{bar.netBarStyle}}"></div>
+                    <div style="{{bar.expBarStyle}}"></div>
+                  </div>
+                  <div style="font-size:12px; color:{{bar.labelColor}}; font-weight:700; white-space:nowrap;">{{bar.label}}</div>
+                  <div style="font-size:11px; color:#9AA39D; font-weight:500; white-space:nowrap;">{{bar.countLabel}}</div>
                 </div>
-                <div style="font-size:12px; color:{{bar.labelColor}}; font-weight:700; white-space:nowrap;">{{bar.label}}</div>
-                <div style="font-size:11px; color:#9AA39D; font-weight:500; white-space:nowrap;">{{bar.countLabel}}</div>
-              </div>
-            </sc-for>
+              </sc-for>
+            </div>
           </div>
         </div>
         <div style="background:#fff; border:1px solid #EEE8DB; border-radius:16px; padding:20px; overflow-x:auto;">
@@ -486,31 +485,32 @@
       </sc-if>
 
       <sc-if value="{{adminViewIsStore}}" hint-placeholder-val="{{false}}">
-        <div style="background:#fff; border:1px solid #EEE8DB; border-radius:16px; padding:20px; overflow-x:auto;">
-          <div style="font-size:15px; font-weight:800; color:#1E2A26; margin-bottom:10px;">ยอดขายแบ่งตามวันในสัปดาห์</div>
-          <div style="display:flex; align-items:center; gap:14px; margin-bottom:10px; flex-wrap:wrap;">
-            <sc-for list="{{lineChartLegend}}" as="leg" hint-placeholder-count="2">
-              <div style="display:flex; align-items:center; gap:6px;">
-                <div style="{{leg.lineStyle}}"></div>
-                <div style="font-size:12px; color:#7A8580; font-weight:600;">{{leg.label}}</div>
-              </div>
-            </sc-for>
-          </div>
+        <div style="background:#fff; border:1px solid #EEE8DB; border-radius:16px; position:relative;">
           <sc-if value="{{lineTooltipVisible}}" hint-placeholder-val="{{false}}">
-            <div style="background:#F1F9F6; border:1.5px solid #C3E0D6; border-radius:10px; padding:8px 14px; margin-bottom:12px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-              <div style="width:10px; height:10px; border-radius:50%; background:{{lineTooltipColor}}; flex-shrink:0;"></div>
-              <div style="font-size:13px; font-weight:700; color:#1E2A26;">วัน{{lineTooltipDay}}</div>
-              <div style="font-size:12px; color:#7A8580;">{{lineTooltipWeek}}</div>
-              <div style="font-size:13px; color:#0E7C66; font-weight:600;">ยอดสุทธิ ฿{{lineTooltipVal}}</div>
+            <div style="position:absolute; top:14px; right:16px; z-index:10; background:#fff; border:1.5px solid #C3E0D6; border-radius:10px; padding:10px 14px; box-shadow:0 4px 18px rgba(0,0,0,0.12); display:flex; flex-direction:column; gap:5px; min-width:140px; pointer-events:none;">
+              <div style="display:flex; align-items:center; gap:6px;">
+                <div style="width:9px; height:9px; border-radius:50%; background:{{lineTooltipColor}}; flex-shrink:0;"></div>
+                <div style="font-size:13px; font-weight:700; color:#1E2A26;">วัน{{lineTooltipDay}}</div>
+              </div>
+              <div style="font-size:12px; color:#9AA39D;">{{lineTooltipWeek}}</div>
+              <div style="font-size:13px; color:#0E7C66; font-weight:700;">฿{{lineTooltipVal}}</div>
             </div>
           </sc-if>
-          <sc-if value="{{lineTooltipHidden}}" hint-placeholder-val="{{true}}">
-            <div style="font-size:12px; color:#C8C2B4; margin-bottom:12px;">คลิก หรือ ชี้เมาส์ที่จุดเพื่อดูรายละเอียด</div>
-          </sc-if>
-          <div style="position:relative; height:155px; width:560px;">
-            <sc-for list="{{lineChartItems}}" as="li" hint-placeholder-count="40">
-              <div style="{{li.style}}" onMouseEnter="{{li.hoverIn}}" onMouseLeave="{{li.hoverOut}}" onClick="{{li.onClick}}">{{li.label}}</div>
-            </sc-for>
+          <div style="padding:20px; overflow-x:auto;">
+            <div style="font-size:15px; font-weight:800; color:#1E2A26; margin-bottom:10px;">ยอดขายแบ่งตามวันในสัปดาห์</div>
+            <div style="display:flex; align-items:center; gap:14px; margin-bottom:14px; flex-wrap:wrap;">
+              <sc-for list="{{lineChartLegend}}" as="leg" hint-placeholder-count="2">
+                <div style="display:flex; align-items:center; gap:6px;">
+                  <div style="{{leg.lineStyle}}"></div>
+                  <div style="font-size:12px; color:#7A8580; font-weight:600;">{{leg.label}}</div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="position:relative; height:155px; width:560px;">
+              <sc-for list="{{lineChartItems}}" as="li" hint-placeholder-count="40">
+                <div style="{{li.style}}" onMouseEnter="{{li.hoverIn}}" onMouseLeave="{{li.hoverOut}}" onClick="{{li.onClick}}">{{li.label}}</div>
+              </sc-for>
+            </div>
           </div>
         </div>
         <div style="background:#fff; border:1px solid #EEE8DB; border-radius:16px; padding:20px; overflow-x:auto;">
