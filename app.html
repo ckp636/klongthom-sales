@@ -428,13 +428,23 @@
       <sc-if value="{{adminViewIsEmployee}}" hint-placeholder-val="{{false}}">
         <div style="background:#fff; border:1px solid #EEE8DB; border-radius:16px; padding:20px; overflow-x:auto;">
           <div style="font-size:15px; font-weight:800; color:#1E2A26; margin-bottom:10px;">เปรียบเทียบยอดขายรายพนักงาน</div>
-          <div style="display:flex; gap:12px; margin-bottom:14px;">
+          <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px; flex-wrap:wrap;">
             <div style="display:flex; align-items:center; gap:5px;"><div style="width:12px; height:12px; background:#0E7C66; border-radius:2px;"></div><div style="font-size:12px; color:#7A8580;">ยอดสุทธิ</div></div>
             <div style="display:flex; align-items:center; gap:5px;"><div style="width:12px; height:12px; background:#F97316; border-radius:2px;"></div><div style="font-size:12px; color:#7A8580;">ค่าใช้จ่าย</div></div>
           </div>
+          <sc-if value="{{empTooltipVisible}}" hint-placeholder-val="{{false}}">
+            <div style="background:#F1F9F6; border:1.5px solid #C3E0D6; border-radius:10px; padding:8px 14px; margin-bottom:12px; display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+              <div style="font-size:13px; font-weight:700; color:#1E2A26;">{{empTooltipLabel}}</div>
+              <div style="font-size:13px; color:#0E7C66; font-weight:600;">ยอดสุทธิ ฿{{empTooltipNet}}</div>
+              <div style="font-size:13px; color:#F97316; font-weight:600;">ค่าใช้จ่าย ฿{{empTooltipExp}}</div>
+            </div>
+          </sc-if>
+          <sc-if value="{{empTooltipHidden}}" hint-placeholder-val="{{true}}">
+            <div style="font-size:12px; color:#C8C2B4; margin-bottom:12px;">คลิก หรือ ชี้เมาส์ที่แท่งเพื่อดูรายละเอียด</div>
+          </sc-if>
           <div style="display:flex; align-items:flex-end; gap:10px; height:185px; min-width:480px;">
             <sc-for list="{{employeeChartBars}}" as="bar" hint-placeholder-count="8">
-              <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:5px; height:100%; min-width:52px;">
+              <div style="{{bar.colStyle}}" onMouseEnter="{{bar.hoverIn}}" onMouseLeave="{{bar.hoverOut}}" onClick="{{bar.onClick}}">
                 <div style="font-size:11px; color:#7A8580; font-weight:600; white-space:nowrap;">฿{{bar.valueDisplay}}</div>
                 <div style="display:flex; flex-direction:column; align-items:center; width:100%; max-width:48px;">
                   <div style="{{bar.netBarStyle}}"></div>
@@ -478,7 +488,7 @@
       <sc-if value="{{adminViewIsStore}}" hint-placeholder-val="{{false}}">
         <div style="background:#fff; border:1px solid #EEE8DB; border-radius:16px; padding:20px; overflow-x:auto;">
           <div style="font-size:15px; font-weight:800; color:#1E2A26; margin-bottom:10px;">ยอดขายแบ่งตามวันในสัปดาห์</div>
-          <div style="display:flex; gap:14px; margin-bottom:14px; flex-wrap:wrap;">
+          <div style="display:flex; align-items:center; gap:14px; margin-bottom:10px; flex-wrap:wrap;">
             <sc-for list="{{lineChartLegend}}" as="leg" hint-placeholder-count="2">
               <div style="display:flex; align-items:center; gap:6px;">
                 <div style="{{leg.lineStyle}}"></div>
@@ -486,9 +496,20 @@
               </div>
             </sc-for>
           </div>
+          <sc-if value="{{lineTooltipVisible}}" hint-placeholder-val="{{false}}">
+            <div style="background:#F1F9F6; border:1.5px solid #C3E0D6; border-radius:10px; padding:8px 14px; margin-bottom:12px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+              <div style="width:10px; height:10px; border-radius:50%; background:{{lineTooltipColor}}; flex-shrink:0;"></div>
+              <div style="font-size:13px; font-weight:700; color:#1E2A26;">วัน{{lineTooltipDay}}</div>
+              <div style="font-size:12px; color:#7A8580;">{{lineTooltipWeek}}</div>
+              <div style="font-size:13px; color:#0E7C66; font-weight:600;">ยอดสุทธิ ฿{{lineTooltipVal}}</div>
+            </div>
+          </sc-if>
+          <sc-if value="{{lineTooltipHidden}}" hint-placeholder-val="{{true}}">
+            <div style="font-size:12px; color:#C8C2B4; margin-bottom:12px;">คลิก หรือ ชี้เมาส์ที่จุดเพื่อดูรายละเอียด</div>
+          </sc-if>
           <div style="position:relative; height:155px; width:560px;">
             <sc-for list="{{lineChartItems}}" as="li" hint-placeholder-count="40">
-              <div style="{{li.style}}">{{li.label}}</div>
+              <div style="{{li.style}}" onMouseEnter="{{li.hoverIn}}" onMouseLeave="{{li.hoverOut}}" onClick="{{li.onClick}}">{{li.label}}</div>
             </sc-for>
           </div>
         </div>
@@ -829,6 +850,8 @@ class Component extends DCLogic {
     adminPickerOpen: null,
     adminPickerY: new Date().getFullYear(),
     adminPickerM: new Date().getMonth(),
+    empTooltip: null,
+    lineTooltip: null,
   };
 
   STORES = [
@@ -1283,28 +1306,31 @@ class Component extends DCLogic {
       const totalH = Math.max(8, (gross / maxEmpGross) * 120);
       const expH = gross > 0 ? (g.expense / gross) * totalH : 0;
       const netH = totalH - expH;
+      const isHovered = s.empTooltip?.key === g.employee;
       return {
         label: g.employee.split(' ')[0],
         countLabel: `(${g.count})`,
         valueDisplay: fmt(net),
-        netBarStyle: `width:100%; height:${netH.toFixed(1)}px; border-radius:8px 8px 0 0; background:#0E7C66; flex-shrink:0;`,
-        expBarStyle: `width:100%; height:${Math.max(0, expH).toFixed(1)}px; border-radius:${expH > 1 ? '0 0 4px 4px' : '0'}; background:#F97316; flex-shrink:0;`,
-        labelColor: '#1E2A26',
+        netBarStyle: `width:100%; height:${netH.toFixed(1)}px; border-radius:8px 8px 0 0; background:${isHovered ? '#0B6453' : '#0E7C66'}; flex-shrink:0; transition:background 0.1s;`,
+        expBarStyle: `width:100%; height:${Math.max(0, expH).toFixed(1)}px; border-radius:${expH > 1 ? '0 0 4px 4px' : '0'}; background:${isHovered ? '#D97006' : '#F97316'}; flex-shrink:0; transition:background 0.1s;`,
+        labelColor: isHovered ? '#0E7C66' : '#1E2A26',
+        colStyle: `flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:5px; height:100%; min-width:52px; cursor:pointer;`,
+        hoverIn: () => this.setState({ empTooltip: { key: g.employee, label: g.employee, netDisplay: fmt(net), expDisplay: fmt(g.expense) } }),
+        hoverOut: () => this.setState({ empTooltip: null }),
+        onClick: () => this.setState({ empTooltip: s.empTooltip?.key === g.employee ? null : { key: g.employee, label: g.employee, netDisplay: fmt(net), expDisplay: fmt(g.expense) } }),
       };
     });
 
-    // Line chart for รายร้านค้า — one line per calendar week (Mon–Sun)
+    // Line chart for รายร้านค้า — one line per calendar week (Sun–Sat)
     const weekMap = new Map();
     adminFiltered.forEach(r => {
       const d = new Date(r.date + 'T00:00:00');
-      const day = d.getDay();
-      const daysToMon = day === 0 ? -6 : 1 - day;
-      const mon = new Date(d); mon.setDate(d.getDate() + daysToMon);
-      const wk = mon.toISOString().slice(0, 10);
+      const day = d.getDay(); // 0=Sun..6=Sat
+      // Week key: Sunday of that week
+      const sun = new Date(d); sun.setDate(d.getDate() - day);
+      const wk = sun.toISOString().slice(0, 10);
       if (!weekMap.has(wk)) weekMap.set(wk, new Array(7).fill(0));
-      const DOW_IDX = [1, 2, 3, 4, 5, 6, 0];
-      const idx = DOW_IDX.indexOf(d.getDay());
-      if (idx >= 0) weekMap.get(wk)[idx] += r.cash + r.transfer - (r.expense || 0);
+      weekMap.get(wk)[day] += r.cash + r.transfer - (r.expense || 0); // index = JS day (0=Sun)
     });
     const lcWeeks = [...weekMap.entries()].sort(([a], [b]) => a.localeCompare(b));
     const LINE_COLORS_CHART = ['#0E7C66', '#F59E0B', '#6366F1', '#EC4899', '#14B8A6'];
@@ -1312,19 +1338,28 @@ class Component extends DCLogic {
     const lcStep = (LC_W - LC_PAD * 2) / 6;
     const allWkVals = lcWeeks.flatMap(([, v]) => v);
     const maxWkVal = Math.max(...allWkVals, 1);
-    const DOW_LC_LABELS = ['จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส', 'อา'];
+    // อา จ อ พ พฤ ศ ส = Sun(0) Mon(1) Tue(2) Wed(3) Thu(4) Fri(5) Sat(6)
+    const DOW_LC_ORDER = [0, 1, 2, 3, 4, 5, 6];
+    const DOW_LC_LABELS = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
     const lineChartItems = [];
+    const noop = () => {};
     DOW_LC_LABELS.forEach((label, i) => {
       lineChartItems.push({
         style: `position:absolute; left:${(LC_PAD + i * lcStep).toFixed(1)}px; top:${LC_H + 8}px; transform:translateX(-50%); font-size:12px; font-weight:700; color:#9AA39D; white-space:nowrap;`,
-        label,
+        label, hoverIn: noop, hoverOut: noop, onClick: noop,
       });
     });
-    lcWeeks.forEach(([, vals], wi) => {
+    const f2lc = (dt) => `${dt.getDate()}/${dt.getMonth() + 1}`;
+    lcWeeks.forEach(([wkSun, vals], wi) => {
       const color = LINE_COLORS_CHART[wi % LINE_COLORS_CHART.length];
-      const pts = vals.map((v, i) => ({
+      const d0 = new Date(wkSun + 'T00:00:00');
+      const d1 = new Date(d0); d1.setDate(d0.getDate() + 6);
+      const weekLabel = `${f2lc(d0)}–${f2lc(d1)}`;
+      const pts = DOW_LC_ORDER.map((dow, i) => ({
         x: LC_PAD + i * lcStep,
-        y: LC_H - Math.max(0, (v / maxWkVal)) * (LC_H - 8),
+        y: LC_H - Math.max(0, (vals[dow] / maxWkVal)) * (LC_H - 8),
+        v: vals[dow],
+        dayLabel: DOW_LC_LABELS[i],
       }));
       for (let i = 0; i < pts.length - 1; i++) {
         const dx = pts[i + 1].x - pts[i].x;
@@ -1333,22 +1368,26 @@ class Component extends DCLogic {
         const angle = Math.atan2(dy, dx) * 180 / Math.PI;
         lineChartItems.push({
           style: `position:absolute; left:${pts[i].x.toFixed(1)}px; top:${pts[i].y.toFixed(1)}px; width:${len.toFixed(1)}px; height:2.5px; background:${color}; transform:rotate(${angle.toFixed(2)}deg); transform-origin:0 50%; z-index:1;`,
-          label: '',
+          label: '', hoverIn: noop, hoverOut: noop, onClick: noop,
         });
       }
       pts.forEach(p => {
+        const tooltipData = { weekLabel, dayLabel: p.dayLabel, valDisplay: fmt(p.v), color };
+        const isActive = s.lineTooltip?.weekLabel === weekLabel && s.lineTooltip?.dayLabel === p.dayLabel;
         lineChartItems.push({
-          style: `position:absolute; left:${(p.x - 4).toFixed(1)}px; top:${(p.y - 4).toFixed(1)}px; width:8px; height:8px; border-radius:50%; background:${color}; z-index:2;`,
+          style: `position:absolute; left:${(p.x - 5).toFixed(1)}px; top:${(p.y - 5).toFixed(1)}px; width:${isActive ? 12 : 10}px; height:${isActive ? 12 : 10}px; border-radius:50%; background:${color}; border:2px solid ${isActive ? '#fff' : color}; box-shadow:${isActive ? `0 0 0 2px ${color}` : 'none'}; z-index:2; cursor:pointer; transition:all 0.1s;`,
           label: '',
+          hoverIn: () => this.setState({ lineTooltip: tooltipData }),
+          hoverOut: () => this.setState({ lineTooltip: null }),
+          onClick: () => this.setState({ lineTooltip: isActive ? null : tooltipData }),
         });
       });
     });
-    const lineChartLegend = lcWeeks.map(([wkStart], wi) => {
+    const lineChartLegend = lcWeeks.map(([wkSun], wi) => {
       const color = LINE_COLORS_CHART[wi % LINE_COLORS_CHART.length];
-      const d0 = new Date(wkStart + 'T00:00:00');
+      const d0 = new Date(wkSun + 'T00:00:00');
       const d1 = new Date(d0); d1.setDate(d0.getDate() + 6);
-      const f2 = (dt) => `${dt.getDate()}/${dt.getMonth() + 1}`;
-      return { color, label: `${f2(d0)}–${f2(d1)}`, lineStyle: `width:20px; height:3px; background:${color}; border-radius:2px; flex-shrink:0;` };
+      return { color, label: `${f2lc(d0)}–${f2lc(d1)}`, lineStyle: `width:20px; height:3px; background:${color}; border-radius:2px; flex-shrink:0;` };
     });
 
     const isLoggedIn = !!s.employeeName;
@@ -1556,6 +1595,17 @@ class Component extends DCLogic {
       hasNotReported: notReportedStores.length > 0, notReportedCount: notReportedStores.length, notReportedStores,
       isSingleDay,
       chartBars, employeeChartBars, lineChartItems, lineChartLegend,
+      empTooltipVisible: !!s.empTooltip,
+      empTooltipHidden: !s.empTooltip,
+      empTooltipLabel: s.empTooltip?.label || '',
+      empTooltipNet: s.empTooltip?.netDisplay || '',
+      empTooltipExp: s.empTooltip?.expDisplay || '',
+      lineTooltipVisible: !!s.lineTooltip,
+      lineTooltipHidden: !s.lineTooltip,
+      lineTooltipWeek: s.lineTooltip?.weekLabel || '',
+      lineTooltipDay: s.lineTooltip?.dayLabel || '',
+      lineTooltipVal: s.lineTooltip?.valDisplay || '',
+      lineTooltipColor: s.lineTooltip?.color || '#0E7C66',
 
       hasAdminDateFilter: !!(s.adminDateFrom || s.adminDateTo), clearAdminDateFilter: this.clearAdminDateFilter,
       openAdminPickerFrom: () => this.openAdminPicker('from'),
