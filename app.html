@@ -632,6 +632,42 @@
     </div>
   </sc-if>
 
+  <sc-if value="{{isUserManageMode}}" hint-placeholder-val="{{false}}">
+    <div style="width:100%; max-width:900px; margin:0 auto; padding:20px; display:flex; flex-direction:column; gap:16px;">
+      <div style="display:flex; align-items:center; gap:14px; margin-bottom:4px;">
+        <div onClick="{{backFromUserManage}}" style="width:36px;height:36px;border-radius:100px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;color:#1E2A26;cursor:pointer;flex-shrink:0;box-shadow:0 1px 4px rgba(0,0,0,0.08);">←</div>
+        <div style="font-size:20px; font-weight:800; color:#1E2A26;">จัดการผู้ใช้งาน</div>
+      </div>
+      <sc-for list="{{userManageRows}}" as="u" hint-placeholder-count="5">
+        <div style="background:#fff; border-radius:16px; padding:16px 20px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+          <div style="width:46px;height:46px;border-radius:100px;background:{{u.avatarColor}};color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;flex-shrink:0;">{{u.initials}}</div>
+          <div style="flex:1; min-width:180px; display:flex; flex-direction:column; gap:4px;">
+            <sc-if value="{{u.isEditing}}" hint-placeholder-val="{{false}}">
+              <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                <input type="text" value="{{userManageNameDraft}}" onInput="{{setUserNameDraft}}" style="font-size:14px;font-weight:700;color:#1E2A26;border:1.5px solid #0E7C66;border-radius:8px;padding:5px 10px;flex:1;min-width:140px;outline:none;"/>
+                <div onClick="{{u.saveUserName}}" style="padding:6px 14px;background:#0E7C66;color:#fff;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;">บันทึก</div>
+                <div onClick="{{u.cancelEdit}}" style="padding:6px 14px;background:#F1EDE1;color:#4E5854;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;">ยกเลิก</div>
+              </div>
+            </sc-if>
+            <sc-if value="{{u.isNotEditing}}" hint-placeholder-val="{{true}}">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <div style="font-size:15px; font-weight:700; color:#1E2A26;">{{u.name}}</div>
+                <div onClick="{{u.startEdit}}" style="cursor:pointer;color:#9AA39D;font-size:13px;padding:2px 7px;border-radius:6px;background:#F8F5EF;flex-shrink:0;">✏</div>
+              </div>
+            </sc-if>
+            <div style="font-size:12px; color:#0E7C66; font-weight:600; display:flex; align-items:center; gap:5px;">
+              <div style="width:7px;height:7px;border-radius:50%;background:#0E7C66;flex-shrink:0;"></div>
+              LINE เชื่อมต่อแล้ว
+            </div>
+            <div style="font-size:12px; color:#9AA39D;">ร้านล่าสุด: {{u.lastStoreLabel}} · {{u.lastDateLabel}}</div>
+          </div>
+          <div style="{{u.statusStyle}}">{{u.statusLabel}}</div>
+          <div onClick="{{u.toggleActive}}" style="{{u.toggleStyle}}">{{u.toggleLabel}}</div>
+        </div>
+      </sc-for>
+    </div>
+  </sc-if>
+
   <sc-if value="{{showProfileMenu}}" hint-placeholder-val="{{false}}">
     <div onClick="{{closeProfileMenu}}" style="{{profileMenuOverlayStyle}}">
       <div onClick="{{stopPropagation}}" style="background:#fff; border-radius:18px; padding:24px; width:100%; max-width:360px; display:flex; flex-direction:column; gap:16px;">
@@ -647,7 +683,7 @@
           </div>
         </div>
         <sc-if value="{{isAdminUser}}" hint-placeholder-val="{{false}}">
-          <div onClick="{{goToAdminReport}}" style="width:100%; background:#F1EDE1; color:#0E7C66; font-size:15px; font-weight:700; padding:13px; border-radius:12px; text-align:center; cursor:pointer;">รายงานยอดขาย →</div>
+          <div onClick="{{goToUserManage}}" style="width:100%; background:#F1EDE1; color:#0E7C66; font-size:15px; font-weight:700; padding:13px; border-radius:12px; text-align:center; cursor:pointer;">จัดการผู้ใช้งาน →</div>
         </sc-if>
         <div onClick="{{goToHistory}}" style="width:100%; background:#F1EDE1; color:#0E7C66; font-size:15px; font-weight:700; padding:13px; border-radius:12px; text-align:center; cursor:pointer;">ประวัติส่งยอด →</div>
         <div onClick="{{doLogout}}" style="width:100%; border:1.5px solid #DDD5C4; color:#B04A3B; font-size:14.5px; font-weight:700; padding:12px; border-radius:12px; text-align:center; cursor:pointer;">ออกจากระบบ</div>
@@ -944,6 +980,9 @@ class Component extends DCLogic {
     storePage: 0,
     empDetailOpen: null,
     storeDetailOpen: null,
+    userManageEditName: null,
+    userManageNameDraft: '',
+    userStatus: {},
   };
 
   STORES = [
@@ -1264,6 +1303,27 @@ class Component extends DCLogic {
   goToAdminReport = () => this.setState({ mode: 'admin', showProfileMenu: false });
   goToHistory = () => this.setState(s => ({ screen: 'history', screenStack: [...s.screenStack, s.screen], showProfileMenu: false }));
 
+  goToUserManage = () => this.setState({ mode: 'userManage', showProfileMenu: false });
+  backFromUserManage = () => this.setState({ mode: 'admin' });
+  startEditUser = (name) => this.setState({ userManageEditName: name, userManageNameDraft: name });
+  setUserNameDraft = (e) => this.setState({ userManageNameDraft: e.target.value });
+  saveUserName2 = () => {
+    const oldName = this.state.userManageEditName;
+    const newName = (this.state.userManageNameDraft || '').trim() || oldName;
+    this.setState(s => ({
+      allHistory: s.allHistory.map(h => h.employee === oldName ? { ...h, employee: newName } : h),
+      submissionsToday: s.submissionsToday.map(r => r.employee === oldName ? { ...r, employee: newName } : r),
+      employeeName: s.employeeName === oldName ? newName : s.employeeName,
+      userManageEditName: null,
+      userManageNameDraft: '',
+    }));
+  };
+  cancelEditUser = () => this.setState({ userManageEditName: null, userManageNameDraft: '' });
+  toggleUserActive = (name) => this.setState(s => {
+    const isActive = s.userStatus[name] !== false;
+    return { userStatus: { ...s.userStatus, [name]: !isActive } };
+  });
+
   openHistoryPicker = (which) => {
     const iso = which === 'from' ? this.state.historyDateFrom : this.state.historyDateTo;
     const d = iso ? new Date(iso + 'T00:00:00') : new Date();
@@ -1399,6 +1459,36 @@ class Component extends DCLogic {
     const empDetailRecords = s.empDetailOpen ? buildDetailRows(adminFiltered.filter(r => r.employee === s.empDetailOpen)) : [];
     const storeDetailLabel = s.storeDetailOpen ? (groupedByStore.find(g => g.storeCode === s.storeDetailOpen)?.storeLabel || s.storeDetailOpen) : '';
     const storeDetailRecords = s.storeDetailOpen ? buildDetailRows(adminFiltered.filter(r => r.storeCode === s.storeDetailOpen)) : [];
+
+    // User management rows
+    const UM_COLORS = ['#0E7C66', '#6366F1', '#F59E0B', '#EC4899', '#14B8A6', '#0EA5E9'];
+    const allEmpNames = [...new Set(s.allHistory.map(r => r.employee))].sort();
+    const userManageRows = allEmpNames.map(name => {
+      const empRecs = s.allHistory.filter(r => r.employee === name).sort((a, b) => b.date.localeCompare(a.date));
+      const last = empRecs[0];
+      const isActive = s.userStatus[name] !== false;
+      const isEditing = s.userManageEditName === name;
+      const initials = name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+      const avatarColor = UM_COLORS[name.charCodeAt(0) % UM_COLORS.length];
+      return {
+        name,
+        initials,
+        avatarColor,
+        lastStoreLabel: last ? `${last.storeCode} ${last.storeName}` : '—',
+        lastDateLabel: last ? fmtD(last.date) : '—',
+        isActive,
+        isEditing,
+        isNotEditing: !isEditing,
+        statusLabel: isActive ? 'ใช้งานได้' : 'ระงับ',
+        statusStyle: `display:inline-flex;align-items:center;font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:100px;background:${isActive ? '#DCFCE7' : '#FEE2E2'};color:${isActive ? '#16A34A' : '#DC2626'};flex-shrink:0;`,
+        toggleStyle: `padding:7px 14px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid ${isActive ? '#EDD5D5' : '#C3E0D6'};color:${isActive ? '#B04A3B' : '#0E7C66'};background:${isActive ? '#FFF9F9' : '#F1F9F6'};flex-shrink:0;`,
+        toggleLabel: isActive ? 'ระงับ' : 'เปิดใช้งาน',
+        toggleActive: () => this.toggleUserActive(name),
+        startEdit: () => this.startEditUser(name),
+        saveUserName: this.saveUserName2,
+        cancelEdit: this.cancelEditUser,
+      };
+    });
 
     const weekData = [...this.WEEK_HISTORY, { d: '5 ก.ค. (วันนี้)', v: totalToday, today: true }];
     const maxV = Math.max(...weekData.map(w => w.v), 1);
@@ -1770,6 +1860,10 @@ class Component extends DCLogic {
       nameDraft: s.nameDraft, setNameDraft: this.setNameDraft, saveName: this.saveName,
       goToAdminReport: this.goToAdminReport,
       goToHistory: this.goToHistory,
+      isUserManageMode: s.mode === 'userManage',
+      goToUserManage: this.goToUserManage,
+      backFromUserManage: this.backFromUserManage,
+      userManageRows, userManageNameDraft: s.userManageNameDraft, setUserNameDraft: this.setUserNameDraft,
 
       showPhotoModal: !!photoSub,
       photoModalOverlayStyle: `position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(20,26,23,0.55); display:flex; align-items:center; justify-content:center; z-index:50; padding:20px;`,
