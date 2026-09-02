@@ -1403,7 +1403,7 @@ class Component extends DCLogic {
   };
 
   goToAdminReport = () => this.setState({ mode: 'admin', showProfileMenu: false });
-  goToHistory = () => this.setState(s => ({ screen: 'history', screenStack: [...s.screenStack, s.screen], showProfileMenu: false }));
+  goToHistory = () => this.setState(s => ({ mode: 'staff', screen: 'history', screenStack: [...s.screenStack, s.screen], showProfileMenu: false }));
 
   goToUserManage = () => this.setState({ mode: 'userManage', showProfileMenu: false });
   backFromUserManage = () => this.setState({ mode: 'admin' });
