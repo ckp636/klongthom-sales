@@ -634,10 +634,20 @@
 
   <sc-if value="{{isUserManageMode}}" hint-placeholder-val="{{false}}">
     <div style="width:100%; max-width:900px; margin:0 auto; padding:20px; display:flex; flex-direction:column; gap:16px;">
-      <div style="display:flex; align-items:center; gap:14px; margin-bottom:4px;">
-        <div onClick="{{backFromUserManage}}" style="width:36px;height:36px;border-radius:100px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;color:#1E2A26;cursor:pointer;flex-shrink:0;box-shadow:0 1px 4px rgba(0,0,0,0.08);">←</div>
-        <div style="font-size:20px; font-weight:800; color:#1E2A26;">จัดการผู้ใช้งาน</div>
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:14px; margin-bottom:4px; flex-wrap:wrap;">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div onClick="{{backFromUserManage}}" style="width:36px;height:36px;border-radius:100px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;color:#1E2A26;cursor:pointer;flex-shrink:0;box-shadow:0 1px 4px rgba(0,0,0,0.08);">←</div>
+          <div style="font-size:20px; font-weight:800; color:#1E2A26;">จัดการข้อมูล / {{userManageTabShort}}</div>
+        </div>
+        <div style="display:flex; align-items:center; gap:12px; flex-shrink:0;">
+          <div style="display:flex; background:#EFE9DC; border-radius:100px; padding:4px; gap:4px;">
+            <div onClick="{{setTabUsers}}" style="{{tabUsersStyle}}">ผู้ใช้งาน</div>
+            <div onClick="{{setTabStores}}" style="{{tabStoresStyle}}">ร้านค้า</div>
+          </div>
+          <div onClick="{{openProfileMenu}}" style="width:38px;height:38px;border-radius:100px;background:#0E7C66;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0;cursor:pointer;">{{employeeInitial}}</div>
+        </div>
       </div>
+      <sc-if value="{{isUserTab}}" hint-placeholder-val="{{true}}">
       <sc-for list="{{userManageRows}}" as="u" hint-placeholder-count="5">
         <div style="background:#fff; border-radius:16px; padding:16px 20px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
           <div style="width:46px;height:46px;border-radius:100px;background:{{u.avatarColor}};color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;flex-shrink:0;">{{u.initials}}</div>
@@ -668,6 +678,18 @@
           </div>
         </div>
       </sc-for>
+      </sc-if>
+      <sc-if value="{{isStoreTab}}" hint-placeholder-val="{{false}}">
+      <sc-for list="{{storeManageRows}}" as="st" hint-placeholder-count="5">
+        <div style="background:#fff; border-radius:16px; padding:16px 20px; display:flex; align-items:center; gap:14px;">
+          <div style="width:46px;height:46px;border-radius:12px;background:#F1EDE1;color:#0E7C66;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0;">{{st.code}}</div>
+          <div style="flex:1;">
+            <div style="font-size:15px; font-weight:700; color:#1E2A26;">{{st.name}}</div>
+            <div style="font-size:12px; color:#9AA39D;">รหัส {{st.code}} · {{st.countLabel}}</div>
+          </div>
+        </div>
+      </sc-for>
+      </sc-if>
     </div>
   </sc-if>
 
@@ -686,7 +708,7 @@
           </div>
         </div>
         <sc-if value="{{isAdminUser}}" hint-placeholder-val="{{false}}">
-          <div onClick="{{goToUserManage}}" style="width:100%; background:#F1EDE1; color:#0E7C66; font-size:15px; font-weight:700; padding:13px; border-radius:12px; text-align:center; cursor:pointer;">จัดการผู้ใช้งาน →</div>
+          <div onClick="{{goToUserManage}}" style="width:100%; background:#F1EDE1; color:#0E7C66; font-size:15px; font-weight:700; padding:13px; border-radius:12px; text-align:center; cursor:pointer;">จัดการข้อมูล →</div>
         </sc-if>
         <div onClick="{{goToHistory}}" style="width:100%; background:#F1EDE1; color:#0E7C66; font-size:15px; font-weight:700; padding:13px; border-radius:12px; text-align:center; cursor:pointer;">ประวัติส่งยอด →</div>
         <div onClick="{{doLogout}}" style="width:100%; border:1.5px solid #DDD5C4; color:#B04A3B; font-size:14.5px; font-weight:700; padding:12px; border-radius:12px; text-align:center; cursor:pointer;">ออกจากระบบ</div>
@@ -986,6 +1008,7 @@ class Component extends DCLogic {
     userManageEditName: null,
     userManageNameDraft: '',
     userStatus: {},
+    userManageTab: 'users',
   };
 
   STORES = [
@@ -1322,6 +1345,7 @@ class Component extends DCLogic {
 
   goToUserManage = () => this.setState({ mode: 'userManage', showProfileMenu: false });
   backFromUserManage = () => this.setState({ mode: 'admin' });
+  setUserManageTab = (tab) => this.setState({ userManageTab: tab });
   startEditUser = (name) => this.setState({ userManageEditName: name, userManageNameDraft: name });
   setUserNameDraft = (e) => this.setState({ userManageNameDraft: e.target.value });
   saveUserName2 = () => {
@@ -1884,6 +1908,17 @@ class Component extends DCLogic {
       goToUserManage: this.goToUserManage,
       backFromUserManage: this.backFromUserManage,
       userManageRows, userManageNameDraft: s.userManageNameDraft, setUserNameDraft: this.setUserNameDraft,
+      isUserTab: s.userManageTab !== 'stores',
+      isStoreTab: s.userManageTab === 'stores',
+      userManageTabShort: s.userManageTab === 'stores' ? 'ร้านค้า' : 'ผู้ใช้งาน',
+      tabUsersStyle: `padding:9px 18px; border-radius:100px; font-size:13.5px; font-weight:700; cursor:pointer; white-space:nowrap; background:${s.userManageTab !== 'stores' ? '#0E7C66' : 'transparent'}; color:${s.userManageTab !== 'stores' ? '#fff' : '#4E5854'};`,
+      tabStoresStyle: `padding:9px 18px; border-radius:100px; font-size:13.5px; font-weight:700; cursor:pointer; white-space:nowrap; background:${s.userManageTab === 'stores' ? '#0E7C66' : 'transparent'}; color:${s.userManageTab === 'stores' ? '#fff' : '#4E5854'};`,
+      setTabUsers: () => this.setUserManageTab('users'),
+      setTabStores: () => this.setUserManageTab('stores'),
+      storeManageRows: this.STORES.map(st => {
+        const recs = s.allHistory.filter(r => r.storeCode === st.code);
+        return { code: st.code, name: st.name, countLabel: `${recs.length} ครั้ง` };
+      }),
 
       showPhotoModal: !!photoSub,
       photoModalOverlayStyle: `position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(20,26,23,0.55); display:flex; align-items:center; justify-content:center; z-index:50; padding:20px;`,
