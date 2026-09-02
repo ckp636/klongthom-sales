@@ -669,12 +669,9 @@
             <div style="font-size:12px; color:#9AA39D;">ชื่อ LINE: {{u.lineDisplayName}}</div>
             <div style="font-size:12px; color:#9AA39D;">ร้านล่าสุด: {{u.lastStoreLabel}} · {{u.lastDateLabel}}</div>
           </div>
-          <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px; flex-shrink:0;">
-            <div style="display:flex; align-items:center; gap:6px;">
-              <div style="font-size:11.5px; color:#9AA39D; font-weight:600;">สถานะ</div>
-              <div style="{{u.statusStyle}}">{{u.statusLabel}}</div>
-            </div>
-            <div style="font-size:12px; color:#9AA39D;">login ล่าสุด: {{u.lastLogin}}</div>
+          <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
+            <div style="font-size:11.5px; color:#9AA39D; font-weight:600;">สถานะ</div>
+            <div style="{{u.statusStyle}}">{{u.statusLabel}}</div>
             <div onClick="{{u.toggleActive}}" style="{{u.toggleStyle}}">{{u.toggleLabel}}</div>
           </div>
         </div>
@@ -1634,7 +1631,7 @@ class Component extends DCLogic {
         lineDisplayName: lineProfile.displayName,
         lastLogin: lineProfile.lastLogin,
         lastStoreLabel: last ? `${last.storeCode} ${last.storeName}` : '—',
-        lastDateLabel: last ? fmtD(last.date) : '—',
+        lastDateLabel: last ? `${fmtD(last.date)}${last.time ? ' ' + last.time : ''}` : '—',
         isActive,
         isEditing,
         isNotEditing: !isEditing,
