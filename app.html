@@ -12,6 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700;800&family=Noto+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+  <script src="https://unpkg.com/qrcode@1.5.3/build/qrcode.min.js"></script>
   <style>
     * { box-sizing: border-box; }
     body { margin:0; }
@@ -669,12 +670,12 @@
             <div style="font-size:12px; color:#9AA39D;">ร้านล่าสุด: {{u.lastStoreLabel}} · {{u.lastDateLabel}}</div>
           </div>
           <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px; flex-shrink:0;">
-            <div style="font-size:12px; color:#9AA39D;">login ล่าสุด: {{u.lastLogin}}</div>
             <div style="display:flex; align-items:center; gap:6px;">
               <div style="font-size:11.5px; color:#9AA39D; font-weight:600;">สถานะ</div>
               <div style="{{u.statusStyle}}">{{u.statusLabel}}</div>
-              <div onClick="{{u.toggleActive}}" style="{{u.toggleStyle}}">{{u.toggleLabel}}</div>
             </div>
+            <div style="font-size:12px; color:#9AA39D;">login ล่าสุด: {{u.lastLogin}}</div>
+            <div onClick="{{u.toggleActive}}" style="{{u.toggleStyle}}">{{u.toggleLabel}}</div>
           </div>
         </div>
       </sc-for>
@@ -684,16 +685,23 @@
           <div style="background:#fff; border-radius:16px; padding:16px 20px; display:flex; align-items:center; gap:14px;">
             <div style="width:48px;height:48px;border-radius:12px;background:#F1EDE1;color:#0E7C66;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;">{{st.code}}</div>
             <div style="flex:1; display:flex; flex-direction:column; gap:4px;">
-              <div style="display:flex; align-items:center; gap:6px;">
-                <div style="{{st.statusDotStyle}}"></div>
-                <div style="font-size:15px; font-weight:700; color:#1E2A26;">{{st.name}}</div>
-                <div style="font-size:11.5px; font-weight:600; color:{{st.statusLabelColor}};">{{st.statusLabel}}</div>
-              </div>
+              <div style="font-size:15px; font-weight:700; color:#1E2A26;">{{st.name}}</div>
               <div style="font-size:12px; color:#9AA39D;">ผู้ขายล่าสุด: {{st.lastEmployee}} · {{st.lastDateLabel}}</div>
             </div>
+            <div style="{{st.statusStyle}}">{{st.statusLabel}}</div>
             <div onClick="{{st.startEdit}}" style="width:42px;height:42px;border-radius:12px;background:#F1EDE1;color:#4E5854;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;flex-shrink:0;">✏</div>
+            <div onClick="{{st.openQR}}" style="width:42px;height:42px;border-radius:12px;background:#0E7C66;color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;flex-shrink:0;">⊞</div>
           </div>
         </sc-for>
+        <sc-if value="{{qrModalOpen}}" hint-placeholder-val="{{false}}">
+          <div onClick="{{closeStoreQR}}" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(20,26,23,0.55);display:flex;align-items:center;justify-content:center;z-index:60;padding:20px;">
+            <div onClick="{{stopPropagation}}" style="background:#fff;border-radius:20px;padding:24px;width:100%;max-width:360px;display:flex;flex-direction:column;align-items:center;gap:16px;">
+              <div style="font-size:17px;font-weight:800;color:#1E2A26;">QR Code ร้าน {{qrStoreCode}}</div>
+              <img src="{{qrDataUrl}}" style="width:260px;height:260px;border-radius:12px;display:block;" alt="QR Code"/>
+              <div onClick="{{closeStoreQR}}" style="width:100%;text-align:center;padding:12px;background:#F1EDE1;color:#4E5854;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;">ปิด</div>
+            </div>
+          </div>
+        </sc-if>
         <sc-if value="{{storeEditModalOpen}}" hint-placeholder-val="{{false}}">
           <div onClick="{{cancelEditStore}}" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(20,26,23,0.55);display:flex;align-items:center;justify-content:center;z-index:60;padding:20px;">
             <div onClick="{{stopPropagation}}" style="background:#fff;border-radius:20px;padding:24px;width:100%;max-width:380px;display:flex;flex-direction:column;gap:16px;">
@@ -1061,6 +1069,8 @@ class Component extends DCLogic {
     storeEditCodeDraft: '',
     storeEditNameDraft: '',
     storeEditStatusDraft: true,
+    qrStoreCode: null,
+    qrDataUrl: '',
   };
 
   STORES = [
@@ -1422,6 +1432,35 @@ class Component extends DCLogic {
     }
   };
   cancelEditStore = () => this.setState({ storeEditCode: null });
+
+  openStoreQR = async (code) => {
+    const qrText = location.href.split('?')[0] + '?shop=' + code;
+    const size = 600;
+    try {
+      const baseUrl = await QRCode.toDataURL(qrText, {
+        width: size, margin: 2, errorCorrectionLevel: 'H',
+        color: { dark: '#1E2A26', light: '#FFFFFF' },
+      });
+      const canvas = document.createElement('canvas');
+      canvas.width = size; canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      img.onload = () => {
+        ctx.drawImage(img, 0, 0, size, size);
+        const bw = size * 0.22, bh = size * 0.13;
+        const bx = (size - bw) / 2, by = (size - bh) / 2;
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(bx - 6, by - 6, bw + 12, bh + 12);
+        ctx.fillStyle = '#0E7C66';
+        ctx.font = `bold ${Math.floor(size * 0.075)}px Arial, sans-serif`;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(code, size / 2, size / 2);
+        this.setState({ qrStoreCode: code, qrDataUrl: canvas.toDataURL('image/png') });
+      };
+      img.src = baseUrl;
+    } catch(e) { this.setState({ qrStoreCode: code, qrDataUrl: '' }); }
+  };
+  closeStoreQR = () => this.setState({ qrStoreCode: null, qrDataUrl: '' });
   startEditUser = (name) => this.setState({ userManageEditName: name, userManageNameDraft: name });
   setUserNameDraft = (e) => this.setState({ userManageNameDraft: e.target.value });
   saveUserName2 = () => {
@@ -1999,12 +2038,16 @@ class Component extends DCLogic {
           code: st.code, name: st.name,
           lastEmployee: lastRec ? lastRec.employee : '—',
           lastDateLabel: lastRec ? fmtD(lastRec.date) : '',
-          statusDotStyle: `width:7px;height:7px;border-radius:50%;background:${isActive ? '#0E7C66' : '#DC2626'};flex-shrink:0;`,
+          statusStyle: `display:inline-flex;align-items:center;font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:100px;background:${isActive ? '#DCFCE7' : '#FEE2E2'};color:${isActive ? '#16A34A' : '#DC2626'};flex-shrink:0;`,
           statusLabel: isActive ? 'ใช้งานได้' : 'ระงับ',
-          statusLabelColor: isActive ? '#0E7C66' : '#DC2626',
           startEdit: () => this.startEditStore(st.code),
+          openQR: () => this.openStoreQR(st.code),
         };
       }),
+      qrModalOpen: !!s.qrStoreCode,
+      qrDataUrl: s.qrDataUrl,
+      qrStoreCode: s.qrStoreCode,
+      closeStoreQR: this.closeStoreQR,
       storeEditModalOpen: !!s.storeEditCode,
       storeEditCodeDraft: s.storeEditCodeDraft, setStoreEditCodeDraft: this.setStoreEditCodeDraft,
       storeEditNameDraft: s.storeEditNameDraft, setStoreEditNameDraft: this.setStoreEditNameDraft,
