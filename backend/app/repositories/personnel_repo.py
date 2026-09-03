@@ -6,7 +6,7 @@ from app.schemas.personnel import PersonnelCreate, PersonnelUpdate
 
 
 async def get_all(db: AsyncSession, sid: int | None = None) -> list[Personnel]:
-    q = select(Personnel).order_by(Personnel.p7Name)
+    q = select(Personnel).order_by(Personnel.p7FName, Personnel.p7LName)
     if sid is not None:
         q = q.where(Personnel.p7Sid == sid)
     result = await db.execute(q)
