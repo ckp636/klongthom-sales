@@ -8,12 +8,11 @@ class Settings(BaseSettings):
         case_sensitive=True,
     )
 
-    DB_HOST: str
+    DB_HOST: str = "209.15.116.56"
     DB_PORT: int = 1433
-    DB_USER: str
-    DB_PASSWORD: str
-    DB_NAME: str = "KlongthomSales"
-    DB_DRIVER: str = "ODBC Driver 18 for SQL Server"
+    DB_USER: str = "JCAT"
+    DB_PASSWORD: str = "SKIN7646"
+    DB_NAME: str = "@KlongThom_Sales"
 
     API_PREFIX: str = "/api"
     CORS_ORIGINS: list[str] = ["*"]

@@ -1,53 +1,47 @@
-from collections.abc import AsyncGenerator
-from urllib.parse import quote_plus
+from typing import Generator
 
-from sqlalchemy.ext.asyncio import (
-    AsyncSession,
-    async_sessionmaker,
-    create_async_engine,
-)
-from sqlalchemy.orm import DeclarativeBase
+import pymssql
+from sqlalchemy import create_engine
+from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
 from app.core.config import settings
 
 
-def _build_url() -> str:
-    odbc = (
-        f"DRIVER={{{settings.DB_DRIVER}}};"
-        f"SERVER={settings.DB_HOST},{settings.DB_PORT};"
-        f"DATABASE={settings.DB_NAME};"
-        f"UID={settings.DB_USER};"
-        f"PWD={settings.DB_PASSWORD};"
-        f"TrustServerCertificate=yes;"
-        f"Encrypt=yes;"
+def _create_conn():
+    return pymssql.connect(
+        server=settings.DB_HOST,
+        port=settings.DB_PORT,
+        user=settings.DB_USER,
+        password=settings.DB_PASSWORD,
+        database=settings.DB_NAME,
+        tds_version="7.0",
+        charset="UTF-8",
     )
-    return f"mssql+aioodbc:///?odbc_connect={quote_plus(odbc)}"
 
 
-engine = create_async_engine(
-    _build_url(),
+engine = create_engine(
+    "mssql+pymssql://",
+    creator=_create_conn,
     echo=False,
     pool_pre_ping=True,
-    pool_size=10,
-    max_overflow=20,
+    pool_size=5,
+    max_overflow=10,
 )
 
-AsyncSessionLocal = async_sessionmaker(
-    engine,
-    class_=AsyncSession,
-    expire_on_commit=False,
-)
+SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
 
 
 class Base(DeclarativeBase):
     pass
 
 
-async def get_db() -> AsyncGenerator[AsyncSession, None]:
-    async with AsyncSessionLocal() as session:
-        try:
-            yield session
-            await session.commit()
-        except Exception:
-            await session.rollback()
-            raise
+def get_db() -> Generator[Session, None, None]:
+    db = SessionLocal()
+    try:
+        yield db
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+    finally:
+        db.close()

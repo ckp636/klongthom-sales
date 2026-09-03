@@ -1,7 +1,7 @@
 from datetime import date
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.repositories import transaction_repo
@@ -14,36 +14,36 @@ router = APIRouter(prefix="/transactions", tags=["transactions"])
 
 
 @router.get("/", response_model=list[TransactionOut])
-async def list_transactions(
+def list_transactions(
     sid: int | None = Query(None),
     pid: int | None = Query(None),
     date_from: date | None = Query(None),
     date_to: date | None = Query(None),
-    db: AsyncSession = Depends(get_db),
+    db: Session = Depends(get_db),
 ):
-    return await transaction_repo.get_all(db, sid=sid, pid=pid, date_from=date_from, date_to=date_to)
+    return transaction_repo.get_all(db, sid=sid, pid=pid, date_from=date_from, date_to=date_to)
 
 
 @router.get("/{tid}", response_model=TransactionOut)
-async def get_transaction(tid: int, db: AsyncSession = Depends(get_db)):
-    txn = await transaction_repo.get_by_id(db, tid)
+def get_transaction(tid: int, db: Session = Depends(get_db)):
+    txn = transaction_repo.get_by_id(db, tid)
     if not txn:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Transaction not found")
     return txn
 
 
 @router.get("/{tid}/files", response_model=list[TxnFileOut])
-async def get_transaction_files(tid: int, db: AsyncSession = Depends(get_db)):
-    txn = await transaction_repo.get_by_id(db, tid)
+def get_transaction_files(tid: int, db: Session = Depends(get_db)):
+    txn = transaction_repo.get_by_id(db, tid)
     if not txn:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Transaction not found")
     return txn.files
 
 
 @router.post("/", response_model=TransactionOut, status_code=status.HTTP_201_CREATED)
-async def create_transaction(data: TransactionCreate, db: AsyncSession = Depends(get_db)):
-    txn = await transaction_repo.create(db, data)
-    await log_service.write(db, LogCreate(
+def create_transaction(data: TransactionCreate, db: Session = Depends(get_db)):
+    txn = transaction_repo.create(db, data)
+    log_service.write(db, LogCreate(
         l9Type="audit", l9Module="transaction", l9Action="create",
         l9Page="/transactions", l9Component="create_transaction",
         l9Sid=txn.t1Sid, l9Pid=txn.t1Pid,
@@ -54,13 +54,13 @@ async def create_transaction(data: TransactionCreate, db: AsyncSession = Depends
 
 
 @router.patch("/{tid}", response_model=TransactionOut)
-async def update_transaction(tid: int, data: TransactionUpdate, db: AsyncSession = Depends(get_db)):
-    txn = await transaction_repo.get_by_id(db, tid)
+def update_transaction(tid: int, data: TransactionUpdate, db: Session = Depends(get_db)):
+    txn = transaction_repo.get_by_id(db, tid)
     if not txn:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Transaction not found")
     old_status = txn.t1PayStatus
-    txn = await transaction_repo.update(db, txn, data)
-    await log_service.write(db, LogCreate(
+    txn = transaction_repo.update(db, txn, data)
+    log_service.write(db, LogCreate(
         l9Type="audit", l9Module="transaction", l9Action="update",
         l9Page="/transactions", l9Component="update_transaction",
         l9Sid=txn.t1Sid, l9Pid=txn.t1Pid,

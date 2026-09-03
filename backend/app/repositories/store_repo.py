@@ -1,35 +1,33 @@
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Session
 
 from app.models.store import Store
 from app.schemas.store import StoreCreate, StoreUpdate
 
 
-async def get_all(db: AsyncSession) -> list[Store]:
-    result = await db.execute(select(Store).order_by(Store.s7Code))
-    return list(result.scalars().all())
+def get_all(db: Session) -> list[Store]:
+    return list(db.execute(select(Store).order_by(Store.s7Code)).scalars().all())
 
 
-async def get_by_id(db: AsyncSession, sid: int) -> Store | None:
-    return await db.get(Store, sid)
+def get_by_id(db: Session, sid: int) -> Store | None:
+    return db.get(Store, sid)
 
 
-async def get_by_code(db: AsyncSession, code: str) -> Store | None:
-    result = await db.execute(select(Store).where(Store.s7Code == code))
-    return result.scalar_one_or_none()
+def get_by_code(db: Session, code: str) -> Store | None:
+    return db.execute(select(Store).where(Store.s7Code == code)).scalar_one_or_none()
 
 
-async def create(db: AsyncSession, data: StoreCreate) -> Store:
+def create(db: Session, data: StoreCreate) -> Store:
     store = Store(**data.model_dump())
     db.add(store)
-    await db.flush()
-    await db.refresh(store)
+    db.flush()
+    db.refresh(store)
     return store
 
 
-async def update(db: AsyncSession, store: Store, data: StoreUpdate) -> Store:
+def update(db: Session, store: Store, data: StoreUpdate) -> Store:
     for field, value in data.model_dump(exclude_none=True).items():
         setattr(store, field, value)
-    await db.flush()
-    await db.refresh(store)
+    db.flush()
+    db.refresh(store)
     return store
