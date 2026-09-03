@@ -54,3 +54,9 @@ class TransactionOut(BaseModel):
     t1Note: str | None = None
     t1CreatedAt: datetime
     t1UpdatedAt: datetime | None = None
+
+
+class TransactionRich(TransactionOut):
+    storeCode: str = ""
+    storeName: str = ""
+    employeeName: str = ""

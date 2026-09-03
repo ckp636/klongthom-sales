@@ -44,9 +44,11 @@ async def get_transaction_files(tid: int, db: AsyncSession = Depends(get_db)):
 async def create_transaction(data: TransactionCreate, db: AsyncSession = Depends(get_db)):
     txn = await transaction_repo.create(db, data)
     await log_service.write(db, LogCreate(
-        l9Type="audit", l9Page="/transactions", l9Component="create_transaction",
+        l9Type="audit", l9Module="transaction", l9Action="create",
+        l9Page="/transactions", l9Component="create_transaction",
         l9Sid=txn.t1Sid, l9Pid=txn.t1Pid,
-        l9Detail=f"txn {txn.t1TID} total={txn.t1Total}",
+        l9RefID=txn.t1TID, l9RefTable="mod1$_Transaction",
+        l9NewVal=str(txn.t1Total),
     ))
     return txn
 
@@ -56,10 +58,13 @@ async def update_transaction(tid: int, data: TransactionUpdate, db: AsyncSession
     txn = await transaction_repo.get_by_id(db, tid)
     if not txn:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Transaction not found")
+    old_status = txn.t1PayStatus
     txn = await transaction_repo.update(db, txn, data)
     await log_service.write(db, LogCreate(
-        l9Type="audit", l9Page="/transactions", l9Component="update_transaction",
+        l9Type="audit", l9Module="transaction", l9Action="update",
+        l9Page="/transactions", l9Component="update_transaction",
         l9Sid=txn.t1Sid, l9Pid=txn.t1Pid,
-        l9Detail=f"txn {txn.t1TID} status={txn.t1PayStatus}",
+        l9RefID=txn.t1TID, l9RefTable="mod1$_Transaction",
+        l9OldVal=old_status, l9NewVal=txn.t1PayStatus,
     ))
     return txn

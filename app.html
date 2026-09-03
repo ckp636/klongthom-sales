@@ -838,6 +838,7 @@ class Component extends DCLogic {
   // ตั้งเป็น false ก่อน deploy จริง เพื่อซ่อน dev tools
   DEV_MODE = ['localhost', '127.0.0.1', ''].includes(location.hostname)
           || new URLSearchParams(location.search).get('dev') === '1';
+  API_BASE = 'http://127.0.0.1:8000';
 
   LIFF_ID = '2010674864-18QwDZSk';
 
@@ -895,6 +896,8 @@ class Component extends DCLogic {
     scrollY: 0,
     lineUserId: '',
     lineProfilePic: '',
+    personnelId: null,
+    storeId: null,
     qrShop: '',
     qrSig: '',
     scannerOpen: false,
@@ -1294,23 +1297,52 @@ class Component extends DCLogic {
 
   backToScan = () => this.setState({ screen: 'scan', screenStack: [], manualPick: false });
 
+  _apiLogin = async (body) => {
+    const res = await fetch(`${this.API_BASE}/api/auth/${this.DEV_MODE ? 'login-dev' : 'login'}`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'เข้าสู่ระบบไม่สำเร็จ');
+    }
+    return res.json();
+  };
+
   doLogin = async () => {
     if (!this.DEV_MODE) {
-      // Ensure liff.init() has resolved before checking login state
       if (this._liffInitPromise) await this._liffInitPromise;
-      if (!liff.isLoggedIn()) {
-        liff.login();   // redirects to LINE OAuth → comes back to this URL
-        return;
-      }
+      if (!liff.isLoggedIn()) { liff.login(); return; }
       const profile = await liff.getProfile();
-      const isAdminOverride = new URLSearchParams(location.search).get('admin') === '1';
-      this.setState(s => ({ employeeName: profile.displayName, lineUserId: profile.userId, lineProfilePic: profile.pictureUrl || '', isAdminUser: isAdminOverride, selectedHistoryEmployee: profile.displayName, screen: 'form', screenStack: [...s.screenStack, s.screen] }));
+      try {
+        const { personnel, store } = await this._apiLogin({ line_user_id: profile.userId });
+        const isAdminOverride = new URLSearchParams(location.search).get('admin') === '1';
+        this.setState(s => ({
+          employeeName: `${personnel.p7FName} ${personnel.p7LName}`,
+          lineUserId: profile.userId, lineProfilePic: profile.pictureUrl || '',
+          isAdminUser: isAdminOverride || personnel.p7Role === 'admin',
+          personnelId: personnel.p7PID, storeId: store.s7Sid,
+          selectedHistoryEmployee: `${personnel.p7FName} ${personnel.p7LName}`,
+          screen: 'form', screenStack: [...s.screenStack, s.screen],
+        }));
+      } catch (e) { alert(e.message); }
       return;
     }
-    // DEV mock login — ใช้ role ที่เลือกจาก DEV panel (default: staff)
+    // DEV: ใช้ p7PID=1 หรือเลือกจาก DEV panel
     const isAdmin = this.state.pendingRole === 'admin';
-    const name = isAdmin ? 'อรทัย จัดการ (แอดมิน)' : 'สมชาย ใจดี';
-    this.setState(s => ({ employeeName: name, isAdminUser: isAdmin, selectedHistoryEmployee: name, screen: 'form', screenStack: [...s.screenStack, s.screen] }));
+    try {
+      const { personnel, store } = await this._apiLogin({ p7PID: isAdmin ? 2 : 1 });
+      this.setState(s => ({
+        employeeName: `${personnel.p7FName} ${personnel.p7LName}`,
+        isAdminUser: personnel.p7Role === 'admin',
+        personnelId: personnel.p7PID, storeId: store.s7Sid,
+        selectedHistoryEmployee: `${personnel.p7FName} ${personnel.p7LName}`,
+        screen: 'form', screenStack: [...s.screenStack, s.screen],
+      }));
+    } catch (e) {
+      // fallback ถ้า API ไม่รัน
+      const name = isAdmin ? 'อรทัย จัดการ (แอดมิน)' : 'สมชาย ใจดี';
+      this.setState(s => ({ employeeName: name, isAdminUser: isAdmin, selectedHistoryEmployee: name, screen: 'form', screenStack: [...s.screenStack, s.screen] }));
+    }
   };
 
   doLogout = () => {
@@ -1329,29 +1361,55 @@ class Component extends DCLogic {
   setNote = (e) => this.setState({ note: e.target.value });
   setPeriod = (p) => this.setState({ period: p });
 
-  submitForm = () => {
+  submitForm = async () => {
     if (!this.state.cash) { this.setState({ cashError: true }); return; }
-    // TODO (ตอนต่อ API จริง): ส่ง qrShop + qrSig ไปให้ backend ตรวจสอบด้วย
-    // crypto.timingSafeEqual(expected_sig, sig) ก่อนบันทึกข้อมูลทุกครั้ง
-    // เพื่อป้องกันการปลอม QR code หรือแก้ไข shop parameter ใน URL
+    const { storeCode, storeName, employeeName, personnelId, storeId, period, date, note } = this.state;
     const cashNum = Number(this.state.cash || 0);
     const transferNum = Number(this.state.transfer || 0);
     const expenseNum = Number(this.state.expense || 0);
+    const periodMap = { 'เช้า': 'morning', 'เย็น': 'afternoon', 'ค่ำ': 'evening' };
     const record = {
       id: 'live-' + Date.now(),
-      storeCode: this.state.storeCode, storeName: this.state.storeName,
-      employee: this.state.employeeName, cash: cashNum, transfer: transferNum, expense: expenseNum,
+      storeCode, storeName, employee: employeeName, cash: cashNum, transfer: transferNum, expense: expenseNum,
       time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
-      period: this.state.period, date: this.state.date,
+      period, date,
     };
+    // ส่งไป API ถ้ามี personnelId และ storeId
+    if (personnelId && storeId) {
+      const sub = cashNum + transferNum;
+      const disc = expenseNum;
+      const total = sub - disc;
+      const payMethod = cashNum > 0 && transferNum > 0 ? 'qr' : transferNum > 0 ? 'transfer' : 'cash';
+      const body = {
+        t1TNo: `TXN-${Date.now()}`,
+        t1Sid: storeId, t1Pid: personnelId,
+        t1Date: new Date().toISOString(),
+        t1Shift: periodMap[period] || 'evening',
+        t1Sub: sub, t1Disc: disc, t1Tax: 0, t1Total: total,
+        t1PayMethod: payMethod, t1PayStatus: 'paid',
+        t1Note: note || null,
+      };
+      try {
+        const res = await fetch(`${this.API_BASE}/api/transactions/`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          alert('บันทึกไม่สำเร็จ: ' + (err.detail || res.status));
+          return;
+        }
+        const txn = await res.json();
+        record.id = `api-${txn.t1TID}`;
+      } catch (e) {
+        alert('เชื่อมต่อ server ไม่ได้ บันทึกเฉพาะ local');
+      }
+    }
     this.setState(s => ({
       submissionsToday: [...s.submissionsToday, record],
       allHistory: [{ id: record.id, employee: record.employee, date: record.date, storeCode: record.storeCode, storeName: record.storeName, period: record.period, cash: record.cash, transfer: record.transfer, expense: record.expense }, ...s.allHistory],
-      lastSubmission: record,
-      justSubmitted: true,
+      lastSubmission: record, justSubmitted: true,
       selectedHistoryEmployee: record.employee,
-      screen: 'history',
-      screenStack: [...s.screenStack, s.screen],
+      screen: 'history', screenStack: [...s.screenStack, s.screen],
       cash: '', transfer: '', expense: '', note: '', evidencePhoto: null,
     }));
   };

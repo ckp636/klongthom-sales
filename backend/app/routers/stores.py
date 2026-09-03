@@ -30,8 +30,9 @@ async def create_store(data: StoreCreate, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Store code already exists")
     store = await store_repo.create(db, data)
     await log_service.write(db, LogCreate(
-        l9Type="audit", l9Page="/stores", l9Component="create_store",
-        l9Sid=store.s7Sid, l9Detail=f"created store {store.s7Code}",
+        l9Type="audit", l9Module="store", l9Action="create",
+        l9Page="/stores", l9Component="create_store",
+        l9Sid=store.s7Sid, l9NewVal=store.s7Code,
     ))
     return store
 
@@ -43,7 +44,8 @@ async def update_store(sid: int, data: StoreUpdate, db: AsyncSession = Depends(g
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Store not found")
     store = await store_repo.update(db, store, data)
     await log_service.write(db, LogCreate(
-        l9Type="audit", l9Page="/stores", l9Component="update_store",
-        l9Sid=store.s7Sid, l9Detail=f"updated store {store.s7Code}",
+        l9Type="audit", l9Module="store", l9Action="update",
+        l9Page="/stores", l9Component="update_store",
+        l9Sid=store.s7Sid, l9RefID=store.s7Sid, l9RefTable="mod7$_Store",
     ))
     return store
