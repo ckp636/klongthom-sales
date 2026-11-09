@@ -892,12 +892,9 @@ class Component extends DCLogic {
     photoModalSub: null,
     showProfileMenu: false,
     evidencePhoto: null,
-    nameDraft: '',
-    scrollY: 0,
     lineUserId: '',
     lineProfilePic: '',
     personnelId: null,
-    storeId: null,
     qrShop: '',
     qrSig: '',
     scannerOpen: false,
@@ -1076,47 +1073,15 @@ class Component extends DCLogic {
     qrDataUrl: '',
   };
 
-  STORES = [
-    { code: 'A1', name: 'กอล์ฟ' },
-    { code: 'A2', name: 'นิ่ม (เพลง)' },
-    { code: 'A3', name: 'ต่อ' },
-    { code: 'D1', name: 'กร' },
-    { code: 'D1.1', name: 'กร แก้ว ผ้าปูโต๊ะ' },
-    { code: 'D2', name: 'จัด' },
-    { code: 'H1', name: 'บุญมี' },
-    { code: 'K3', name: 'เจน' },
-    { code: 'K4', name: 'อ้อ' },
-    { code: 'K8', name: 'เสก' },
-    { code: 'K9', name: 'น้ำหอม' },
-    { code: 'SB', name: 'ป้าตุ้ย' },
-    { code: 'X1', name: 'หนุ่ย' },
-    { code: 'X8', name: 'นนท์' },
-  ];
-
-  WEEK_HISTORY = [
-    { d: '11 ส.ค.', v: 62300 },
-    { d: '12 ส.ค.', v: 64200 },
-    { d: '13 ส.ค.', v: 55950 },
-    { d: '14 ส.ค.', v: 67150 },
-    { d: '15 ส.ค.', v: 79800 },
-    { d: '16 ส.ค.', v: 63100 },
-    { d: '17 ส.ค.', v: 72350 },
-  ];
-
   fmt(n) { return Math.round(n || 0).toLocaleString('th-TH'); }
   onlyDigits(v) { return (v || '').replace(/[^0-9]/g, ''); }
 
-  onScroll = () => this.setState({ scrollY: window.scrollY || window.pageYOffset || 0 });
-
   componentDidMount() {
-    window.addEventListener('scroll', this.onScroll, { passive: true });
-    this.onScroll();
     this.readUrlParams();
     this.initLiff();
   }
 
   componentWillUnmount() {
-    window.removeEventListener('scroll', this.onScroll);
     this.stopScan();
   }
 
@@ -1148,41 +1113,11 @@ class Component extends DCLogic {
 
   setFormDate = (e) => this.setState({ date: e.target.value });
 
-  dateSelectFor(stateKey) {
-    const today = new Date();
-    const raw = this.state[stateKey];
-    const val = raw || today.toISOString().slice(0, 10);
-    const [ys, ms, ds] = val.split('-');
-    const y = Number(ys), m = Number(ms);
-    const daysInMonth = new Date(y, m, 0).getDate();
-    const curBE = today.getFullYear() + 543;
-    const upd = (part) => (e) => {
-      const cur = this.state[stateKey] || today.toISOString().slice(0, 10);
-      const [cy, cm, cd] = cur.split('-');
-      let ny = cy, nm = cm, nd = cd;
-      if (part === 'y') ny = e.target.value;
-      if (part === 'm') nm = e.target.value;
-      if (part === 'd') nd = e.target.value;
-      const maxD = new Date(Number(ny), Number(nm), 0).getDate();
-      if (Number(nd) > maxD) nd = String(maxD).padStart(2, '0');
-      this.setState({ [stateKey]: `${ny}-${nm}-${nd}` });
-    };
-    return {
-      dv: ds, mv: ms, yv: ys,
-      dd: Array.from({ length: daysInMonth }, (_, i) => ({ value: String(i + 1).padStart(2, '0'), label: String(i + 1) })),
-      md: this.THAI_MONTHS_FULL.map((n, i) => ({ value: String(i + 1).padStart(2, '0'), label: n })),
-      yd: Array.from({ length: 6 }, (_, i) => curBE - 2 + i).map(be => ({ value: String(be - 543), label: String(be) })),
-      od: upd('d'), om: upd('m'), oy: upd('y'),
-    };
-  }
-
   goStaffMode = () => this.setState({ mode: 'staff' });
   goAdminMode = () => this.setState({ mode: 'admin' });
 
   toggleManualPick = () => this.setState(s => ({ manualPick: !s.manualPick }));
 
-  setRoleStaff = () => this.setState({ pendingRole: 'staff' });
-  setRoleAdmin = () => this.setState({ pendingRole: 'admin' });
 
   devLoginStaff = () => this.setState(s => ({ employeeName: 'สมชาย ใจดี', isAdminUser: false, selectedHistoryEmployee: 'สมชาย ใจดี', screen: 'form', screenStack: [...s.screenStack, s.screen] }));
   devLoginAdmin = () => this.setState(s => ({ employeeName: 'อรทัย จัดการ (แอดมิน)', isAdminUser: true, selectedHistoryEmployee: 'อรทัย จัดการ (แอดมิน)', screen: 'form', screenStack: [...s.screenStack, s.screen] }));
@@ -1320,21 +1255,21 @@ class Component extends DCLogic {
           employeeName: `${personnel.p7FName} ${personnel.p7LName}`,
           lineUserId: profile.userId, lineProfilePic: profile.pictureUrl || '',
           isAdminUser: isAdminOverride || personnel.p7Role === 'admin',
-          personnelId: personnel.p7PID, storeId: store.s7Sid,
+          personnelId: personnel.p7PID,
           selectedHistoryEmployee: `${personnel.p7FName} ${personnel.p7LName}`,
           screen: 'form', screenStack: [...s.screenStack, s.screen],
         }));
       } catch (e) { alert(e.message); }
       return;
     }
-    // DEV: ใช้ p7PID=1 หรือเลือกจาก DEV panel
+    // DEV: login as the first active staff/admin, per the DEV panel role
     const isAdmin = this.state.pendingRole === 'admin';
     try {
-      const { personnel, store } = await this._apiLogin({ p7PID: isAdmin ? 2 : 1 });
+      const { personnel, store } = await this._apiLogin({ role: isAdmin ? 'admin' : 'staff' });
       this.setState(s => ({
         employeeName: `${personnel.p7FName} ${personnel.p7LName}`,
         isAdminUser: personnel.p7Role === 'admin',
-        personnelId: personnel.p7PID, storeId: store.s7Sid,
+        personnelId: personnel.p7PID,
         selectedHistoryEmployee: `${personnel.p7FName} ${personnel.p7LName}`,
         screen: 'form', screenStack: [...s.screenStack, s.screen],
       }));
@@ -1363,7 +1298,7 @@ class Component extends DCLogic {
 
   submitForm = async () => {
     if (!this.state.cash) { this.setState({ cashError: true }); return; }
-    const { storeCode, storeName, employeeName, personnelId, storeId, period, date, note } = this.state;
+    const { storeCode, storeName, employeeName, personnelId, period, date, note, qrSig } = this.state;
     const cashNum = Number(this.state.cash || 0);
     const transferNum = Number(this.state.transfer || 0);
     const expenseNum = Number(this.state.expense || 0);
@@ -1374,19 +1309,14 @@ class Component extends DCLogic {
       time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
       period, date,
     };
-    // ส่งไป API ถ้ามี personnelId และ storeId
-    if (personnelId && storeId) {
-      const sub = cashNum + transferNum;
-      const disc = expenseNum;
-      const total = sub - disc;
-      const payMethod = cashNum > 0 && transferNum > 0 ? 'qr' : transferNum > 0 ? 'transfer' : 'cash';
+    // ส่งไป API ถ้า login ผ่าน API แล้ว (มี personnelId) — ร้านมาจาก QR ที่สแกน
+    if (personnelId && storeCode) {
       const body = {
-        t1TNo: `TXN-${Date.now()}`,
-        t1Sid: storeId, t1Pid: personnelId,
-        t1Date: new Date().toISOString(),
-        t1Shift: periodMap[period] || 'evening',
-        t1Sub: sub, t1Disc: disc, t1Tax: 0, t1Total: total,
-        t1PayMethod: payMethod, t1PayStatus: 'paid',
+        storeCode, qrSig: qrSig || null,
+        t1Pid: personnelId,
+        t1Date: date,
+        t1Shift: periodMap[period] || 'afternoon',
+        t1Cash: cashNum, t1Transfer: transferNum, t1Expense: expenseNum,
         t1Note: note || null,
       };
       try {
@@ -1422,7 +1352,6 @@ class Component extends DCLogic {
     return { screen: prev, screenStack: stack };
   });
 
-  goHistory = () => this.setState(s => ({ screen: 'history', screenStack: [...s.screenStack, s.screen] }));
   backFromHistory = () => this.goBack();
   backFromDetail = () => this.goBack();
   selectHistory = (h) => this.setState(s => ({ selectedHistory: h, screen: 'historyDetail', screenStack: [...s.screenStack, s.screen] }));
@@ -1443,23 +1372,8 @@ class Component extends DCLogic {
     reader.readAsDataURL(file);
   };
 
-  openProfileMenu = () => this.setState({ showProfileMenu: true, nameDraft: this.state.employeeName });
+  openProfileMenu = () => this.setState({ showProfileMenu: true });
   closeProfileMenu = () => this.setState({ showProfileMenu: false });
-  setNameDraft = (e) => this.setState({ nameDraft: e.target.value });
-
-  saveName = () => {
-    const oldName = this.state.employeeName;
-    const newName = (this.state.nameDraft || '').trim() || oldName;
-    if (newName === oldName) { this.setState({ showProfileMenu: false }); return; }
-    this.setState(s => ({
-      employeeName: newName,
-      selectedHistoryEmployee: s.selectedHistoryEmployee === oldName ? newName : s.selectedHistoryEmployee,
-      allHistory: s.allHistory.map(h => h.employee === oldName ? { ...h, employee: newName } : h),
-      submissionsToday: s.submissionsToday.map(r => r.employee === oldName ? { ...r, employee: newName } : r),
-      showProfileMenu: false,
-    }));
-  };
-
   goToAdminReport = () => this.setState({ mode: 'admin', showProfileMenu: false });
   goToHistory = () => this.setState(s => ({ mode: 'staff', screen: 'history', screenStack: [...s.screenStack, s.screen], showProfileMenu: false }));
 
@@ -1707,15 +1621,6 @@ class Component extends DCLogic {
       };
     });
 
-    const weekData = [...this.WEEK_HISTORY, { d: '5 ก.ค. (วันนี้)', v: totalToday, today: true }];
-    const maxV = Math.max(...weekData.map(w => w.v), 1);
-    const chartBars = weekData.map(w => ({
-      label: w.d,
-      valueDisplay: fmt(w.v),
-      labelColor: w.today ? '#0E7C66' : '#9AA39D',
-      barStyle: `width:100%; max-width:44px; height:${Math.max(6, (w.v / maxV) * 130)}px; border-radius:8px 8px 0 0; background:${w.today ? '#0E7C66' : '#CFE3DC'};`,
-    }));
-
     const maxEmpGross = Math.max(...groupedByEmployee.map(g => g.cash + g.transfer), 1);
     const employeeChartBars = groupedByEmployee.map(g => {
       const gross = g.cash + g.transfer;
@@ -1959,9 +1864,7 @@ class Component extends DCLogic {
       toggleManualPick: this.toggleManualPick, manualPick: s.manualPick, stores,
 
       doLogin: this.doLogin,
-      setRoleStaff: this.setRoleStaff, setRoleAdmin: this.setRoleAdmin,
       devLoginStaff: this.devLoginStaff, devLoginAdmin: this.devLoginAdmin,
-      roleStaffStyle: '', roleAdminStyle: '',
 
       formStoreLabel: `${s.storeCode} ${s.storeName}`, backToScan: this.backToScan, goBack: this.goBack,
       fdDateV: s.date, fdDateO: this.setFormDate, fdDateOpts: this.getLast4DayOpts(),
@@ -1983,7 +1886,6 @@ class Component extends DCLogic {
       justSubmitted: s.justSubmitted, dismissBanner: this.dismissBanner,
       lastStoreLabel: s.lastSubmission ? `${s.lastSubmission.storeCode} ${s.lastSubmission.storeName}` : '',
       lastTotalDisplay: s.lastSubmission ? fmt(s.lastSubmission.cash + s.lastSubmission.transfer) : '0',
-      goHistory: this.goHistory,
 
       selectedHistoryEmployee: s.selectedHistoryEmployee, setHistoryEmployee: this.setHistoryEmployee,
       hasHistoryDateFilter: !!(s.historyDateFrom || s.historyDateTo), clearHistoryDateFilter: this.clearHistoryDateFilter,
@@ -2022,17 +1924,13 @@ class Component extends DCLogic {
       totalExpenseTodayDisplay: fmt(totalExpenseToday), hasAdminExpense: totalExpenseToday > 0,
       reportedCount: reportedCodes.size, totalStoreCount: s.stores.length,
       hasNotReported: notReportedStores.length > 0, notReportedCount: notReportedStores.length, notReportedStores,
-      isSingleDay,
-      chartBars, employeeChartBars, lineChartItems, lineChartLegend,
+      employeeChartBars, lineChartItems, lineChartLegend,
       empTooltipVisible: !!s.empTooltip,
-      empTooltipHidden: !s.empTooltip,
       empTooltipLabel: s.empTooltip?.label || '',
       empTooltipInc: s.empTooltip?.incDisplay || '',
       empTooltipNet: s.empTooltip?.netDisplay || '',
       empTooltipExp: s.empTooltip?.expDisplay || '',
       lineTooltipVisible: !!s.lineTooltip,
-      lineTooltipHidden: !s.lineTooltip,
-      lineTooltipWeek: s.lineTooltip?.weekLabel || '',
       lineTooltipDay: s.lineTooltip?.dayLabel || '',
       lineTooltipDate: s.lineTooltip?.dotDateLabel || '',
       lineTooltipVal: s.lineTooltip?.valDisplay || '',
@@ -2059,7 +1957,6 @@ class Component extends DCLogic {
       adminViewListStyle: `padding:9px 16px; border-radius:100px; font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap; background:${s.adminView === 'list' ? '#0E7C66' : '#F1EDE1'}; color:${s.adminView === 'list' ? '#fff' : '#4E5854'};`,
       adminViewEmployeeStyle: `padding:9px 16px; border-radius:100px; font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap; background:${s.adminView === 'employee' ? '#0E7C66' : '#F1EDE1'}; color:${s.adminView === 'employee' ? '#fff' : '#4E5854'};`,
       adminViewStoreStyle: `padding:9px 16px; border-radius:100px; font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap; background:${s.adminView === 'store' ? '#0E7C66' : '#F1EDE1'}; color:${s.adminView === 'store' ? '#fff' : '#4E5854'};`,
-      groupedByEmployee, groupedByStore,
       empPagedRows, empPageInfo: `${empPg+1} / ${empTP}`,
       empPrevPageStyle: empPg > 0 ? btnOn : btnOff, empNextPageStyle: empPg < empTP-1 ? btnOn : btnOff,
       empPrevPage: () => this.setState(s => ({empPage: Math.max(0, s.empPage-1)})),
@@ -2074,7 +1971,6 @@ class Component extends DCLogic {
       showProfileMenu: s.showProfileMenu, openProfileMenu: this.openProfileMenu, closeProfileMenu: this.closeProfileMenu,
       profileMenuOverlayStyle: `position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(20,26,23,0.55); display:flex; align-items:center; justify-content:center; z-index:50; padding:20px;`,
       profileRoleLabel: s.isAdminUser ? 'สิทธิ์ผู้ใช้: แอดมิน' : 'สิทธิ์ผู้ใช้: พนักงานทั่วไป',
-      nameDraft: s.nameDraft, setNameDraft: this.setNameDraft, saveName: this.saveName,
       goToAdminReport: this.goToAdminReport,
       goToHistory: this.goToHistory,
       isUserManageMode: s.mode === 'userManage',
@@ -2109,7 +2005,6 @@ class Component extends DCLogic {
       storeEditModalOpen: !!s.storeEditCode,
       storeEditCodeDraft: s.storeEditCodeDraft, setStoreEditCodeDraft: this.setStoreEditCodeDraft,
       storeEditNameDraft: s.storeEditNameDraft, setStoreEditNameDraft: this.setStoreEditNameDraft,
-      storeEditStatusDraft: s.storeEditStatusDraft,
       storeEditStatusActiveStyle: `flex:1;text-align:center;padding:9px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;background:${s.storeEditStatusDraft ? '#0E7C66' : '#F1EDE1'};color:${s.storeEditStatusDraft ? '#fff' : '#4E5854'};`,
       storeEditStatusInactiveStyle: `flex:1;text-align:center;padding:9px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;background:${!s.storeEditStatusDraft ? '#DC2626' : '#F1EDE1'};color:${!s.storeEditStatusDraft ? '#fff' : '#4E5854'};`,
       setStoreEditStatusActive: () => this.setStoreEditStatusDraft(true),

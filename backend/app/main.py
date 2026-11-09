@@ -6,7 +6,7 @@ from app.routers import auth, personnel, stores, transactions
 
 app = FastAPI(
     title="KlongthomSales API",
-    version="0.1.0",
+    version="0.2.0",
 )
 
 app.add_middleware(
