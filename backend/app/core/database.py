@@ -1,3 +1,4 @@
+import time
 from typing import Generator
 
 import pymssql
@@ -6,17 +7,30 @@ from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
 from app.core.config import settings
 
+# Azure SQL serverless pauses when idle; the first login after that fails with
+# 40613 ("database not currently available") for up to a minute while it resumes.
+_RESUME_ERROR = "40613"
+_RESUME_RETRIES = 6
+_RESUME_WAIT_S = 10
+
 
 def _create_conn():
-    return pymssql.connect(
-        server=settings.DB_HOST,
-        port=settings.DB_PORT,
-        user=settings.DB_USER,
-        password=settings.DB_PASSWORD,
-        database=settings.DB_NAME,
-        tds_version="7.0",
-        charset="UTF-8",
-    )
+    for attempt in range(_RESUME_RETRIES + 1):
+        try:
+            return pymssql.connect(
+                server=settings.DB_HOST,
+                port=settings.DB_PORT,
+                user=settings.DB_USER,
+                password=settings.DB_PASSWORD,
+                database=settings.DB_NAME,
+                tds_version=settings.DB_TDS_VERSION,
+                charset="UTF-8",
+                login_timeout=30,
+            )
+        except pymssql.OperationalError as e:
+            if _RESUME_ERROR not in str(e) or attempt == _RESUME_RETRIES:
+                raise
+            time.sleep(_RESUME_WAIT_S)
 
 
 engine = create_engine(
@@ -28,7 +42,7 @@ engine = create_engine(
     max_overflow=10,
 )
 
-SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
+SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False, expire_on_commit=False)
 
 
 class Base(DeclarativeBase):

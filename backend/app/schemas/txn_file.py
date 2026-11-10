@@ -1,15 +1,5 @@
 from datetime import datetime
-from typing import Literal
-
 from pydantic import BaseModel, ConfigDict
-
-
-class TxnFileCreate(BaseModel):
-    f1TID: int
-    f1Pid: int | None = None
-    f1Path: str
-    f1MimeType: str | None = None
-    f1Tag: Literal["receipt", "slip", "product", "other"] = "receipt"
 
 
 class TxnFileOut(BaseModel):
@@ -18,7 +8,13 @@ class TxnFileOut(BaseModel):
     f1FID: int
     f1TID: int
     f1Pid: int | None
+    f1FileName: str
     f1Path: str
-    f1MimeType: str | None
+    f1MimeType: str
+    f1Size: int | None
     f1Tag: str
     f1CreatedAt: datetime
+    f1ExpiresAt: datetime | None = None
+    f1PurgedAt: datetime | None = None
+    available: bool
+    contentUrl: str | None = None

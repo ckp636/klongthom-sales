@@ -5,8 +5,11 @@ from app.models.store import Store
 from app.schemas.store import StoreCreate, StoreUpdate
 
 
-def get_all(db: Session) -> list[Store]:
-    return list(db.execute(select(Store).order_by(Store.s7Code)).scalars().all())
+def get_all(db: Session, active_only: bool = False) -> list[Store]:
+    q = select(Store).order_by(Store.s7Code)
+    if active_only:
+        q = q.where(Store.s7Status == True)  # noqa: E712
+    return list(db.execute(q).scalars().all())
 
 
 def get_by_id(db: Session, sid: int) -> Store | None:
@@ -26,8 +29,15 @@ def create(db: Session, data: StoreCreate) -> Store:
 
 
 def update(db: Session, store: Store, data: StoreUpdate) -> Store:
-    for field, value in data.model_dump(exclude_none=True).items():
+    for field, value in data.model_dump(exclude_unset=True).items():
         setattr(store, field, value)
+    db.flush()
+    db.refresh(store)
+    return store
+
+
+def rotate_qr(db: Session, store: Store) -> Store:
+    store.s7QrVer += 1
     db.flush()
     db.refresh(store)
     return store

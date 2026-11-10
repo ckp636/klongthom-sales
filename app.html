@@ -12,7 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700;800&family=Noto+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
-  <script src="https://unpkg.com/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <script src="https://unpkg.com/qrcode@1.4.4/build/qrcode.min.js"></script>
   <style>
     * { box-sizing: border-box; }
     body { margin:0; }
@@ -24,6 +24,19 @@
 </helmet>
 
 <div style="min-height:100vh; width:100%; background:#DDD6CB; font-family:'Noto Sans Thai','Noto Sans',sans-serif; display:flex; flex-direction:column; position:relative;">
+  <sc-if value="{{hasApiError}}">
+    <div role="alert" style="position:sticky; top:0; z-index:100; padding:14px; background:#FEE2E2; color:#991B1B; font-size:14px;">
+      {{apiError}} <button onClick="{{retryData}}">ลองโหลดข้อมูลใหม่</button>
+    </div>
+  </sc-if>
+  <sc-if value="{{loading}}">
+    <div role="status" style="padding:10px; text-align:center; background:#F1EDE1;">กำลังโหลดข้อมูล...</div>
+  </sc-if>
+  <sc-if value="{{pendingPhoto}}">
+    <div role="status" style="padding:14px; background:#FEF3C7;">ยอดถูกบันทึกแล้ว กรุณาส่งรูปอีกครั้ง (ไม่ส่งยอดซ้ำ)
+      <button onClick="{{retryPhoto}}">ส่งรูปอีกครั้ง</button>
+    </div>
+  </sc-if>
 
   <sc-if value="{{isAdminMode}}">
     <div style="width:100%; max-width:1180px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; padding:20px 20px 0;">
@@ -166,7 +179,7 @@
                 <div style="font-size:14px; font-weight:700; color:#1E2A26; margin-bottom:8px;">นำส่งยอด เงินสด <span style="color:#C1483A;">*</span></div>
                 <div style="display:flex; align-items:center; border-radius:14px; border:1.5px solid {{cashBorderColor}}; background:#fff; overflow:hidden;">
                   <div style="padding:14px 14px; font-size:20px; font-weight:800; color:#0E7C66; background:#F1EDE1;">฿</div>
-                  <input type="text" inputmode="numeric" placeholder="0" value="{{cash}}" onChange="{{setCash}}" style="flex:1; border:none; outline:none; font-size:22px; font-weight:700; padding:12px 14px; color:#1E2A26; font-family:inherit; min-width:0;"/>
+                  <input type="text" inputmode="decimal" placeholder="0" value="{{cash}}" onChange="{{setCash}}" style="flex:1; border:none; outline:none; font-size:22px; font-weight:700; padding:12px 14px; color:#1E2A26; font-family:inherit; min-width:0;"/>
                 </div>
                 <sc-if value="{{cashError}}" hint-placeholder-val="{{false}}">
                   <div style="color:#C1483A; font-size:13px; margin-top:6px; font-weight:600;">กรุณากรอกยอดเงินสดที่นำส่ง</div>
@@ -177,7 +190,7 @@
                 <div style="font-size:14px; font-weight:700; color:#1E2A26; margin-bottom:8px;">นำส่งยอด เงินโอน</div>
                 <div style="display:flex; align-items:center; border-radius:14px; border:1.5px solid #DDD5C4; background:#fff; overflow:hidden;">
                   <div style="padding:14px 14px; font-size:20px; font-weight:800; color:#0E7C66; background:#F1EDE1;">฿</div>
-                  <input type="text" inputmode="numeric" placeholder="0" value="{{transfer}}" onChange="{{setTransfer}}" style="flex:1; border:none; outline:none; font-size:22px; font-weight:700; padding:12px 14px; color:#1E2A26; font-family:inherit; min-width:0;"/>
+                  <input type="text" inputmode="decimal" placeholder="0" value="{{transfer}}" onChange="{{setTransfer}}" style="flex:1; border:none; outline:none; font-size:22px; font-weight:700; padding:12px 14px; color:#1E2A26; font-family:inherit; min-width:0;"/>
                 </div>
               </div>
 
@@ -185,7 +198,7 @@
                 <div style="font-size:14px; font-weight:700; color:#1E2A26; margin-bottom:8px;">(หัก) ค่าใช้จ่าย</div>
                 <div style="display:flex; align-items:center; border-radius:14px; border:1.5px solid #DDD5C4; background:#fff; overflow:hidden;">
                   <div style="padding:14px 14px; font-size:20px; font-weight:800; color:#C1483A; background:#FCECEA;">฿</div>
-                  <input type="text" inputmode="numeric" placeholder="0" value="{{expense}}" onChange="{{setExpense}}" style="flex:1; border:none; outline:none; font-size:22px; font-weight:700; padding:12px 14px; color:#1E2A26; font-family:inherit; min-width:0;"/>
+                  <input type="text" inputmode="decimal" placeholder="0" value="{{expense}}" onChange="{{setExpense}}" style="flex:1; border:none; outline:none; font-size:22px; font-weight:700; padding:12px 14px; color:#1E2A26; font-family:inherit; min-width:0;"/>
                 </div>
               </div>
 
@@ -217,8 +230,9 @@
                       <div style="font-size:13px; color:#9AA39D; font-weight:600;">แตะเพื่อถ่ายภาพ หรือเลือกจากคลังภาพ</div>
                     </div>
                   </sc-if>
-                  <input type="file" accept="image/*" onChange="{{onEvidenceChange}}" style="position:absolute; inset:0; width:100%; height:100%; opacity:0; cursor:pointer;"/>
+                  <input type="file" accept="image/jpeg,image/png,image/webp" onChange="{{onEvidenceChange}}" style="position:absolute; inset:0; width:100%; height:100%; opacity:0; cursor:pointer;"/>
                 </div>
+                <div style="font-size:12px; color:#7A8580;">JPEG / PNG / WebP · ย่อรูปก่อนส่ง · ไม่เกิน 2 MB · เก็บ 365 วัน</div>
               </div>
 
               <div>
@@ -227,7 +241,7 @@
               </div>
 
               <div onClick="{{submitForm}}" style="width:100%; background:#0E7C66; color:#fff; font-size:18px; font-weight:800; padding:17px; border-radius:14px; text-align:center; cursor:pointer; margin-top:6px;">
-                ส่งยอดขาย
+                {{submitLabel}}
               </div>
             </div>
           </div>
@@ -292,6 +306,7 @@
                   </div>
                 </div>
               </sc-for>
+              <sc-if value="{{emptyHistory}}"><div style="padding:20px; text-align:center;">ไม่มีรายการในช่วงวันที่เลือก</div></sc-if>
             </div>
           </div>
         </sc-if>
@@ -317,6 +332,10 @@
                     <div style="display:flex; justify-content:space-between; font-size:14px;"><span style="color:#9AA39D;">(หัก) ค่าใช้จ่าย</span><span style="font-weight:700; color:#C1483A;">−฿{{r.expense}}</span></div>
                   </sc-if>
                   <div style="display:flex; justify-content:space-between; font-size:15px; border-top:1px solid #F0EBDF; padding-top:8px;"><span style="color:#1E2A26; font-weight:700;">รวม</span><span style="font-weight:800; color:#0E7C66;">฿{{r.total}}</span></div>
+                  <button onClick="{{r.viewPhoto}}">ดู / แนบหลักฐาน</button>
+                  <div>{{r.statusLabel}}</div>
+                  <sc-if value="{{r.canVerify}}"><button onClick="{{r.verify}}">ยืนยันรายการ</button></sc-if>
+                  <sc-if value="{{r.canVoid}}"><button onClick="{{r.void}}">ยกเลิกรายการ</button></sc-if>
                 </div>
               </sc-for>
               <div style="background:#0E7C66; border-radius:14px; padding:14px 16px; display:flex; justify-content:space-between; align-items:center;">
@@ -778,10 +797,18 @@
           <div style="font-size:16px; font-weight:800; color:#1E2A26;">หลักฐานนำส่งเงิน — {{photoModalStore}}</div>
           <div onClick="{{closePhotoModal}}" style="cursor:pointer; font-size:18px; color:#9AA39D;">✕</div>
         </div>
-        <div style="width:100%; height:260px; border-radius:14px; background:#EFE9DC; display:flex; align-items:center; justify-content:center;">
-          <svg width="52" height="52" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="#B3A98F" stroke-width="1.6"/><circle cx="12" cy="12" r="3.5" stroke="#B3A98F" stroke-width="1.6"/></svg>
+        <sc-if value="{{photoLoading}}"><div>กำลังโหลดรูป...</div></sc-if>
+        <sc-if value="{{noPhotoFiles}}"><div>ยังไม่มีรูปที่จัดเก็บไว้</div></sc-if>
+        <div style="max-height:50vh; overflow:auto;">
+          <sc-for list="{{photoFiles}}" as="photo" hint-placeholder-count="0">
+            <sc-if value="{{photo.available}}"><img src="{{photo.url}}" style="width:100%; object-fit:contain;" alt="หลักฐานนำส่งเงิน"/></sc-if>
+            <sc-if value="{{photo.unavailable}}"><div>{{photo.f1FileName}} — รูปหมดอายุหรือไม่มีไฟล์</div></sc-if>
+          </sc-for>
         </div>
         <div style="font-size:13.5px; color:#7A8580;">พนักงาน {{photoModalEmployee}} · {{photoModalTime}}</div>
+        <input type="file" accept="image/jpeg,image/png,image/webp" onChange="{{onEvidenceChange}}"/>
+        <sc-if value="{{hasEvidence}}"><img src="{{evidencePhotoSrc}}" style="max-height:150px; object-fit:contain;" alt="รูปที่เลือก"/></sc-if>
+        <button onClick="{{attachToViewed}}">{{attachLabel}}</button>
       </div>
     </div>
   </sc-if>
@@ -835,36 +862,25 @@
 </x-dc>
 <script type="text/x-dc" data-dc-script>
 class Component extends DCLogic {
-  // ตั้งเป็น false ก่อน deploy จริง เพื่อซ่อน dev tools
-  DEV_MODE = ['localhost', '127.0.0.1', ''].includes(location.hostname)
-          || new URLSearchParams(location.search).get('dev') === '1';
-  API_BASE = ['localhost', '127.0.0.1', ''].includes(location.hostname) ? 'http://127.0.0.1:8000' : '';
+  DEV_MODE = ['localhost', '127.0.0.1'].includes(location.hostname);
+  API_BASE = ['localhost', '127.0.0.1'].includes(location.hostname) ? `http://${location.hostname}:8000` : '';
 
   LIFF_ID = '2010674864-18QwDZSk';
 
   _liffInitPromise = null;
 
   initLiff = () => {
-    if (this.DEV_MODE || typeof liff === 'undefined') return;
+    if (this.DEV_MODE) return Promise.resolve();
     this._liffInitPromise = (async () => {
-      try {
-        await liff.init({ liffId: this.LIFF_ID });
-        if (liff.isLoggedIn()) {
-          const profile = await liff.getProfile();
-          // ถ้ามี storeCode อยู่แล้ว (จาก QR/URL params) → ไป form เลย
-          // ถ้าไม่มี → อยู่ที่ scan ให้สแกนร้านก่อน
-          const hasStore = !!this.state.storeCode;
-          this.setState({
-            employeeName: profile.displayName,
-            lineUserId: profile.userId,
-            lineProfilePic: profile.pictureUrl || '',
-            selectedHistoryEmployee: profile.displayName,
-            ...(hasStore && { screen: 'form' }),
-          });
-        }
-      } catch (err) { console.error('[LIFF] init error:', err); }
+      if (typeof liff === 'undefined') throw new Error('โหลด LINE SDK ไม่สำเร็จ กรุณาเปิดหน้าใหม่');
+      await liff.init({ liffId: this.LIFF_ID });
     })();
+    return this._liffInitPromise;
   };
+
+  bangkokDate(value = new Date()) {
+    return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok', year: 'numeric', month: '2-digit', day: '2-digit' }).format(value);
+  }
 
   state = {
     mode: 'staff',
@@ -875,7 +891,7 @@ class Component extends DCLogic {
     pendingRole: 'staff',
     storeCode: '',
     storeName: '',
-    date: new Date().toISOString().slice(0, 10),
+    date: this.bangkokDate(),
     period: 'เย็น',
     cash: '',
     transfer: '',
@@ -887,153 +903,29 @@ class Component extends DCLogic {
     justSubmitted: false,
     selectedHistory: null,
     selectedHistoryEmployee: '',
-    historyDateFrom: (() => { const n = new Date(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-01`; })(),
-    historyDateTo: (() => { const n = new Date(); const last = new Date(n.getFullYear(), n.getMonth()+1, 0).getDate(); return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(last).padStart(2,'0')}`; })(),
+    historyDateFrom: this.bangkokDate().slice(0, 8) + '01',
+    historyDateTo: this.bangkokDate(),
     photoModalSub: null,
     showProfileMenu: false,
     evidencePhoto: null,
-    nameDraft: '',
-    scrollY: 0,
     lineUserId: '',
     lineProfilePic: '',
     personnelId: null,
-    storeId: null,
     qrShop: '',
     qrSig: '',
     scannerOpen: false,
-    allHistory: [
-      // 17 ส.ค. (เมื่อวาน)
-      { id: 'h1701', employee: 'สมชาย ใจดี',       date: '2026-08-17', storeCode: 'A1',  storeName: 'กอล์ฟ',          period: 'เย็น', cash: 5600, transfer: 2100 },
-      { id: 'h1702', employee: 'วันดี ศรีสุข',       date: '2026-08-17', storeCode: 'A2',  storeName: 'นิ่ม (เพลง)',    period: 'เย็น', cash: 4400, transfer: 2700 },
-      { id: 'h1703', employee: 'คำแพง สายบัว',       date: '2026-08-17', storeCode: 'A3',  storeName: 'ต่อ',            period: 'เย็น', cash: 6200, transfer: 1100, expense: 450 },
-      { id: 'h1704', employee: 'อองมิน',             date: '2026-08-17', storeCode: 'D1',  storeName: 'กร',             period: 'เช้า', cash: 4000, transfer: 1400 },
-      { id: 'h1705', employee: 'อองมิน',             date: '2026-08-17', storeCode: 'D1.1',storeName: 'กร แก้ว ผ้าปูโต๊ะ', period: 'เย็น', cash: 3500, transfer: 1100 },
-      { id: 'h1706', employee: 'จันทร์เพ็ญ ทองดี',   date: '2026-08-17', storeCode: 'D2',  storeName: 'จัด',            period: 'เย็น', cash: 5800, transfer: 2200 },
-      { id: 'h1707', employee: 'มยุรี แก้วมณี',       date: '2026-08-17', storeCode: 'H1',  storeName: 'บุญมี',          period: 'เย็น', cash: 5100, transfer: 1600 },
-      { id: 'h1708', employee: 'ทองสุข แสงจันทร์',   date: '2026-08-17', storeCode: 'K3',  storeName: 'เจน',            period: 'เย็น', cash: 5400, transfer: 2500 },
-      { id: 'h1709', employee: 'ทองสุข แสงจันทร์',   date: '2026-08-17', storeCode: 'K4',  storeName: 'อ้อ',            period: 'ค่ำ',  cash: 3200, transfer: 800 },
-      { id: 'h1710', employee: 'บัวลอย คำมี',         date: '2026-08-17', storeCode: 'K8',  storeName: 'เสก',            period: 'เช้า', cash: 3700, transfer: 1000 },
-      { id: 'h1711', employee: 'สมหญิง ใจงาม',       date: '2026-08-17', storeCode: 'K9',  storeName: 'น้ำหอม',         period: 'เย็น', cash: 5000, transfer: 2100 },
-      { id: 'h1712', employee: 'สมหญิง ใจงาม',       date: '2026-08-17', storeCode: 'SB',  storeName: 'ป้าตุ้ย',        period: 'เย็น', cash: 3900, transfer: 1300, expense: 200 },
-      { id: 'h1713', employee: 'คำสิงห์ วงศ์ษา',     date: '2026-08-17', storeCode: 'X1',  storeName: 'หนุ่ย',          period: 'เย็น', cash: 5600, transfer: 1800 },
-      { id: 'h1714', employee: 'คำสิงห์ วงศ์ษา',     date: '2026-08-17', storeCode: 'X8',  storeName: 'นนท์',           period: 'ค่ำ',  cash: 4100, transfer: 1500 },
-      // 16 ส.ค.
-      { id: 'h1601', employee: 'สมชาย ใจดี',         date: '2026-08-16', storeCode: 'A1',  storeName: 'กอล์ฟ',          period: 'เย็น', cash: 5300, transfer: 1900 },
-      { id: 'h1602', employee: 'วันดี ศรีสุข',       date: '2026-08-16', storeCode: 'A2',  storeName: 'นิ่ม (เพลง)',    period: 'เย็น', cash: 4600, transfer: 2500 },
-      { id: 'h1603', employee: 'คำแพง สายบัว',       date: '2026-08-16', storeCode: 'A3',  storeName: 'ต่อ',            period: 'เย็น', cash: 6400, transfer: 900,  expense: 300 },
-      { id: 'h1604', employee: 'อองมิน',             date: '2026-08-16', storeCode: 'D1',  storeName: 'กร',             period: 'เช้า', cash: 3800, transfer: 1600 },
-      { id: 'h1605', employee: 'จันทร์เพ็ญ ทองดี',   date: '2026-08-16', storeCode: 'D2',  storeName: 'จัด',            period: 'เย็น', cash: 5500, transfer: 2400 },
-      { id: 'h1606', employee: 'มยุรี แก้วมณี',       date: '2026-08-16', storeCode: 'H1',  storeName: 'บุญมี',          period: 'เย็น', cash: 4900, transfer: 1800 },
-      { id: 'h1607', employee: 'ทองสุข แสงจันทร์',   date: '2026-08-16', storeCode: 'K3',  storeName: 'เจน',            period: 'เย็น', cash: 5200, transfer: 2300 },
-      { id: 'h1608', employee: 'บัวลอย คำมี',         date: '2026-08-16', storeCode: 'K8',  storeName: 'เสก',            period: 'ค่ำ',  cash: 3500, transfer: 1300 },
-      { id: 'h1609', employee: 'สมหญิง ใจงาม',       date: '2026-08-16', storeCode: 'K9',  storeName: 'น้ำหอม',         period: 'เย็น', cash: 4800, transfer: 2000 },
-      { id: 'h1610', employee: 'คำสิงห์ วงศ์ษา',     date: '2026-08-16', storeCode: 'X1',  storeName: 'หนุ่ย',          period: 'เย็น', cash: 5400, transfer: 1700 },
-      // 15 ส.ค. (ศุกร์ - ยอดสูง)
-      { id: 'h1501', employee: 'สมชาย ใจดี',         date: '2026-08-15', storeCode: 'A1',  storeName: 'กอล์ฟ',          period: 'เย็น', cash: 6200, transfer: 2500, expense: 200 },
-      { id: 'h1502', employee: 'วันดี ศรีสุข',       date: '2026-08-15', storeCode: 'A2',  storeName: 'นิ่ม (เพลง)',    period: 'เย็น', cash: 5200, transfer: 3100 },
-      { id: 'h1503', employee: 'คำแพง สายบัว',       date: '2026-08-15', storeCode: 'A3',  storeName: 'ต่อ',            period: 'เย็น', cash: 7100, transfer: 1400 },
-      { id: 'h1504', employee: 'อองมิน',             date: '2026-08-15', storeCode: 'D1',  storeName: 'กร',             period: 'เช้า', cash: 4500, transfer: 1900 },
-      { id: 'h1505', employee: 'อองมิน',             date: '2026-08-15', storeCode: 'D1.1',storeName: 'กร แก้ว ผ้าปูโต๊ะ', period: 'เย็น', cash: 3800, transfer: 1200 },
-      { id: 'h1506', employee: 'จันทร์เพ็ญ ทองดี',   date: '2026-08-15', storeCode: 'D2',  storeName: 'จัด',            period: 'เย็น', cash: 6600, transfer: 2800 },
-      { id: 'h1507', employee: 'มยุรี แก้วมณี',       date: '2026-08-15', storeCode: 'H1',  storeName: 'บุญมี',          period: 'เย็น', cash: 5700, transfer: 2100 },
-      { id: 'h1508', employee: 'ทองสุข แสงจันทร์',   date: '2026-08-15', storeCode: 'K3',  storeName: 'เจน',            period: 'เย็น', cash: 6100, transfer: 2900 },
-      { id: 'h1509', employee: 'ทองสุข แสงจันทร์',   date: '2026-08-15', storeCode: 'K4',  storeName: 'อ้อ',            period: 'ค่ำ',  cash: 3600, transfer: 900 },
-      { id: 'h1510', employee: 'บัวลอย คำมี',         date: '2026-08-15', storeCode: 'K8',  storeName: 'เสก',            period: 'เช้า', cash: 4200, transfer: 1300, expense: 600 },
-      { id: 'h1511', employee: 'สมหญิง ใจงาม',       date: '2026-08-15', storeCode: 'K9',  storeName: 'น้ำหอม',         period: 'เย็น', cash: 5600, transfer: 2400 },
-      { id: 'h1512', employee: 'สมหญิง ใจงาม',       date: '2026-08-15', storeCode: 'SB',  storeName: 'ป้าตุ้ย',        period: 'เย็น', cash: 4300, transfer: 1600 },
-      { id: 'h1513', employee: 'คำสิงห์ วงศ์ษา',     date: '2026-08-15', storeCode: 'X1',  storeName: 'หนุ่ย',          period: 'เย็น', cash: 6400, transfer: 2200 },
-      { id: 'h1514', employee: 'คำสิงห์ วงศ์ษา',     date: '2026-08-15', storeCode: 'X8',  storeName: 'นนท์',           period: 'ค่ำ',  cash: 4500, transfer: 1700 },
-      // 14 ส.ค.
-      { id: 'h1401', employee: 'สมชาย ใจดี',         date: '2026-08-14', storeCode: 'A1',  storeName: 'กอล์ฟ',          period: 'เย็น', cash: 5500, transfer: 2000 },
-      { id: 'h1402', employee: 'วันดี ศรีสุข',       date: '2026-08-14', storeCode: 'A2',  storeName: 'นิ่ม (เพลง)',    period: 'เย็น', cash: 4200, transfer: 2600 },
-      { id: 'h1403', employee: 'คำแพง สายบัว',       date: '2026-08-14', storeCode: 'A3',  storeName: 'ต่อ',            period: 'เย็น', cash: 6000, transfer: 1000, expense: 350 },
-      { id: 'h1404', employee: 'อองมิน',             date: '2026-08-14', storeCode: 'D1',  storeName: 'กร',             period: 'เช้า', cash: 4100, transfer: 1500 },
-      { id: 'h1405', employee: 'จันทร์เพ็ญ ทองดี',   date: '2026-08-14', storeCode: 'D2',  storeName: 'จัด',            period: 'เย็น', cash: 5700, transfer: 2100 },
-      { id: 'h1406', employee: 'มยุรี แก้วมณี',       date: '2026-08-14', storeCode: 'H1',  storeName: 'บุญมี',          period: 'เย็น', cash: 4900, transfer: 1700 },
-      { id: 'h1407', employee: 'ทองสุข แสงจันทร์',   date: '2026-08-14', storeCode: 'K3',  storeName: 'เจน',            period: 'เย็น', cash: 5300, transfer: 2400 },
-      { id: 'h1408', employee: 'บัวลอย คำมี',         date: '2026-08-14', storeCode: 'K8',  storeName: 'เสก',            period: 'ค่ำ',  cash: 3600, transfer: 1100 },
-      { id: 'h1409', employee: 'สมหญิง ใจงาม',       date: '2026-08-14', storeCode: 'K9',  storeName: 'น้ำหอม',         period: 'เย็น', cash: 4700, transfer: 1900 },
-      { id: 'h1410', employee: 'สมหญิง ใจงาม',       date: '2026-08-14', storeCode: 'SB',  storeName: 'ป้าตุ้ย',        period: 'เย็น', cash: 4100, transfer: 1500 },
-      { id: 'h1411', employee: 'คำสิงห์ วงศ์ษา',     date: '2026-08-14', storeCode: 'X1',  storeName: 'หนุ่ย',          period: 'เย็น', cash: 5500, transfer: 1700 },
-      // 13 ส.ค. (วันช้า)
-      { id: 'h1301', employee: 'สมชาย ใจดี',         date: '2026-08-13', storeCode: 'A1',  storeName: 'กอล์ฟ',          period: 'เย็น', cash: 4900, transfer: 1800 },
-      { id: 'h1302', employee: 'วันดี ศรีสุข',       date: '2026-08-13', storeCode: 'A2',  storeName: 'นิ่ม (เพลง)',    period: 'เย็น', cash: 4000, transfer: 2200 },
-      { id: 'h1303', employee: 'คำแพง สายบัว',       date: '2026-08-13', storeCode: 'A3',  storeName: 'ต่อ',            period: 'เย็น', cash: 5800, transfer: 900 },
-      { id: 'h1304', employee: 'จันทร์เพ็ญ ทองดี',   date: '2026-08-13', storeCode: 'D2',  storeName: 'จัด',            period: 'เย็น', cash: 5200, transfer: 1900 },
-      { id: 'h1305', employee: 'มยุรี แก้วมณี',       date: '2026-08-13', storeCode: 'H1',  storeName: 'บุญมี',          period: 'เย็น', cash: 4600, transfer: 1600 },
-      { id: 'h1306', employee: 'ทองสุข แสงจันทร์',   date: '2026-08-13', storeCode: 'K3',  storeName: 'เจน',            period: 'เย็น', cash: 5100, transfer: 2200 },
-      { id: 'h1307', employee: 'บัวลอย คำมี',         date: '2026-08-13', storeCode: 'K8',  storeName: 'เสก',            period: 'เช้า', cash: 3400, transfer: 1100 },
-      { id: 'h1308', employee: 'สมหญิง ใจงาม',       date: '2026-08-13', storeCode: 'K9',  storeName: 'น้ำหอม',         period: 'เย็น', cash: 4600, transfer: 1900 },
-      { id: 'h1309', employee: 'คำสิงห์ วงศ์ษา',     date: '2026-08-13', storeCode: 'X1',  storeName: 'หนุ่ย',          period: 'เย็น', cash: 5200, transfer: 1600, expense: 250 },
-      // 12 ส.ค.
-      { id: 'h1201', employee: 'สมชาย ใจดี',         date: '2026-08-12', storeCode: 'A1',  storeName: 'กอล์ฟ',          period: 'เย็น', cash: 5400, transfer: 2000, expense: 180 },
-      { id: 'h1202', employee: 'วันดี ศรีสุข',       date: '2026-08-12', storeCode: 'A2',  storeName: 'นิ่ม (เพลง)',    period: 'เย็น', cash: 4300, transfer: 2500 },
-      { id: 'h1203', employee: 'คำแพง สายบัว',       date: '2026-08-12', storeCode: 'A3',  storeName: 'ต่อ',            period: 'เย็น', cash: 6100, transfer: 1100 },
-      { id: 'h1204', employee: 'อองมิน',             date: '2026-08-12', storeCode: 'D1',  storeName: 'กร',             period: 'เช้า', cash: 3900, transfer: 1400 },
-      { id: 'h1205', employee: 'จันทร์เพ็ญ ทองดี',   date: '2026-08-12', storeCode: 'D2',  storeName: 'จัด',            period: 'เย็น', cash: 5600, transfer: 2000 },
-      { id: 'h1206', employee: 'มยุรี แก้วมณี',       date: '2026-08-12', storeCode: 'H1',  storeName: 'บุญมี',          period: 'เย็น', cash: 5000, transfer: 1700 },
-      { id: 'h1207', employee: 'ทองสุข แสงจันทร์',   date: '2026-08-12', storeCode: 'K3',  storeName: 'เจน',            period: 'เย็น', cash: 5200, transfer: 2300 },
-      { id: 'h1208', employee: 'บัวลอย คำมี',         date: '2026-08-12', storeCode: 'K8',  storeName: 'เสก',            period: 'ค่ำ',  cash: 3700, transfer: 1100 },
-      { id: 'h1209', employee: 'สมหญิง ใจงาม',       date: '2026-08-12', storeCode: 'K9',  storeName: 'น้ำหอม',         period: 'เย็น', cash: 4900, transfer: 2000 },
-      { id: 'h1210', employee: 'คำสิงห์ วงศ์ษา',     date: '2026-08-12', storeCode: 'X1',  storeName: 'หนุ่ย',          period: 'เย็น', cash: 5500, transfer: 1800 },
-      // 11 ส.ค.
-      { id: 'h1101', employee: 'สมชาย ใจดี',         date: '2026-08-11', storeCode: 'A1',  storeName: 'กอล์ฟ',          period: 'เย็น', cash: 5200, transfer: 1900 },
-      { id: 'h1102', employee: 'วันดี ศรีสุข',       date: '2026-08-11', storeCode: 'A2',  storeName: 'นิ่ม (เพลง)',    period: 'เย็น', cash: 4100, transfer: 2400 },
-      { id: 'h1103', employee: 'คำแพง สายบัว',       date: '2026-08-11', storeCode: 'A3',  storeName: 'ต่อ',            period: 'เย็น', cash: 5900, transfer: 1000, expense: 400 },
-      { id: 'h1104', employee: 'อองมิน',             date: '2026-08-11', storeCode: 'D1',  storeName: 'กร',             period: 'เช้า', cash: 4000, transfer: 1500 },
-      { id: 'h1105', employee: 'จันทร์เพ็ญ ทองดี',   date: '2026-08-11', storeCode: 'D2',  storeName: 'จัด',            period: 'เย็น', cash: 5400, transfer: 2100 },
-      { id: 'h1106', employee: 'มยุรี แก้วมณี',       date: '2026-08-11', storeCode: 'H1',  storeName: 'บุญมี',          period: 'เย็น', cash: 4800, transfer: 1500 },
-      { id: 'h1107', employee: 'ทองสุข แสงจันทร์',   date: '2026-08-11', storeCode: 'K3',  storeName: 'เจน',            period: 'เย็น', cash: 5100, transfer: 2200 },
-      { id: 'h1108', employee: 'บัวลอย คำมี',         date: '2026-08-11', storeCode: 'K8',  storeName: 'เสก',            period: 'เช้า', cash: 3500, transfer: 1000 },
-      { id: 'h1109', employee: 'สมหญิง ใจงาม',       date: '2026-08-11', storeCode: 'K9',  storeName: 'น้ำหอม',         period: 'เย็น', cash: 4700, transfer: 1900 },
-      { id: 'h1110', employee: 'คำสิงห์ วงศ์ษา',     date: '2026-08-11', storeCode: 'X1',  storeName: 'หนุ่ย',          period: 'เย็น', cash: 5300, transfer: 1700 },
-      // 1-10 ส.ค. (ข้อมูลกระจาย)
-      { id: 'h1001', employee: 'สมชาย ใจดี',         date: '2026-08-10', storeCode: 'A1',  storeName: 'กอล์ฟ',          period: 'เย็น', cash: 5100, transfer: 1800 },
-      { id: 'h1002', employee: 'วันดี ศรีสุข',       date: '2026-08-10', storeCode: 'A2',  storeName: 'นิ่ม (เพลง)',    period: 'เย็น', cash: 4200, transfer: 2300 },
-      { id: 'h1003', employee: 'คำแพง สายบัว',       date: '2026-08-10', storeCode: 'A3',  storeName: 'ต่อ',            period: 'เย็น', cash: 5900, transfer: 1000 },
-      { id: 'h1004', employee: 'จันทร์เพ็ญ ทองดี',   date: '2026-08-10', storeCode: 'D2',  storeName: 'จัด',            period: 'เย็น', cash: 5300, transfer: 2000 },
-      { id: 'h1005', employee: 'ทองสุข แสงจันทร์',   date: '2026-08-10', storeCode: 'K3',  storeName: 'เจน',            period: 'เย็น', cash: 5000, transfer: 2100 },
-      { id: 'h1006', employee: 'บัวลอย คำมี',         date: '2026-08-10', storeCode: 'K8',  storeName: 'เสก',            period: 'ค่ำ',  cash: 3600, transfer: 1000, expense: 150 },
-      { id: 'h1007', employee: 'คำสิงห์ วงศ์ษา',     date: '2026-08-10', storeCode: 'X1',  storeName: 'หนุ่ย',          period: 'เย็น', cash: 5400, transfer: 1600 },
-      { id: 'h901',  employee: 'สมชาย ใจดี',         date: '2026-08-09', storeCode: 'A1',  storeName: 'กอล์ฟ',          period: 'เย็น', cash: 5000, transfer: 1700 },
-      { id: 'h902',  employee: 'คำแพง สายบัว',       date: '2026-08-09', storeCode: 'A3',  storeName: 'ต่อ',            period: 'เย็น', cash: 5700, transfer: 900 },
-      { id: 'h903',  employee: 'จันทร์เพ็ญ ทองดี',   date: '2026-08-09', storeCode: 'D2',  storeName: 'จัด',            period: 'เย็น', cash: 5100, transfer: 1900 },
-      { id: 'h904',  employee: 'มยุรี แก้วมณี',       date: '2026-08-09', storeCode: 'H1',  storeName: 'บุญมี',          period: 'เย็น', cash: 4700, transfer: 1600 },
-      { id: 'h905',  employee: 'สมหญิง ใจงาม',       date: '2026-08-09', storeCode: 'K9',  storeName: 'น้ำหอม',         period: 'เย็น', cash: 4600, transfer: 1800 },
-      { id: 'h801',  employee: 'สมชาย ใจดี',         date: '2026-08-08', storeCode: 'A1',  storeName: 'กอล์ฟ',          period: 'เย็น', cash: 5300, transfer: 2000, expense: 220 },
-      { id: 'h802',  employee: 'วันดี ศรีสุข',       date: '2026-08-08', storeCode: 'A2',  storeName: 'นิ่ม (เพลง)',    period: 'เย็น', cash: 4100, transfer: 2200 },
-      { id: 'h803',  employee: 'อองมิน',             date: '2026-08-08', storeCode: 'D1',  storeName: 'กร',             period: 'เช้า', cash: 3800, transfer: 1300 },
-      { id: 'h804',  employee: 'ทองสุข แสงจันทร์',   date: '2026-08-08', storeCode: 'K3',  storeName: 'เจน',            period: 'เย็น', cash: 5100, transfer: 2100 },
-      { id: 'h805',  employee: 'คำสิงห์ วงศ์ษา',     date: '2026-08-08', storeCode: 'X1',  storeName: 'หนุ่ย',          period: 'เย็น', cash: 5200, transfer: 1600 },
-      { id: 'h501',  employee: 'สมชาย ใจดี',         date: '2026-08-05', storeCode: 'A1',  storeName: 'กอล์ฟ',          period: 'เย็น', cash: 5600, transfer: 2100 },
-      { id: 'h502',  employee: 'วันดี ศรีสุข',       date: '2026-08-05', storeCode: 'A2',  storeName: 'นิ่ม (เพลง)',    period: 'เย็น', cash: 4500, transfer: 2700 },
-      { id: 'h503',  employee: 'คำแพง สายบัว',       date: '2026-08-05', storeCode: 'A3',  storeName: 'ต่อ',            period: 'เย็น', cash: 6300, transfer: 1100, expense: 500 },
-      { id: 'h504',  employee: 'จันทร์เพ็ญ ทองดี',   date: '2026-08-05', storeCode: 'D2',  storeName: 'จัด',            period: 'เย็น', cash: 5800, transfer: 2200 },
-      { id: 'h505',  employee: 'มยุรี แก้วมณี',       date: '2026-08-05', storeCode: 'H1',  storeName: 'บุญมี',          period: 'เย็น', cash: 5000, transfer: 1600 },
-      { id: 'h506',  employee: 'ทองสุข แสงจันทร์',   date: '2026-08-05', storeCode: 'K3',  storeName: 'เจน',            period: 'เย็น', cash: 5300, transfer: 2400 },
-      { id: 'h507',  employee: 'สมหญิง ใจงาม',       date: '2026-08-05', storeCode: 'K9',  storeName: 'น้ำหอม',         period: 'เย็น', cash: 5000, transfer: 2000 },
-      { id: 'h508',  employee: 'คำสิงห์ วงศ์ษา',     date: '2026-08-05', storeCode: 'X1',  storeName: 'หนุ่ย',          period: 'เย็น', cash: 5600, transfer: 1900 },
-      { id: 'h101',  employee: 'สมชาย ใจดี',         date: '2026-08-01', storeCode: 'A1',  storeName: 'กอล์ฟ',          period: 'เย็น', cash: 5100, transfer: 1900 },
-      { id: 'h102',  employee: 'วันดี ศรีสุข',       date: '2026-08-01', storeCode: 'A2',  storeName: 'นิ่ม (เพลง)',    period: 'เย็น', cash: 4300, transfer: 2500 },
-      { id: 'h103',  employee: 'คำแพง สายบัว',       date: '2026-08-01', storeCode: 'A3',  storeName: 'ต่อ',            period: 'เย็น', cash: 5900, transfer: 1000 },
-      { id: 'h104',  employee: 'จันทร์เพ็ญ ทองดี',   date: '2026-08-01', storeCode: 'D2',  storeName: 'จัด',            period: 'เย็น', cash: 5500, transfer: 2100 },
-      { id: 'h105',  employee: 'ทองสุข แสงจันทร์',   date: '2026-08-01', storeCode: 'K3',  storeName: 'เจน',            period: 'เย็น', cash: 5200, transfer: 2200 },
-      { id: 'h106',  employee: 'คำสิงห์ วงศ์ษา',     date: '2026-08-01', storeCode: 'X1',  storeName: 'หนุ่ย',          period: 'เย็น', cash: 5400, transfer: 1700 },
-    ],
-    submissionsToday: [
-      { id: 's1',  date: '2026-08-18', storeCode: 'A1',  storeName: 'กอล์ฟ',          employee: 'สมชาย ใจดี',       cash: 5800, transfer: 2100, time: '18:45', period: 'เย็น', expense: 300 },
-      { id: 's2',  date: '2026-08-18', storeCode: 'A2',  storeName: 'นิ่ม (เพลง)',    employee: 'วันดี ศรีสุข',     cash: 4500, transfer: 2800, time: '19:10', period: 'เย็น' },
-      { id: 's3',  date: '2026-08-18', storeCode: 'A3',  storeName: 'ต่อ',            employee: 'คำแพง สายบัว',     cash: 6300, transfer: 1200, time: '18:15', period: 'เย็น', expense: 500 },
-      { id: 's4',  date: '2026-08-18', storeCode: 'D1',  storeName: 'กร',             employee: 'อองมิน',           cash: 4200, transfer: 1600, time: '17:50', period: 'เช้า' },
-      { id: 's5',  date: '2026-08-18', storeCode: 'D2',  storeName: 'จัด',            employee: 'จันทร์เพ็ญ ทองดี', cash: 5900, transfer: 2300, time: '19:20', period: 'เย็น' },
-      { id: 's6',  date: '2026-08-18', storeCode: 'H1',  storeName: 'บุญมี',          employee: 'มยุรี แก้วมณี',   cash: 5200, transfer: 1700, time: '18:55', period: 'เย็น', expense: 200 },
-      { id: 's7',  date: '2026-08-18', storeCode: 'K3',  storeName: 'เจน',            employee: 'ทองสุข แสงจันทร์', cash: 5500, transfer: 2600, time: '18:30', period: 'เย็น' },
-      { id: 's8',  date: '2026-08-18', storeCode: 'K8',  storeName: 'เสก',            employee: 'บัวลอย คำมี',     cash: 3800, transfer: 1200, time: '17:35', period: 'ค่ำ' },
-      { id: 's9',  date: '2026-08-18', storeCode: 'K9',  storeName: 'น้ำหอม',         employee: 'สมหญิง ใจงาม',   cash: 5100, transfer: 2200, time: '19:05', period: 'เย็น', expense: 400 },
-      { id: 's10', date: '2026-08-18', storeCode: 'X1',  storeName: 'หนุ่ย',          employee: 'คำสิงห์ วงศ์ษา', cash: 5700, transfer: 1900, time: '18:20', period: 'เย็น' },
-    ],
-    adminDateFrom: '2026-08-18',
-    adminDateTo: '2026-08-18',
+    personnel: [],
+    loading: false,
+    apiError: '',
+    submitting: false,
+    photoPreparing: false,
+    pendingPhotoTid: null,
+    photoFiles: [],
+    photoLoading: false,
+    allHistory: [],
+    submissionsToday: [],
+    adminDateFrom: this.bangkokDate(),
+    adminDateTo: this.bangkokDate(),
     adminView: 'list',
     historyPickerOpen: null,
     historyPickerY: new Date().getFullYear(),
@@ -1051,22 +943,7 @@ class Component extends DCLogic {
     userManageNameDraft: '',
     userStatus: {},
     userManageTab: 'users',
-    stores: [
-      { code: 'A1', name: 'กอล์ฟ' },
-      { code: 'A2', name: 'นิ่ม (เพลง)' },
-      { code: 'A3', name: 'ต่อ' },
-      { code: 'D1', name: 'กร' },
-      { code: 'D1.1', name: 'กร แก้ว ผ้าปูโต๊ะ' },
-      { code: 'D2', name: 'จัด' },
-      { code: 'H1', name: 'บุญมี' },
-      { code: 'K3', name: 'เจน' },
-      { code: 'K4', name: 'อ้อ' },
-      { code: 'K8', name: 'เสก' },
-      { code: 'K9', name: 'น้ำหอม' },
-      { code: 'SB', name: 'ป้าตุ้ย' },
-      { code: 'X1', name: 'หนุ่ย' },
-      { code: 'X8', name: 'นนท์' },
-    ],
+    stores: [],
     storeStatus: {},
     storeEditCode: null,
     storeEditCodeDraft: '',
@@ -1076,120 +953,148 @@ class Component extends DCLogic {
     qrDataUrl: '',
   };
 
-  STORES = [
-    { code: 'A1', name: 'กอล์ฟ' },
-    { code: 'A2', name: 'นิ่ม (เพลง)' },
-    { code: 'A3', name: 'ต่อ' },
-    { code: 'D1', name: 'กร' },
-    { code: 'D1.1', name: 'กร แก้ว ผ้าปูโต๊ะ' },
-    { code: 'D2', name: 'จัด' },
-    { code: 'H1', name: 'บุญมี' },
-    { code: 'K3', name: 'เจน' },
-    { code: 'K4', name: 'อ้อ' },
-    { code: 'K8', name: 'เสก' },
-    { code: 'K9', name: 'น้ำหอม' },
-    { code: 'SB', name: 'ป้าตุ้ย' },
-    { code: 'X1', name: 'หนุ่ย' },
-    { code: 'X8', name: 'นนท์' },
-  ];
-
-  WEEK_HISTORY = [
-    { d: '11 ส.ค.', v: 62300 },
-    { d: '12 ส.ค.', v: 64200 },
-    { d: '13 ส.ค.', v: 55950 },
-    { d: '14 ส.ค.', v: 67150 },
-    { d: '15 ส.ค.', v: 79800 },
-    { d: '16 ส.ค.', v: 63100 },
-    { d: '17 ส.ค.', v: 72350 },
-  ];
-
-  fmt(n) { return Math.round(n || 0).toLocaleString('th-TH'); }
-  onlyDigits(v) { return (v || '').replace(/[^0-9]/g, ''); }
-
-  onScroll = () => this.setState({ scrollY: window.scrollY || window.pageYOffset || 0 });
+  fmt(n) { return Number(n || 0).toLocaleString('th-TH', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  onlyDigits(v) { return (v || '').replace(/[^0-9.]/g, ''); }
 
   componentDidMount() {
-    window.addEventListener('scroll', this.onScroll, { passive: true });
-    this.onScroll();
     this.readUrlParams();
-    this.initLiff();
+    this.bootstrap();
   }
 
   componentWillUnmount() {
-    window.removeEventListener('scroll', this.onScroll);
     this.stopScan();
+    this._dataRequest++;
+    this._photoRequest++;
+    if (this._previewUrl) URL.revokeObjectURL(this._previewUrl);
+    this.clearViewedPhotos();
   }
+
+  _dataRequest = 0;
+  _photoRequest = 0;
+  _submitBusy = false;
+  _photoBlob = null;
+  _previewUrl = '';
+
+  api = async (path, options = {}) => {
+    const request = { ...options, credentials: 'include', headers: { Accept: 'application/json', ...options.headers } };
+    if (request.body && !(request.body instanceof FormData)) {
+      request.headers['Content-Type'] = 'application/json';
+      request.body = JSON.stringify(request.body);
+    }
+    const response = await fetch(this.API_BASE + '/api' + path, request);
+    if (response.status === 204) return null;
+    const data = await response.json().catch(() => { throw new Error(`Server ส่งข้อมูลไม่ถูกต้อง (${response.status})`); });
+    if (!response.ok) {
+      if (response.status === 401 && this.state.personnelId) this.resetSession('หมดเวลาเข้าสู่ระบบ กรุณาเข้าสู่ระบบใหม่');
+      const message = typeof data.detail === 'string' ? data.detail
+        : Array.isArray(data.detail) ? data.detail.map(e => e.msg).join('; ') : `Server error (${response.status})`;
+      const error = new Error(message);
+      error.status = response.status;
+      throw error;
+    }
+    return data;
+  };
+
+  showError = (error) => {
+    console.error('[API]', error);
+    this.setState({ apiError: error.message || 'เกิดข้อผิดพลาด กรุณาลองใหม่' });
+  };
+
+  bootstrap = async () => {
+    try {
+      try {
+        const session = await this.api('/auth/me');
+        await this.applyLogin(session);
+        return;
+      } catch (error) {
+        if (error.status !== 401) throw error;
+      }
+      await this.initLiff();
+      if (!this.DEV_MODE && liff.isLoggedIn()) await this.doLogin();
+    } catch (error) { this.showError(error); }
+  };
+
+  applyLogin = async ({ personnel }) => {
+    this.setState({
+      employeeName: personnel.fullName, personnelId: personnel.p7PID,
+      selectedHistoryEmployee: String(personnel.p7PID), isAdminUser: personnel.p7Role === 'admin',
+      screen: this.state.storeCode ? 'form' : 'scan', apiError: '',
+    });
+    await this.loadData();
+  };
+
+  adaptTransaction(txn) {
+    return {
+      id: txn.t1TID, pid: txn.t1Pid, employee: txn.employeeName,
+      date: txn.t1Date, storeCode: txn.storeCode, storeName: txn.storeName,
+      period: { morning: 'เช้า', afternoon: 'เย็น', evening: 'ค่ำ' }[txn.t1Shift],
+      cash: Number(txn.t1Cash), transfer: Number(txn.t1Transfer), expense: Number(txn.t1Expense),
+      note: txn.t1Note || '', status: txn.t1Status, fileCount: txn.fileCount,
+      time: new Date(txn.t1CreatedAt.endsWith('Z') ? txn.t1CreatedAt : txn.t1CreatedAt + 'Z')
+        .toLocaleTimeString('th-TH', { timeZone: 'Asia/Bangkok', hour: '2-digit', minute: '2-digit' }),
+    };
+  }
+
+  loadData = async () => {
+    if (!this.state.personnelId) return;
+    const request = ++this._dataRequest;
+    const admin = this.state.isAdminUser;
+    this.setState({ loading: true, apiError: '' });
+    try {
+      const [transactions, stores, personnel] = await Promise.all([
+        this.api('/transactions/'), this.api('/stores/'),
+        admin ? this.api('/personnel/') : Promise.resolve([]),
+      ]);
+      if (request !== this._dataRequest) return;
+      const reports = transactions.map(txn => this.adaptTransaction(txn));
+      const storeRows = stores.map(st => ({ id: st.s7Sid, code: st.s7Code, name: st.s7Name, active: st.s7Status }));
+      const currentStore = storeRows.find(st => st.code === this.state.storeCode);
+      this.setState({
+        allHistory: reports, submissionsToday: reports, stores: storeRows, personnel,
+        storeStatus: Object.fromEntries(storeRows.map(st => [st.code, st.active])),
+        ...(currentStore && { storeName: currentStore.name }), loading: false,
+      });
+    } catch (error) {
+      if (request !== this._dataRequest) return;
+      this.setState({ loading: false });
+      this.showError(error);
+    }
+  };
 
   THAI_MONTHS_FULL = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
   THAI_MONTHS_SHORT = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
   THAI_DAYS_SHORT   = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
 
-  LINE_PROFILES = {
-    'สมชาย ใจดี':       { displayName: 'Somchai J.',     lastLogin: '17 ส.ค. 18:45' },
-    'วันดี ศรีสุข':     { displayName: 'Wandee',          lastLogin: '17 ส.ค. 17:20' },
-    'คำแพง สายบัว':     { displayName: 'คำแพง SB',        lastLogin: '17 ส.ค. 19:10' },
-    'อองมิน':           { displayName: 'Aung Min',         lastLogin: '17 ส.ค. 16:55' },
-    'จันทร์เพ็ญ ทองดี': { displayName: 'จันทร์เพ็ญ',     lastLogin: '17 ส.ค. 18:30' },
-    'มยุรี แก้วมณี':    { displayName: 'Mayuree',          lastLogin: '17 ส.ค. 19:05' },
-    'ทองสุข แสงจันทร์': { displayName: 'Tongsuk',          lastLogin: '17 ส.ค. 20:15' },
-    'บัวลอย คำมี':      { displayName: 'Bualoy',           lastLogin: '17 ส.ค. 15:40' },
-    'สมหญิง ใจงาม':     { displayName: 'Somying',          lastLogin: '17 ส.ค. 18:50' },
-    'คำสิงห์ วงศ์ษา':   { displayName: 'คำสิงห์',          lastLogin: '17 ส.ค. 20:30' },
-  };
+
 
   getLast4DayOpts() {
-    const today = new Date();
+    const today = new Date(this.bangkokDate() + 'T12:00:00+07:00');
     return Array.from({ length: 2 }, (_, i) => {
-      const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() - i);
-      const iso = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-      return { value: iso, label: `${d.getDate()} ${this.THAI_MONTHS_SHORT[d.getMonth()]} ${d.getFullYear() + 543} (${this.THAI_DAYS_SHORT[d.getDay()]})` };
+      const d = new Date(today);
+      d.setUTCDate(d.getUTCDate() - i);
+      const iso = this.bangkokDate(d);
+      const [year, month, day] = iso.split('-').map(Number);
+      return { value: iso, label: `${day} ${this.THAI_MONTHS_SHORT[month-1]} ${year + 543} (${this.THAI_DAYS_SHORT[d.getUTCDay()]})` };
     });
   }
 
   setFormDate = (e) => this.setState({ date: e.target.value });
 
-  dateSelectFor(stateKey) {
-    const today = new Date();
-    const raw = this.state[stateKey];
-    const val = raw || today.toISOString().slice(0, 10);
-    const [ys, ms, ds] = val.split('-');
-    const y = Number(ys), m = Number(ms);
-    const daysInMonth = new Date(y, m, 0).getDate();
-    const curBE = today.getFullYear() + 543;
-    const upd = (part) => (e) => {
-      const cur = this.state[stateKey] || today.toISOString().slice(0, 10);
-      const [cy, cm, cd] = cur.split('-');
-      let ny = cy, nm = cm, nd = cd;
-      if (part === 'y') ny = e.target.value;
-      if (part === 'm') nm = e.target.value;
-      if (part === 'd') nd = e.target.value;
-      const maxD = new Date(Number(ny), Number(nm), 0).getDate();
-      if (Number(nd) > maxD) nd = String(maxD).padStart(2, '0');
-      this.setState({ [stateKey]: `${ny}-${nm}-${nd}` });
-    };
-    return {
-      dv: ds, mv: ms, yv: ys,
-      dd: Array.from({ length: daysInMonth }, (_, i) => ({ value: String(i + 1).padStart(2, '0'), label: String(i + 1) })),
-      md: this.THAI_MONTHS_FULL.map((n, i) => ({ value: String(i + 1).padStart(2, '0'), label: n })),
-      yd: Array.from({ length: 6 }, (_, i) => curBE - 2 + i).map(be => ({ value: String(be - 543), label: String(be) })),
-      od: upd('d'), om: upd('m'), oy: upd('y'),
-    };
-  }
-
-  goStaffMode = () => this.setState({ mode: 'staff' });
-  goAdminMode = () => this.setState({ mode: 'admin' });
+  goStaffMode = () => { this.setState({ mode: 'staff' }); this.loadData(); };
+  goAdminMode = () => { if (this.state.isAdminUser) { this.setState({ mode: 'admin' }); this.loadData(); } };
 
   toggleManualPick = () => this.setState(s => ({ manualPick: !s.manualPick }));
 
-  setRoleStaff = () => this.setState({ pendingRole: 'staff' });
-  setRoleAdmin = () => this.setState({ pendingRole: 'admin' });
 
-  devLoginStaff = () => this.setState(s => ({ employeeName: 'สมชาย ใจดี', isAdminUser: false, selectedHistoryEmployee: 'สมชาย ใจดี', screen: 'form', screenStack: [...s.screenStack, s.screen] }));
-  devLoginAdmin = () => this.setState(s => ({ employeeName: 'อรทัย จัดการ (แอดมิน)', isAdminUser: true, selectedHistoryEmployee: 'อรทัย จัดการ (แอดมิน)', screen: 'form', screenStack: [...s.screenStack, s.screen] }));
+  devLoginStaff = () => this.doLogin('staff');
+  devLoginAdmin = () => this.doLogin('admin');
 
-  selectStore = (store) => {
-    const next = this.state.employeeName ? 'form' : 'login';
-    this.setState(s => ({ storeCode: store.code, storeName: store.name, screen: next, screenStack: [...s.screenStack, s.screen], manualPick: false, cash: '', transfer: '', expense: '', note: '', cashError: false, evidencePhoto: null }));
+  selectStore = (store, sig = '') => {
+    if (this.state.pendingPhotoTid) { this.showError(new Error('กรุณาส่งรูปของรายการที่บันทึกแล้วให้เสร็จก่อน')); return; }
+    const next = this.state.personnelId ? 'form' : 'login';
+    this.clearPhoto();
+    this.setState(s => ({ storeCode: store.code, storeName: store.name, qrShop: store.code, qrSig: sig,
+      screen: next, screenStack: [...s.screenStack, s.screen], manualPick: false, cash: '', transfer: '', expense: '', note: '', cashError: false }));
   };
 
   startScan = async () => {
@@ -1266,9 +1171,9 @@ class Component extends DCLogic {
     this.setState({ qrShop: shopCode, qrSig: sig });
     const store = this.state.stores.find(s => s.code === shopCode);
     if (store) {
-      this.selectStore(store);
+      this.selectStore(store, sig);
     } else {
-      const next = this.state.employeeName ? 'form' : 'login';
+      const next = this.state.personnelId ? 'form' : 'login';
       this.setState({ storeCode: shopCode, storeName: '', screen: next, manualPick: false });
     }
   };
@@ -1282,77 +1187,64 @@ class Component extends DCLogic {
     this.setState({ qrShop: shop, qrSig: sig });
     const store = this.state.stores.find(s => s.code === shop);
     if (store) {
-      this.selectStore(store);
+      this.selectStore(store, sig);
     } else {
       // Unknown code — keep it as-is; backend decides if it's valid
-      const next = this.state.employeeName ? 'form' : 'login';
+      const next = this.state.personnelId ? 'form' : 'login';
       this.setState({ storeCode: shop, storeName: '', screen: next, manualPick: false });
     }
   };
 
   simulateScan = () => {
-    const store = this.state.stores.find(s => s.code === 'D1.1') || this.state.stores[0];
-    this.selectStore(store);
+    this.handleQrResult('A1');
   };
 
   backToScan = () => this.setState({ screen: 'scan', screenStack: [], manualPick: false });
 
-  _apiLogin = async (body) => {
-    const res = await fetch(`${this.API_BASE}/api/auth/${this.DEV_MODE ? 'login-dev' : 'login'}`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.detail || 'เข้าสู่ระบบไม่สำเร็จ');
-    }
-    return res.json();
-  };
-
-  doLogin = async () => {
-    if (!this.DEV_MODE) {
-      if (this._liffInitPromise) await this._liffInitPromise;
-      if (!liff.isLoggedIn()) { liff.login(); return; }
-      const profile = await liff.getProfile();
-      try {
-        const { personnel, store } = await this._apiLogin({ line_user_id: profile.userId });
-        const isAdminOverride = new URLSearchParams(location.search).get('admin') === '1';
-        this.setState(s => ({
-          employeeName: `${personnel.p7FName} ${personnel.p7LName}`,
-          lineUserId: profile.userId, lineProfilePic: profile.pictureUrl || '',
-          isAdminUser: isAdminOverride || personnel.p7Role === 'admin',
-          personnelId: personnel.p7PID, storeId: store.s7Sid,
-          selectedHistoryEmployee: `${personnel.p7FName} ${personnel.p7LName}`,
-          screen: 'form', screenStack: [...s.screenStack, s.screen],
-        }));
-      } catch (e) { alert(e.message); }
-      return;
-    }
-    // DEV: ใช้ p7PID=1 หรือเลือกจาก DEV panel
-    const isAdmin = this.state.pendingRole === 'admin';
+  doLogin = async (role = 'staff') => {
+    if (this._loginBusy) return;
+    this._loginBusy = true;
+    this.setState({ apiError: '' });
     try {
-      const { personnel, store } = await this._apiLogin({ p7PID: isAdmin ? 2 : 1 });
-      this.setState(s => ({
-        employeeName: `${personnel.p7FName} ${personnel.p7LName}`,
-        isAdminUser: personnel.p7Role === 'admin',
-        personnelId: personnel.p7PID, storeId: store.s7Sid,
-        selectedHistoryEmployee: `${personnel.p7FName} ${personnel.p7LName}`,
-        screen: 'form', screenStack: [...s.screenStack, s.screen],
-      }));
-    } catch (e) {
-      // fallback ถ้า API ไม่รัน
-      const name = isAdmin ? 'อรทัย จัดการ (แอดมิน)' : 'สมชาย ใจดี';
-      this.setState(s => ({ employeeName: name, isAdminUser: isAdmin, selectedHistoryEmployee: name, screen: 'form', screenStack: [...s.screenStack, s.screen] }));
-    }
+      let session;
+      if (this.DEV_MODE) {
+        session = await this.api('/auth/login-dev', { method: 'POST', body: { role: role === 'admin' ? 'admin' : 'staff' } });
+      } else {
+        await (this._liffInitPromise || this.initLiff());
+        if (!liff.isLoggedIn()) { liff.login({ redirectUri: location.href }); return; }
+        const idToken = liff.getIDToken();
+        if (!idToken) throw new Error('LINE ไม่ได้ส่ง ID token กรุณาตรวจสอบสิทธิ์ openid');
+        session = await this.api('/auth/login', { method: 'POST', body: { id_token: idToken } });
+      }
+      await this.applyLogin(session);
+    } catch (error) { this.showError(error); }
+    finally { this._loginBusy = false; }
   };
 
-  doLogout = () => {
-    if (!this.DEV_MODE && typeof liff !== 'undefined' && liff.isLoggedIn()) liff.logout();
+  resetSession = (message = '') => {
+    this._dataRequest++;
+    this._photoRequest++;
+    this.clearPhoto();
+    this.clearViewedPhotos();
     this.setState({
       employeeName: '', isAdminUser: false, pendingRole: 'staff', selectedHistoryEmployee: '',
-      lineUserId: '', lineProfilePic: '',
-      storeCode: '', storeName: '', cash: '', transfer: '', expense: '', note: '',
+      personnelId: null, lineUserId: '', lineProfilePic: '', qrShop: '', qrSig: '',
+      storeCode: '', storeName: '', cash: '', transfer: '', expense: '', note: '', mode: 'staff',
+      allHistory: [], submissionsToday: [], stores: [], personnel: [], storeStatus: {}, userStatus: {},
+      pendingPhotoTid: null, lastSubmission: null, selectedHistory: null, photoModalSub: null, photoFiles: [],
+      showProfileMenu: false, qrStoreCode: null, qrDataUrl: '', storeEditCode: null, userManageEditName: null,
+      empDetailOpen: null, storeDetailOpen: null, loading: false, submitting: false,
+      apiError: message,
       cashError: false, manualPick: false, justSubmitted: false, screen: 'scan', screenStack: [], evidencePhoto: null,
     });
+  };
+
+  doLogout = async () => {
+    try {
+      await this.api('/auth/logout', { method: 'POST' });
+      if (!this.DEV_MODE && typeof liff !== 'undefined' && liff.isLoggedIn()) liff.logout();
+      this.resetSession();
+    } catch (error) { this.showError(error); }
   };
 
   setCash = (e) => this.setState({ cash: this.onlyDigits(e.target.value), cashError: false });
@@ -1362,56 +1254,50 @@ class Component extends DCLogic {
   setPeriod = (p) => this.setState({ period: p });
 
   submitForm = async () => {
+    if (this._submitBusy || this.state.photoPreparing) return;
+    if (this.state.pendingPhotoTid) { await this.retryPhoto(); return; }
     if (!this.state.cash) { this.setState({ cashError: true }); return; }
-    const { storeCode, storeName, employeeName, personnelId, storeId, period, date, note } = this.state;
-    const cashNum = Number(this.state.cash || 0);
-    const transferNum = Number(this.state.transfer || 0);
-    const expenseNum = Number(this.state.expense || 0);
+    const { storeCode, personnelId, period, date, note, qrSig } = this.state;
+    if (!personnelId || !storeCode) { this.showError(new Error('กรุณาเข้าสู่ระบบและสแกนร้านค้าก่อน')); return; }
+    const money = [this.state.cash, this.state.transfer || '0', this.state.expense || '0'];
+    if (money.some(value => !/^\d{1,10}(\.\d{1,2})?$/.test(value))) {
+      this.showError(new Error('กรุณาระบุจำนวนเงินไม่ติดลบและทศนิยมไม่เกิน 2 ตำแหน่ง')); return;
+    }
     const periodMap = { 'เช้า': 'morning', 'เย็น': 'afternoon', 'ค่ำ': 'evening' };
-    const record = {
-      id: 'live-' + Date.now(),
-      storeCode, storeName, employee: employeeName, cash: cashNum, transfer: transferNum, expense: expenseNum,
-      time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
-      period, date,
-    };
-    // ส่งไป API ถ้ามี personnelId และ storeId
-    if (personnelId && storeId) {
-      const sub = cashNum + transferNum;
-      const disc = expenseNum;
-      const total = sub - disc;
-      const payMethod = cashNum > 0 && transferNum > 0 ? 'qr' : transferNum > 0 ? 'transfer' : 'cash';
-      const body = {
-        t1TNo: `TXN-${Date.now()}`,
-        t1Sid: storeId, t1Pid: personnelId,
-        t1Date: new Date().toISOString(),
-        t1Shift: periodMap[period] || 'evening',
-        t1Sub: sub, t1Disc: disc, t1Tax: 0, t1Total: total,
-        t1PayMethod: payMethod, t1PayStatus: 'paid',
+    this._submitBusy = true;
+    this.setState({ submitting: true, apiError: '' });
+    try {
+      const txn = await this.api('/transactions/', { method: 'POST', body: {
+        storeCode, qrSig: qrSig || null,
+        t1Date: date,
+        t1Shift: periodMap[period],
+        t1Cash: money[0], t1Transfer: money[1], t1Expense: money[2],
         t1Note: note || null,
-      };
-      try {
-        const res = await fetch(`${this.API_BASE}/api/transactions/`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
-        });
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          alert('บันทึกไม่สำเร็จ: ' + (err.detail || res.status));
+      } });
+      if (personnelId !== this.state.personnelId) return;
+      const record = this.adaptTransaction(txn);
+      this.setState({ lastSubmission: record });
+      if (this._photoBlob) {
+        this.setState({ pendingPhotoTid: txn.t1TID });
+        try { await this.uploadPhoto(txn.t1TID); }
+        catch (error) {
+          this.showError(new Error(`บันทึกยอดแล้ว (#${txn.t1TID}) แต่ส่งรูปไม่สำเร็จ: ${error.message} — กดส่งรูปอีกครั้งโดยไม่ส่งยอดซ้ำ`));
           return;
         }
-        const txn = await res.json();
-        record.id = `api-${txn.t1TID}`;
-      } catch (e) {
-        alert('เชื่อมต่อ server ไม่ได้ บันทึกเฉพาะ local');
       }
-    }
+      await this.finishSubmission();
+    } catch (error) { this.showError(error); }
+    finally { this._submitBusy = false; this.setState({ submitting: false }); }
+  };
+
+  finishSubmission = async () => {
+    this.clearPhoto();
     this.setState(s => ({
-      submissionsToday: [...s.submissionsToday, record],
-      allHistory: [{ id: record.id, employee: record.employee, date: record.date, storeCode: record.storeCode, storeName: record.storeName, period: record.period, cash: record.cash, transfer: record.transfer, expense: record.expense }, ...s.allHistory],
-      lastSubmission: record, justSubmitted: true,
-      selectedHistoryEmployee: record.employee,
+      pendingPhotoTid: null, justSubmitted: true, selectedHistoryEmployee: String(s.personnelId),
       screen: 'history', screenStack: [...s.screenStack, s.screen],
-      cash: '', transfer: '', expense: '', note: '', evidencePhoto: null,
+      cash: '', transfer: '', expense: '', note: '', apiError: '',
     }));
+    await this.loadData();
   };
 
   dismissBanner = () => this.setState({ justSubmitted: false });
@@ -1422,48 +1308,144 @@ class Component extends DCLogic {
     return { screen: prev, screenStack: stack };
   });
 
-  goHistory = () => this.setState(s => ({ screen: 'history', screenStack: [...s.screenStack, s.screen] }));
   backFromHistory = () => this.goBack();
   backFromDetail = () => this.goBack();
   selectHistory = (h) => this.setState(s => ({ selectedHistory: h, screen: 'historyDetail', screenStack: [...s.screenStack, s.screen] }));
-  setHistoryEmployee = (e) => this.setState({ selectedHistoryEmployee: e.target.value });
-  clearHistoryDateFilter = () => this.setState({ historyDateFrom: '', historyDateTo: '' });
-  clearAdminDateFilter = () => this.setState({ adminDateFrom: '', adminDateTo: '' });
+  setHistoryEmployee = (e) => { this.setState({ selectedHistoryEmployee: e.target.value }); this.loadData(); };
+  clearHistoryDateFilter = () => { this.setState({ historyDateFrom: '', historyDateTo: '' }); this.loadData(); };
+  clearAdminDateFilter = () => { this.setState({ adminDateFrom: '', adminDateTo: '' }); this.loadData(); };
   setAdminView = (v) => this.setState({ adminView: v });
 
-  viewPhoto = (sub) => this.setState({ photoModalSub: sub });
-  closePhotoModal = () => this.setState({ photoModalSub: null });
+  viewPhoto = async (sub) => {
+    const request = ++this._photoRequest;
+    this.clearViewedPhotos();
+    const urls = [];
+    this.setState({ photoModalSub: sub, photoFiles: [], photoLoading: true });
+    try {
+      const files = await this.api(`/transactions/${sub.id}/files`);
+      const photos = [];
+      for (const file of files) {
+        if (request !== this._photoRequest) break;
+        if (!file.available) { photos.push(file); continue; }
+        const response = await fetch(this.API_BASE + file.contentUrl, { credentials: 'include' });
+        if (response.status === 401) this.resetSession('หมดเวลาเข้าสู่ระบบ กรุณาเข้าสู่ระบบใหม่');
+        if (!response.ok) throw new Error(`โหลดรูปไม่สำเร็จ (${response.status}) กรุณาโหลดรายการใหม่`);
+        const blob = await response.blob();
+        if (request !== this._photoRequest) break;
+        const url = URL.createObjectURL(blob);
+        urls.push(url);
+        photos.push({ ...file, imageUrl: url });
+      }
+      if (request !== this._photoRequest) {
+        urls.forEach(url => URL.revokeObjectURL(url));
+        return;
+      }
+      this._photoUrls = urls;
+      this.setState({ photoFiles: photos, photoLoading: false });
+    } catch (error) {
+      urls.forEach(url => URL.revokeObjectURL(url));
+      if (request !== this._photoRequest) return;
+      this.setState({ photoLoading: false });
+      this.showError(error);
+    }
+  };
+  clearViewedPhotos = () => {
+    (this._photoUrls || []).forEach(url => URL.revokeObjectURL(url));
+    this._photoUrls = [];
+  };
+  closePhotoModal = () => { this._photoRequest++; this.clearViewedPhotos(); this.setState({ photoModalSub: null, photoFiles: [], photoLoading: false }); };
   stopPropagation = (e) => e.stopPropagation();
 
-  onEvidenceChange = (e) => {
+  clearPhoto = () => {
+    this._photoSelection = (this._photoSelection || 0) + 1;
+    this._photoBlob = null;
+    if (this._previewUrl) URL.revokeObjectURL(this._previewUrl);
+    this._previewUrl = '';
+    this.setState({ evidencePhoto: null, photoPreparing: false });
+  };
+
+  onEvidenceChange = async (e) => {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => this.setState({ evidencePhoto: ev.target.result });
-    reader.readAsDataURL(file);
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 20 * 1024 * 1024) {
+      this.showError(new Error('เลือกรูป JPEG, PNG หรือ WebP ขนาดต้นฉบับไม่เกิน 20 MB')); return;
+    }
+    this.clearPhoto();
+    const selection = this._photoSelection;
+    this.setState({ photoPreparing: true, apiError: '' });
+    try {
+      const bitmap = await createImageBitmap(file);
+      let blob;
+      try {
+        const scale = Math.min(1, 1600 / Math.max(bitmap.width, bitmap.height));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+        canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+        for (const quality of [0.85, 0.7, 0.55, 0.4]) {
+          blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', quality));
+          if (!blob) throw new Error('ย่อรูปไม่สำเร็จ');
+          if (blob.size <= 500 * 1024) break;
+        }
+      } finally { bitmap.close(); }
+      if (selection !== this._photoSelection) return;
+      if (blob.size > 2 * 1024 * 1024) throw new Error('รูปหลังย่อต้องไม่เกิน 2 MB');
+      this._photoBlob = blob;
+      this._previewUrl = URL.createObjectURL(blob);
+      this.setState({ evidencePhoto: this._previewUrl });
+    } catch (error) { if (selection === this._photoSelection) this.showError(error); }
+    finally { if (selection === this._photoSelection) this.setState({ photoPreparing: false }); }
   };
 
-  openProfileMenu = () => this.setState({ showProfileMenu: true, nameDraft: this.state.employeeName });
+  uploadPhoto = async (tid) => {
+    if (!this._photoBlob) throw new Error('กรุณาเลือกรูปภาพก่อน');
+    const body = new FormData();
+    body.append('file', this._photoBlob, 'evidence.jpg');
+    return this.api(`/transactions/${tid}/files`, { method: 'POST', body });
+  };
+
+  retryPhoto = async () => {
+    if (this._submitBusy || this.state.photoPreparing) return;
+    this._submitBusy = true;
+    this.setState({ submitting: true });
+    try {
+      await this.uploadPhoto(this.state.pendingPhotoTid);
+      await this.finishSubmission();
+    } catch (error) { this.showError(error); }
+    finally { this._submitBusy = false; this.setState({ submitting: false }); }
+  };
+
+  attachToViewed = async () => {
+    if (this._submitBusy || !this.state.photoModalSub || this.state.photoPreparing) return;
+    if (this.state.pendingPhotoTid && this.state.pendingPhotoTid !== this.state.photoModalSub.id) {
+      this.showError(new Error('กรุณาส่งรูปของรายการที่บันทึกค้างไว้ก่อน')); return;
+    }
+    this._submitBusy = true;
+    this.setState({ submitting: true });
+    try {
+      const sub = this.state.photoModalSub;
+      await this.uploadPhoto(sub.id);
+      if (this.state.pendingPhotoTid === sub.id) {
+        await this.finishSubmission();
+        this.closePhotoModal();
+        return;
+      }
+      this.clearPhoto();
+      await this.viewPhoto(sub);
+      await this.loadData();
+    } catch (error) { this.showError(error); }
+    finally { this._submitBusy = false; this.setState({ submitting: false }); }
+  };
+
+  openProfileMenu = () => this.setState({ showProfileMenu: true });
   closeProfileMenu = () => this.setState({ showProfileMenu: false });
-  setNameDraft = (e) => this.setState({ nameDraft: e.target.value });
+  goToAdminReport = () => { if (this.state.isAdminUser) { this.setState({ mode: 'admin', showProfileMenu: false }); this.loadData(); } };
+  goToHistory = () => { this.setState(s => ({ mode: 'staff', screen: 'history', screenStack: [...s.screenStack, s.screen], showProfileMenu: false })); this.loadData(); };
 
-  saveName = () => {
-    const oldName = this.state.employeeName;
-    const newName = (this.state.nameDraft || '').trim() || oldName;
-    if (newName === oldName) { this.setState({ showProfileMenu: false }); return; }
-    this.setState(s => ({
-      employeeName: newName,
-      selectedHistoryEmployee: s.selectedHistoryEmployee === oldName ? newName : s.selectedHistoryEmployee,
-      allHistory: s.allHistory.map(h => h.employee === oldName ? { ...h, employee: newName } : h),
-      submissionsToday: s.submissionsToday.map(r => r.employee === oldName ? { ...r, employee: newName } : r),
-      showProfileMenu: false,
-    }));
-  };
-
-  goToAdminReport = () => this.setState({ mode: 'admin', showProfileMenu: false });
-  goToHistory = () => this.setState(s => ({ mode: 'staff', screen: 'history', screenStack: [...s.screenStack, s.screen], showProfileMenu: false }));
-
-  goToUserManage = () => this.setState({ mode: 'userManage', showProfileMenu: false });
+  goToUserManage = () => { if (this.state.isAdminUser) { this.setState({ mode: 'userManage', showProfileMenu: false }); this.loadData(); } };
   backFromUserManage = () => this.setState({ mode: 'admin' });
   setUserManageTab = (tab) => this.setState({ userManageTab: tab });
 
@@ -1475,26 +1457,26 @@ class Component extends DCLogic {
   setStoreEditCodeDraft = (e) => this.setState({ storeEditCodeDraft: e.target.value });
   setStoreEditNameDraft = (e) => this.setState({ storeEditNameDraft: e.target.value });
   setStoreEditStatusDraft = (v) => this.setState({ storeEditStatusDraft: v });
-  saveEditStore = () => {
+  saveEditStore = async () => {
     const { storeEditCode, storeEditCodeDraft, storeEditNameDraft, storeEditStatusDraft, stores, storeStatus } = this.state;
     const newCode = (storeEditCodeDraft || '').trim().toUpperCase();
     const newName = (storeEditNameDraft || '').trim();
-    if (!newCode || !newName) return;
-    const newStatus = { ...storeStatus, [newCode]: storeEditStatusDraft };
-    if (newCode === storeEditCode) {
-      this.setState({ stores: stores.map(st => st.code === storeEditCode ? { ...st, name: newName } : st), storeStatus: newStatus, storeEditCode: null });
-    } else if (stores.find(st => st.code === newCode)) {
-      this.setState({ stores: stores.map(st => st.code === newCode ? { ...st, name: newName } : st).filter(st => st.code !== storeEditCode), storeStatus: newStatus, storeEditCode: null });
-    } else {
-      this.setState({ stores: stores.map(st => st.code === storeEditCode ? { code: newCode, name: newName } : st), storeStatus: newStatus, storeEditCode: null });
-    }
+    if (!newCode || !newName) { this.showError(new Error('กรุณาระบุรหัสและชื่อร้าน')); return; }
+    const store = stores.find(st => st.code === storeEditCode);
+    try {
+      await this.api(`/stores/${store.id}`, { method: 'PATCH', body: { s7Code: newCode, s7Name: newName, s7Status: storeEditStatusDraft } });
+      this.setState({ storeEditCode: null, qrSig: '', qrShop: '' });
+      await this.loadData();
+    } catch (error) { this.showError(error); }
   };
   cancelEditStore = () => this.setState({ storeEditCode: null });
 
   openStoreQR = async (code) => {
-    const qrText = location.href.split('?')[0] + '?shop=' + code;
+    const store = this.state.stores.find(st => st.code === code);
     const size = 600;
     try {
+      const signed = await this.api(`/stores/${store.id}/qr`);
+      const qrText = location.origin + '/app.html' + signed.qrQuery;
       const baseUrl = await QRCode.toDataURL(qrText, {
         width: size, margin: 2, errorCorrectionLevel: 'H',
         color: { dark: '#1E2A26', light: '#FFFFFF' },
@@ -1516,27 +1498,48 @@ class Component extends DCLogic {
         this.setState({ qrStoreCode: code, qrDataUrl: canvas.toDataURL('image/png') });
       };
       img.src = baseUrl;
-    } catch(e) { this.setState({ qrStoreCode: code, qrDataUrl: '' }); }
+    } catch(error) { this.showError(error); }
   };
   closeStoreQR = () => this.setState({ qrStoreCode: null, qrDataUrl: '' });
-  startEditUser = (name) => this.setState({ userManageEditName: name, userManageNameDraft: name });
+  startEditUser = (person) => this.setState({ userManageEditName: person.p7PID, userManageNameDraft: person.fullName });
   setUserNameDraft = (e) => this.setState({ userManageNameDraft: e.target.value });
-  saveUserName2 = () => {
-    const oldName = this.state.userManageEditName;
-    const newName = (this.state.userManageNameDraft || '').trim() || oldName;
-    this.setState(s => ({
-      allHistory: s.allHistory.map(h => h.employee === oldName ? { ...h, employee: newName } : h),
-      submissionsToday: s.submissionsToday.map(r => r.employee === oldName ? { ...r, employee: newName } : r),
-      employeeName: s.employeeName === oldName ? newName : s.employeeName,
-      userManageEditName: null,
-      userManageNameDraft: '',
-    }));
+  saveUserName2 = async () => {
+    const pid = this.state.userManageEditName;
+    const name = this.state.userManageNameDraft.trim();
+    if (!name) { this.showError(new Error('กรุณาระบุชื่อ')); return; }
+    const [first, ...last] = name.split(/\s+/);
+    try {
+      const updated = await this.api(`/personnel/${pid}`, { method: 'PATCH', body: { p7FName: first, p7LName: last.join(' ') } });
+      this.setState({ userManageEditName: null, userManageNameDraft: '', ...(pid === this.state.personnelId && { employeeName: updated.fullName }) });
+      await this.loadData();
+    } catch (error) { this.showError(error); }
   };
   cancelEditUser = () => this.setState({ userManageEditName: null, userManageNameDraft: '' });
-  toggleUserActive = (name) => this.setState(s => {
-    const isActive = s.userStatus[name] !== false;
-    return { userStatus: { ...s.userStatus, [name]: !isActive } };
-  });
+  toggleUserActive = async (person) => {
+    try {
+      await this.api(`/personnel/${person.p7PID}`, { method: 'PATCH', body: { p7Status: !person.p7Status } });
+      await this.loadData();
+    } catch (error) { this.showError(error); }
+  };
+
+  verifyReport = async (record) => {
+    try {
+      await this.api(`/transactions/${record.id}/verify`, { method: 'POST' });
+      this.setState({ selectedHistory: null, screen: 'history' });
+      await this.loadData();
+    } catch (error) { this.showError(error); }
+  };
+
+  voidReport = async (record) => {
+    const reason = window.prompt('เหตุผลที่ยกเลิกรายการ (จำนวนเงินแก้ไขโดยยกเลิกแล้วส่งใหม่)');
+    if (reason === null) return;
+    if (!reason.trim()) { this.showError(new Error('กรุณาระบุเหตุผล')); return; }
+    try {
+      await this.api(`/transactions/${record.id}/void`, { method: 'POST', body: { reason: reason.trim() } });
+      this.setState({ selectedHistory: null, screen: 'history' });
+      await this.loadData();
+    } catch (error) { this.showError(error); }
+  };
 
   openHistoryPicker = (which) => {
     const iso = which === 'from' ? this.state.historyDateFrom : this.state.historyDateTo;
@@ -1558,6 +1561,7 @@ class Component extends DCLogic {
     const { historyPickerOpen: which, historyPickerY: y, historyPickerM: m } = this.state;
     const iso = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     this.setState({ [which === 'from' ? 'historyDateFrom' : 'historyDateTo']: iso, historyPickerOpen: null });
+    this.loadData();
   };
 
   openAdminPicker = (which) => {
@@ -1580,6 +1584,7 @@ class Component extends DCLogic {
     const { adminPickerOpen: which, adminPickerY: y, adminPickerM: m } = this.state;
     const iso = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     this.setState({ [which === 'from' ? 'adminDateFrom' : 'adminDateTo']: iso, adminPickerOpen: null });
+    this.loadData();
   };
 
   renderVals() {
@@ -1632,14 +1637,14 @@ class Component extends DCLogic {
     const isSingleDay = !!s.adminDateFrom && s.adminDateFrom === s.adminDateTo;
     const reportedCodes = new Set(adminFiltered.map(x => x.storeCode));
     const notReportedStores = isSingleDay
-      ? s.stores.filter(st => !reportedCodes.has(st.code)).map(st => ({ label: `${st.code} ${st.name}` }))
+      ? s.stores.filter(st => st.active && !reportedCodes.has(st.code)).map(st => ({ label: `${st.code} ${st.name}` }))
       : [];
 
     const empMap = new Map();
     adminFiltered.forEach(r => {
-      const e = empMap.get(r.employee) || { employee: r.employee, count: 0, cash: 0, transfer: 0, expense: 0 };
+      const e = empMap.get(r.pid) || { pid: r.pid, employee: r.employee, count: 0, cash: 0, transfer: 0, expense: 0 };
       e.count += 1; e.cash += r.cash; e.transfer += r.transfer; e.expense += (r.expense || 0);
-      empMap.set(r.employee, e);
+      empMap.set(r.pid, e);
     });
     const groupedByEmployee = [...empMap.values()]
       .map(g => ({ ...g, cashDisplay: fmt(g.cash), transferDisplay: fmt(g.transfer), expenseCell: g.expense > 0 ? `฿${fmt(g.expense)}` : '—', expenseCellColor: g.expense > 0 ? '#B0432F' : '#C8C2B4', netDisplay: fmt(g.cash + g.transfer - g.expense) }))
@@ -1661,7 +1666,7 @@ class Component extends DCLogic {
     const fmtD = (iso) => { const [y2,m2,d2] = iso.split('-'); return `${Number(d2)} ${this.THAI_MONTHS_SHORT[Number(m2)-1]} ${Number(y2)+543}`; };
     const btnOn = 'width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:#F1EDE1;color:#1E2A26;font-size:16px;font-weight:700;cursor:pointer;';
     const btnOff = 'width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:#F8F5EF;color:#C8C2B4;font-size:16px;font-weight:700;';
-    const empTableRows = groupedByEmployee.map(g => ({ ...g, openDetail: () => this.setState({ empDetailOpen: g.employee }) }));
+    const empTableRows = groupedByEmployee.map(g => ({ ...g, openDetail: () => this.setState({ empDetailOpen: g.pid }) }));
     const empTP = Math.max(1, Math.ceil(empTableRows.length / PAGE_SIZE));
     const empPg = Math.min(s.empPage, empTP - 1);
     const empPagedRows = empTableRows.slice(empPg * PAGE_SIZE, (empPg + 1) * PAGE_SIZE);
@@ -1670,27 +1675,26 @@ class Component extends DCLogic {
     const storePg = Math.min(s.storePage, storeTP - 1);
     const storePagedRows = storeTableRows.slice(storePg * PAGE_SIZE, (storePg + 1) * PAGE_SIZE);
     const buildDetailRows = (recs) => recs.sort((a, b) => b.date.localeCompare(a.date)).map(r => { const inc = r.cash + r.transfer; const exp = r.expense || 0; return { date: fmtD(r.date), incomeDisplay: fmt(inc), expDisplay: exp > 0 ? fmt(exp) : '—', expColor: exp > 0 ? '#B0432F' : '#C8C2B4', netDisplay: fmt(inc - exp) }; });
-    const empDetailRecords = s.empDetailOpen ? buildDetailRows(adminFiltered.filter(r => r.employee === s.empDetailOpen)) : [];
+    const empDetailRecords = s.empDetailOpen ? buildDetailRows(adminFiltered.filter(r => r.pid === s.empDetailOpen)) : [];
     const storeDetailLabel = s.storeDetailOpen ? (groupedByStore.find(g => g.storeCode === s.storeDetailOpen)?.storeLabel || s.storeDetailOpen) : '';
     const storeDetailRecords = s.storeDetailOpen ? buildDetailRows(adminFiltered.filter(r => r.storeCode === s.storeDetailOpen)) : [];
 
     // User management rows
     const UM_COLORS = ['#0E7C66', '#6366F1', '#F59E0B', '#EC4899', '#14B8A6', '#0EA5E9'];
-    const allEmpNames = [...new Set(s.allHistory.map(r => r.employee))].sort();
-    const userManageRows = allEmpNames.map(name => {
-      const empRecs = s.allHistory.filter(r => r.employee === name).sort((a, b) => b.date.localeCompare(a.date));
+    const userManageRows = s.personnel.map(person => {
+      const name = person.fullName;
+      const empRecs = s.allHistory.filter(r => r.pid === person.p7PID).sort((a, b) => b.date.localeCompare(a.date));
       const last = empRecs[0];
-      const isActive = s.userStatus[name] !== false;
-      const isEditing = s.userManageEditName === name;
+      const isActive = person.p7Status;
+      const isEditing = s.userManageEditName === person.p7PID;
       const initials = name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
       const avatarColor = UM_COLORS[name.charCodeAt(0) % UM_COLORS.length];
-      const lineProfile = this.LINE_PROFILES[name] || { displayName: name, lastLogin: last ? fmtD(last.date) : '—' };
       return {
         name,
         initials,
         avatarColor,
-        lineDisplayName: lineProfile.displayName,
-        lastLogin: lineProfile.lastLogin,
+        lineDisplayName: person.p7LineUID ? 'เชื่อมต่อแล้ว' : 'ยังไม่เชื่อมต่อ',
+        lastLogin: person.p7LastLogin ? new Date(person.p7LastLogin + 'Z').toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' }) : '—',
         lastStoreLabel: last ? `${last.storeCode} ${last.storeName}` : '—',
         lastDateLabel: last ? `${fmtD(last.date)}${last.time ? ' ' + last.time : ''}` : '—',
         isActive,
@@ -1700,21 +1704,12 @@ class Component extends DCLogic {
         statusStyle: `display:inline-flex;align-items:center;font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:100px;background:${isActive ? '#DCFCE7' : '#FEE2E2'};color:${isActive ? '#16A34A' : '#DC2626'};flex-shrink:0;`,
         toggleStyle: `padding:7px 14px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid ${isActive ? '#EDD5D5' : '#C3E0D6'};color:${isActive ? '#B04A3B' : '#0E7C66'};background:${isActive ? '#FFF9F9' : '#F1F9F6'};flex-shrink:0;`,
         toggleLabel: isActive ? 'ระงับ' : 'เปิดใช้งาน',
-        toggleActive: () => this.toggleUserActive(name),
-        startEdit: () => this.startEditUser(name),
+        toggleActive: () => this.toggleUserActive(person),
+        startEdit: () => this.startEditUser(person),
         saveUserName: this.saveUserName2,
         cancelEdit: this.cancelEditUser,
       };
     });
-
-    const weekData = [...this.WEEK_HISTORY, { d: '5 ก.ค. (วันนี้)', v: totalToday, today: true }];
-    const maxV = Math.max(...weekData.map(w => w.v), 1);
-    const chartBars = weekData.map(w => ({
-      label: w.d,
-      valueDisplay: fmt(w.v),
-      labelColor: w.today ? '#0E7C66' : '#9AA39D',
-      barStyle: `width:100%; max-width:44px; height:${Math.max(6, (w.v / maxV) * 130)}px; border-radius:8px 8px 0 0; background:${w.today ? '#0E7C66' : '#CFE3DC'};`,
-    }));
 
     const maxEmpGross = Math.max(...groupedByEmployee.map(g => g.cash + g.transfer), 1);
     const employeeChartBars = groupedByEmployee.map(g => {
@@ -1723,7 +1718,7 @@ class Component extends DCLogic {
       const totalH = Math.max(8, (gross / maxEmpGross) * 120);
       const expH = gross > 0 ? (g.expense / gross) * totalH : 0;
       const netH = totalH - expH;
-      const isHovered = s.empTooltip?.key === g.employee;
+      const isHovered = s.empTooltip?.key === g.pid;
       return {
         label: g.employee.split(' ')[0],
         countLabel: `(${g.count})`,
@@ -1732,9 +1727,9 @@ class Component extends DCLogic {
         expBarStyle: `width:100%; height:${Math.max(0, expH).toFixed(1)}px; border-radius:${expH > 1 ? '0 0 4px 4px' : '0'}; background:${isHovered ? '#D97006' : '#F97316'}; flex-shrink:0; transition:background 0.1s;`,
         labelColor: isHovered ? '#0E7C66' : '#1E2A26',
         colStyle: `flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:5px; height:100%; min-width:52px; cursor:pointer;`,
-        hoverIn: () => this.setState({ empTooltip: { key: g.employee, label: g.employee, incDisplay: fmt(gross), netDisplay: fmt(net), expDisplay: fmt(g.expense) } }),
+        hoverIn: () => this.setState({ empTooltip: { key: g.pid, label: g.employee, incDisplay: fmt(gross), netDisplay: fmt(net), expDisplay: fmt(g.expense) } }),
         hoverOut: () => this.setState({ empTooltip: null }),
-        onClick: () => this.setState({ empTooltip: s.empTooltip?.key === g.employee ? null : { key: g.employee, label: g.employee, incDisplay: fmt(gross), netDisplay: fmt(net), expDisplay: fmt(g.expense) } }),
+        onClick: () => this.setState({ empTooltip: s.empTooltip?.key === g.pid ? null : { key: g.pid, label: g.employee, incDisplay: fmt(gross), netDisplay: fmt(net), expDisplay: fmt(g.expense) } }),
       };
     });
 
@@ -1819,12 +1814,11 @@ class Component extends DCLogic {
       return { color, label: `${f2lc(d0)}–${f2lc(d1)}`, lineStyle: `width:20px; height:3px; background:${color}; border-radius:2px; flex-shrink:0;` };
     });
 
-    const isLoggedIn = !!s.employeeName;
+    const isLoggedIn = !!s.personnelId;
 
-    const uniqueEmployees = [...new Set(s.allHistory.map(h => h.employee))];
     const employeeOptions = s.isAdminUser
-      ? uniqueEmployees.map(name => ({ value: name, label: name }))
-      : [{ value: s.employeeName, label: s.employeeName }];
+      ? s.personnel.map(person => ({ value: String(person.p7PID), label: person.fullName }))
+      : [{ value: String(s.personnelId), label: s.employeeName }];
 
     const fmtDateDisp = (iso) => {
       if (!iso) return 'ทุกวัน';
@@ -1838,13 +1832,13 @@ class Component extends DCLogic {
     };
 
     const rawFiltered = s.allHistory
-      .filter(h => h.employee === s.selectedHistoryEmployee)
+      .filter(h => String(h.pid) === s.selectedHistoryEmployee)
       .filter(h => !s.historyDateFrom || h.date >= s.historyDateFrom)
       .filter(h => !s.historyDateTo || h.date <= s.historyDateTo);
 
     const groups = {};
     for (const h of rawFiltered) {
-      const key = `${h.employee}|${h.date}|${h.storeCode}`;
+      const key = `${h.pid}|${h.date}|${h.storeCode}`;
       if (!groups[key]) groups[key] = { ...h, cash: 0, transfer: 0, expense: 0, periods: [], _first: h, _records: [] };
       groups[key].cash += h.cash || 0;
       groups[key].transfer += h.transfer || 0;
@@ -1935,9 +1929,17 @@ class Component extends DCLogic {
     }
 
     return {
+      apiError: s.apiError, hasApiError: !!s.apiError, loading: s.loading,
+      retryData: () => this.state.personnelId ? this.loadData() : this.bootstrap(),
+      pendingPhoto: !!s.pendingPhotoTid, retryPhoto: this.retryPhoto,
+      submitLabel: s.submitting ? 'กำลังบันทึก...' : s.photoPreparing ? 'กำลังย่อรูป...' : s.pendingPhotoTid ? 'ส่งรูปอีกครั้ง' : 'ส่งยอดขาย',
+      attachLabel: s.submitting ? 'กำลังส่งรูป...' : s.photoPreparing ? 'กำลังย่อรูป...' : 'แนบรูปกับรายการนี้',
+      attachToViewed: this.attachToViewed,
+      photoFiles: s.photoFiles.map(photo => ({ ...photo, unavailable: !photo.available, url: photo.imageUrl || '' })),
+      photoLoading: s.photoLoading, noPhotoFiles: !s.photoLoading && s.photoFiles.length === 0,
       isDev: this.DEV_MODE,
       isStaffMode: s.mode === 'staff',
-      isAdminMode: s.mode === 'admin',
+      isAdminMode: s.mode === 'admin' && s.isAdminUser,
       staffToggleStyle: `padding:9px 18px; border-radius:100px; font-size:13.5px; font-weight:700; cursor:pointer; white-space:nowrap; background:${s.mode === 'staff' ? '#0E7C66' : 'transparent'}; color:${s.mode === 'staff' ? '#fff' : '#4E5854'};`,
       adminToggleStyle: `padding:9px 18px; border-radius:100px; font-size:13.5px; font-weight:700; cursor:pointer; white-space:nowrap; background:${s.mode === 'admin' ? '#0E7C66' : 'transparent'}; color:${s.mode === 'admin' ? '#fff' : '#4E5854'};`,
       staffToggleStyleSm: `padding:6px 12px; border-radius:100px; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; background:${s.mode === 'staff' ? '#0E7C66' : 'transparent'}; color:${s.mode === 'staff' ? '#fff' : '#4E5854'};`,
@@ -1959,9 +1961,7 @@ class Component extends DCLogic {
       toggleManualPick: this.toggleManualPick, manualPick: s.manualPick, stores,
 
       doLogin: this.doLogin,
-      setRoleStaff: this.setRoleStaff, setRoleAdmin: this.setRoleAdmin,
       devLoginStaff: this.devLoginStaff, devLoginAdmin: this.devLoginAdmin,
-      roleStaffStyle: '', roleAdminStyle: '',
 
       formStoreLabel: `${s.storeCode} ${s.storeName}`, backToScan: this.backToScan, goBack: this.goBack,
       fdDateV: s.date, fdDateO: this.setFormDate, fdDateOpts: this.getLast4DayOpts(),
@@ -1982,8 +1982,7 @@ class Component extends DCLogic {
 
       justSubmitted: s.justSubmitted, dismissBanner: this.dismissBanner,
       lastStoreLabel: s.lastSubmission ? `${s.lastSubmission.storeCode} ${s.lastSubmission.storeName}` : '',
-      lastTotalDisplay: s.lastSubmission ? fmt(s.lastSubmission.cash + s.lastSubmission.transfer) : '0',
-      goHistory: this.goHistory,
+      lastTotalDisplay: s.lastSubmission ? fmt(s.lastSubmission.cash + s.lastSubmission.transfer - s.lastSubmission.expense) : '0',
 
       selectedHistoryEmployee: s.selectedHistoryEmployee, setHistoryEmployee: this.setHistoryEmployee,
       hasHistoryDateFilter: !!(s.historyDateFrom || s.historyDateTo), clearHistoryDateFilter: this.clearHistoryDateFilter,
@@ -2002,7 +2001,8 @@ class Component extends DCLogic {
       historyDropdownDisabled: !s.isAdminUser,
       historyDropdownStyle: `width:100%; font-size:15px; font-weight:700; padding:12px 14px; border-radius:12px; border:1.5px solid #DDD5C4; background:${s.isAdminUser ? '#fff' : '#F1EDE1'}; color:#1E2A26; font-family:inherit;`,
       filteredHistory, backFromHistory: this.backFromHistory,
-      filteredHistoryTotal: fmt(filteredHistory.reduce((sum, h) => sum + (h.cash||0) + (h.transfer||0), 0)),
+      emptyHistory: !s.loading && !s.apiError && filteredHistory.length === 0,
+      filteredHistoryTotal: fmt(filteredHistory.reduce((sum, h) => sum + (h.cash||0) + (h.transfer||0) - (h.expense||0), 0)),
 
       detailEmployee: sh.employee || '',
       detailStoreLabel: sh.storeCode ? `${sh.storeCode} ${sh.storeName}` : '',
@@ -2014,6 +2014,10 @@ class Component extends DCLogic {
         expense: fmt(r.expense || 0),
         hasExpense: (r.expense || 0) > 0,
         total: fmt((r.cash||0) + (r.transfer||0) - (r.expense||0)),
+        viewPhoto: () => this.viewPhoto(r),
+        statusLabel: { submitted: 'ส่งแล้ว', verified: 'ยืนยันแล้ว', void: 'ยกเลิกแล้ว' }[r.status],
+        canVerify: s.isAdminUser && r.status === 'submitted', canVoid: s.isAdminUser && r.status !== 'void',
+        verify: () => this.verifyReport(r), void: () => this.voidReport(r),
       })),
       detailTotal: fmt((sh.cash || 0) + (sh.transfer || 0) - (sh.expense || 0)), backFromDetail: this.backFromDetail,
 
@@ -2022,17 +2026,13 @@ class Component extends DCLogic {
       totalExpenseTodayDisplay: fmt(totalExpenseToday), hasAdminExpense: totalExpenseToday > 0,
       reportedCount: reportedCodes.size, totalStoreCount: s.stores.length,
       hasNotReported: notReportedStores.length > 0, notReportedCount: notReportedStores.length, notReportedStores,
-      isSingleDay,
-      chartBars, employeeChartBars, lineChartItems, lineChartLegend,
+      employeeChartBars, lineChartItems, lineChartLegend,
       empTooltipVisible: !!s.empTooltip,
-      empTooltipHidden: !s.empTooltip,
       empTooltipLabel: s.empTooltip?.label || '',
       empTooltipInc: s.empTooltip?.incDisplay || '',
       empTooltipNet: s.empTooltip?.netDisplay || '',
       empTooltipExp: s.empTooltip?.expDisplay || '',
       lineTooltipVisible: !!s.lineTooltip,
-      lineTooltipHidden: !s.lineTooltip,
-      lineTooltipWeek: s.lineTooltip?.weekLabel || '',
       lineTooltipDay: s.lineTooltip?.dayLabel || '',
       lineTooltipDate: s.lineTooltip?.dotDateLabel || '',
       lineTooltipVal: s.lineTooltip?.valDisplay || '',
@@ -2059,7 +2059,6 @@ class Component extends DCLogic {
       adminViewListStyle: `padding:9px 16px; border-radius:100px; font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap; background:${s.adminView === 'list' ? '#0E7C66' : '#F1EDE1'}; color:${s.adminView === 'list' ? '#fff' : '#4E5854'};`,
       adminViewEmployeeStyle: `padding:9px 16px; border-radius:100px; font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap; background:${s.adminView === 'employee' ? '#0E7C66' : '#F1EDE1'}; color:${s.adminView === 'employee' ? '#fff' : '#4E5854'};`,
       adminViewStoreStyle: `padding:9px 16px; border-radius:100px; font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap; background:${s.adminView === 'store' ? '#0E7C66' : '#F1EDE1'}; color:${s.adminView === 'store' ? '#fff' : '#4E5854'};`,
-      groupedByEmployee, groupedByStore,
       empPagedRows, empPageInfo: `${empPg+1} / ${empTP}`,
       empPrevPageStyle: empPg > 0 ? btnOn : btnOff, empNextPageStyle: empPg < empTP-1 ? btnOn : btnOff,
       empPrevPage: () => this.setState(s => ({empPage: Math.max(0, s.empPage-1)})),
@@ -2068,16 +2067,15 @@ class Component extends DCLogic {
       storePrevPageStyle: storePg > 0 ? btnOn : btnOff, storeNextPageStyle: storePg < storeTP-1 ? btnOn : btnOff,
       storePrevPage: () => this.setState(s => ({storePage: Math.max(0, s.storePage-1)})),
       storeNextPage: () => this.setState(s => ({storePage: Math.min(storeTP-1, s.storePage+1)})),
-      showEmpDetail: !!s.empDetailOpen, empDetailName: s.empDetailOpen || '', empDetailRecords, closeEmpDetail: () => this.setState({empDetailOpen:null}),
+      showEmpDetail: !!s.empDetailOpen, empDetailName: groupedByEmployee.find(g => g.pid === s.empDetailOpen)?.employee || '', empDetailRecords, closeEmpDetail: () => this.setState({empDetailOpen:null}),
       showStoreDetail: !!s.storeDetailOpen, storeDetailName: storeDetailLabel, storeDetailRecords, closeStoreDetail: () => this.setState({storeDetailOpen:null}),
 
       showProfileMenu: s.showProfileMenu, openProfileMenu: this.openProfileMenu, closeProfileMenu: this.closeProfileMenu,
       profileMenuOverlayStyle: `position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(20,26,23,0.55); display:flex; align-items:center; justify-content:center; z-index:50; padding:20px;`,
       profileRoleLabel: s.isAdminUser ? 'สิทธิ์ผู้ใช้: แอดมิน' : 'สิทธิ์ผู้ใช้: พนักงานทั่วไป',
-      nameDraft: s.nameDraft, setNameDraft: this.setNameDraft, saveName: this.saveName,
       goToAdminReport: this.goToAdminReport,
       goToHistory: this.goToHistory,
-      isUserManageMode: s.mode === 'userManage',
+      isUserManageMode: s.mode === 'userManage' && s.isAdminUser,
       goToUserManage: this.goToUserManage,
       backFromUserManage: this.backFromUserManage,
       userManageRows, userManageNameDraft: s.userManageNameDraft, setUserNameDraft: this.setUserNameDraft,
@@ -2109,7 +2107,6 @@ class Component extends DCLogic {
       storeEditModalOpen: !!s.storeEditCode,
       storeEditCodeDraft: s.storeEditCodeDraft, setStoreEditCodeDraft: this.setStoreEditCodeDraft,
       storeEditNameDraft: s.storeEditNameDraft, setStoreEditNameDraft: this.setStoreEditNameDraft,
-      storeEditStatusDraft: s.storeEditStatusDraft,
       storeEditStatusActiveStyle: `flex:1;text-align:center;padding:9px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;background:${s.storeEditStatusDraft ? '#0E7C66' : '#F1EDE1'};color:${s.storeEditStatusDraft ? '#fff' : '#4E5854'};`,
       storeEditStatusInactiveStyle: `flex:1;text-align:center;padding:9px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;background:${!s.storeEditStatusDraft ? '#DC2626' : '#F1EDE1'};color:${!s.storeEditStatusDraft ? '#fff' : '#4E5854'};`,
       setStoreEditStatusActive: () => this.setStoreEditStatusDraft(true),
