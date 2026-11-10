@@ -1,29 +1,25 @@
 {
   "version": 2,
-  "cleanUrls": true,
-  "trailingSlash": false,
   "builds": [
-    {
-      "src": "api/index.py",
-      "use": "@vercel/python",
-      "config": { "maxLambdaSize": "50mb" }
-    }
+    { "src": "api/index.py", "use": "@vercel/python" },
+    { "src": "index.html", "use": "@vercel/static" },
+    { "src": "app.html", "use": "@vercel/static" },
+    { "src": "support.js", "use": "@vercel/static" }
   ],
   "routes": [
-    { "src": "/api/(.*)", "dest": "api/index.py" }
-  ],
-  "headers": [
+    { "src": "/api/(.*)", "dest": "/api/index.py" },
+    { "src": "/", "dest": "/index.html" },
+    { "src": "/app", "dest": "/app.html" },
+    { "src": "/index", "dest": "/index.html" },
     {
-      "source": "/(.*)",
-      "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
-      ]
+      "src": "/support.js",
+      "headers": { "Cache-Control": "public, max-age=86400" },
+      "continue": true
     },
-    {
-      "source": "/support.js",
-      "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=86400" }
-      ]
-    }
+    { "handle": "filesystem" },
+    { "src": "/(.*)", "status": 404 }
+  ],
+  "crons": [
+    { "path": "/api/maintenance/photos/cleanup", "schedule": "0 0 * * *" }
   ]
 }

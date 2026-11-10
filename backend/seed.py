@@ -3,7 +3,7 @@
     cd backend && python seed.py
 
 Uses the connection settings from backend/.env. Runs
-database/sql/01_schema.sql → 02_sample_data.sql → 03_sample_expense.sql.
+database/sql/01_schema.sql through 05_photo_storage.sql.
 Each script refuses to run if the tables already exist / hold data, so this
 never overwrites anything.
 """
@@ -14,7 +14,10 @@ from pathlib import Path
 from app.core.database import engine
 
 SQL_DIR = Path(__file__).parent / "database" / "sql"
-SCRIPTS = ["01_schema.sql", "02_sample_data.sql", "03_sample_expense.sql"]
+SCRIPTS = [
+    "01_schema.sql", "02_sample_data.sql", "03_sample_expense.sql",
+    "04_transaction_numbers.sql", "05_photo_storage.sql",
+]
 
 
 def run_script(cursor, path: Path) -> None:

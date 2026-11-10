@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class StoreBase(BaseModel):
@@ -25,6 +25,13 @@ class StoreUpdate(BaseModel):
     s7Phone: str | None = None
     s7TaxID: str | None = None
     s7Status: bool | None = None
+
+    @model_validator(mode="after")
+    def required_values(self) -> "StoreUpdate":
+        for field in ("s7Code", "s7Name", "s7Type", "s7Status"):
+            if field in self.model_fields_set and getattr(self, field) is None:
+                raise ValueError(f"{field} cannot be null")
+        return self
 
 
 class StoreOut(StoreBase):

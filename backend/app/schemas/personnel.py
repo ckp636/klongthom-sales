@@ -42,6 +42,13 @@ class PersonnelUpdate(BaseModel):
     p7Email: str | None = None
     p7Status: bool | None = None
 
+    @model_validator(mode="after")
+    def required_values(self) -> "PersonnelUpdate":
+        for field in ("p7FName", "p7LName", "p7Role", "p7Status"):
+            if field in self.model_fields_set and getattr(self, field) is None:
+                raise ValueError(f"{field} cannot be null")
+        return self
+
 
 class PersonnelOut(PersonnelBase):
     """p7PwdHash is intentionally not part of any response schema."""

@@ -1,19 +1,18 @@
 from datetime import date, datetime, timezone
 from typing import Literal
 
-from sqlalchemy import func, select
+from sqlalchemy import Sequence, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, selectinload
 
 from app.models.personnel import Personnel
 from app.models.store import Store
 from app.models.transaction import Transaction
-from app.models.txn_file import TxnFile
 from app.schemas.transaction import SummaryRow, TransactionCreate, TransactionUpdate
-from app.schemas.txn_file import TxnFileCreate
 
 _SHIFT_LETTER = {"morning": "M", "afternoon": "A", "evening": "E"}
 _LOAD = (selectinload(Transaction.store), selectinload(Transaction.personnel), selectinload(Transaction.files))
+_REPORT_NUMBER = Sequence("seq_t1ReportNo")
 
 
 class DuplicateSlot(Exception):
@@ -60,20 +59,15 @@ def get_by_id(db: Session, tid: int) -> Transaction | None:
 
 def _next_tno(db: Session, store_code: str, day: date, shift: str) -> str:
     base = f"{store_code}-{day:%Y%m%d}-{_SHIFT_LETTER[shift]}"
-    taken = set(db.execute(select(Transaction.t1TNo).where(Transaction.t1TNo.like(f"{base}%"))).scalars())
-    if base not in taken:
-        return base
-    n = 2
-    while f"{base}-{n}" in taken:
-        n += 1
-    return f"{base}-{n}"
+    number = db.scalar(select(_REPORT_NUMBER.next_value()))
+    return f"{base}-N{number}"
 
 
-def create(db: Session, store: Store, data: TransactionCreate) -> Transaction:
+def create(db: Session, store: Store, data: TransactionCreate, pid: int) -> Transaction:
     txn = Transaction(
         t1TNo=_next_tno(db, store.s7Code, data.t1Date, data.t1Shift),
         t1Sid=store.s7Sid,
-        t1Pid=data.t1Pid,
+        t1Pid=pid,
         t1Date=data.t1Date,
         t1Shift=data.t1Shift,
         t1Cash=data.t1Cash,
@@ -120,14 +114,6 @@ def verify(db: Session, txn: Transaction, by_pid: int) -> Transaction:
     db.flush()
     db.refresh(txn)
     return txn
-
-
-def add_file(db: Session, txn: Transaction, data: TxnFileCreate) -> TxnFile:
-    f = TxnFile(f1TID=txn.t1TID, **data.model_dump())
-    db.add(f)
-    db.flush()
-    db.refresh(f)
-    return f
 
 
 def summary(

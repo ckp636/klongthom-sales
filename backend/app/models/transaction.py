@@ -15,7 +15,7 @@ class Transaction(Base):
     __tablename__ = quoted_name("mod1$_Transaction", True)
 
     t1TID: Mapped[int] = mapped_column("t1TID", Integer, primary_key=True, autoincrement=True)
-    t1TNo: Mapped[str] = mapped_column("t1TNo", String(30), nullable=False, unique=True)
+    t1TNo: Mapped[str] = mapped_column("t1TNo", String(64), nullable=False, unique=True)
     t1Sid: Mapped[int] = mapped_column("t1Sid", Integer, ForeignKey("mod7$_Store.s7Sid"), nullable=False)
     t1Pid: Mapped[int] = mapped_column("t1Pid", Integer, ForeignKey("mod7$_Personnel.p7PID"), nullable=False)
     t1Date: Mapped[date] = mapped_column("t1Date", Date, nullable=False)

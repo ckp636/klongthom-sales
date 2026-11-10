@@ -13,8 +13,7 @@ class TransactionCreate(BaseModel):
     """Staff form submit. The store comes from the scanned QR code."""
 
     storeCode: str = Field(min_length=1, max_length=20)
-    qrSig: str | None = None
-    t1Pid: int
+    qrSig: str | None = Field(None, min_length=32, max_length=32, pattern=r"^[a-f0-9]{32}$")
     t1Date: date  # Bangkok business date picked in the app
     t1Shift: Shift
     t1Cash: Money = Field(ge=0, max_digits=12, decimal_places=2)
@@ -30,12 +29,7 @@ class TransactionUpdate(BaseModel):
 
 
 class TransactionVoid(BaseModel):
-    byPid: int
     reason: str = Field(min_length=1, max_length=200)
-
-
-class TransactionVerify(BaseModel):
-    byPid: int
 
 
 class TransactionOut(BaseModel):

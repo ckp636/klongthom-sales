@@ -1,9 +1,12 @@
 import base64
 import hashlib
 import hmac
+import logging
+import os
 import secrets
 
 from app.core.config import settings
+from fastapi import HTTPException
 
 # ── passwords (stdlib scrypt, no extra dependency) ──────────────────────
 _N, _R, _P = 2**14, 8, 1
@@ -44,5 +47,8 @@ def qr_sig(store_code: str, qr_ver: int) -> str:
 
 def verify_qr(store_code: str, qr_ver: int, sig: str | None) -> bool:
     if not qr_checks_enabled():
+        if os.getenv("VERCEL"):
+            logging.getLogger(__name__).error("QR_HMAC_SECRET is required on Vercel")
+            raise HTTPException(503, "QR verification is not configured")
         return True
-    return bool(sig) and hmac.compare_digest(qr_sig(store_code, qr_ver), sig)
+    return bool(sig) and hmac.compare_digest(qr_sig(store_code, qr_ver).encode(), sig.encode())

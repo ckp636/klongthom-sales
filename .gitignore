@@ -7,3 +7,7 @@
 .DS_Store
 Thumbs.db
 .vscode/
+.venv/
+.vercel/
+__pycache__/
+*.py[cod]
