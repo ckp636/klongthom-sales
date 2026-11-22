@@ -146,6 +146,17 @@ test('late data response cannot restore data after logout', async () => {
   assert.equal(c.state.personnelId, null);
 });
 
+test('manual store picker shows only when the server allows it', async () => {
+  const { c } = setup(async () => response([]));
+  assert.equal(c.renderVals().manualPickAllowed, false);
+  await c.applyLogin({ personnel: person, manualStorePick: true });
+  assert.equal(c.renderVals().manualPickAllowed, true);
+  c.toggleManualPick();
+  assert.equal(c.renderVals().manualPickOpen, true);
+  await c.applyLogin({ personnel: person });
+  assert.equal(c.renderVals().manualPickOpen, false);
+});
+
 test('logout removes identity, reports, privileged mode and QR secrets', async () => {
   const { c } = setup(async () => response(null, 204));
   form(c);

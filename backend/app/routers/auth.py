@@ -40,6 +40,7 @@ class DevLoginRequest(BaseModel):
 class LoginResponse(BaseModel):
     personnel: PersonnelOut
     store: StoreOut | None = None  # home store, if the person has one
+    manualStorePick: bool = False  # settings.ALLOW_MANUAL_STORE_PICK
 
 
 def _finish_login(db: Session, person: Personnel, method: str, request: Request, response: Response) -> LoginResponse:
@@ -60,6 +61,7 @@ def _login_response(person: Personnel) -> LoginResponse:
     return LoginResponse(
         personnel=PersonnelOut.model_validate(person),
         store=StoreOut.model_validate(person.store) if person.store else None,
+        manualStorePick=settings.ALLOW_MANUAL_STORE_PICK,
     )
 
 

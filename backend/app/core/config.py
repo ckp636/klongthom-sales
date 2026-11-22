@@ -48,5 +48,10 @@ class Settings(BaseSettings):
     # valid qrSig for its store; when empty, QR signatures are not checked.
     QR_HMAC_SECRET: str = ""
 
+    # Temporary: let staff pick their store from a list instead of scanning
+    # its QR code. A submission without qrSig is accepted (and logged as
+    # storeVia="manual"). Turn off once every user has their QR set up.
+    ALLOW_MANUAL_STORE_PICK: bool = False
+
 
 settings = Settings()

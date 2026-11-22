@@ -88,10 +88,12 @@
                   🛠 DEV — จำลองผลสแกน ({{demoStoreLabel}})
                 </div>
               </sc-if>
-              <div onClick="{{toggleManualPick}}" style="font-size:14px; color:#0E7C66; font-weight:700; text-decoration:underline; cursor:pointer;">หรือเลือกร้านค้าด้วยตนเอง</div>
+              <sc-if value="{{manualPickAllowed}}">
+                <div onClick="{{toggleManualPick}}" style="font-size:14px; color:#0E7C66; font-weight:700; text-decoration:underline; cursor:pointer;">หรือเลือกร้านค้าด้วยตนเอง</div>
+              </sc-if>
             </div>
 
-            <sc-if value="{{manualPick}}" hint-placeholder-val="{{false}}">
+            <sc-if value="{{manualPickOpen}}" hint-placeholder-val="{{false}}">
               <div style="border-top:1px solid #E7E1D6; max-height:320px; overflow-y:auto;">
                 <sc-for list="{{stores}}" as="store" hint-placeholder-count="4">
                   <div onClick="{{store.select}}" style="display:flex; align-items:center; gap:12px; padding:13px 18px; border-bottom:1px solid #F0EBDF; cursor:pointer;">
@@ -899,6 +901,7 @@ class Component extends DCLogic {
     note: '',
     cashError: false,
     manualPick: false,
+    manualPickAllowed: false,
     lastSubmission: null,
     justSubmitted: false,
     selectedHistory: null,
@@ -1014,11 +1017,12 @@ class Component extends DCLogic {
     } catch (error) { this.showError(error); }
   };
 
-  applyLogin = async ({ personnel }) => {
+  applyLogin = async ({ personnel, manualStorePick }) => {
     this.setState({
       employeeName: personnel.fullName, personnelId: personnel.p7PID,
       selectedHistoryEmployee: String(personnel.p7PID), isAdminUser: personnel.p7Role === 'admin',
       screen: this.state.storeCode ? 'form' : 'scan', apiError: '',
+      manualPickAllowed: !!manualStorePick,
     });
     await this.loadData();
   };
@@ -1235,7 +1239,7 @@ class Component extends DCLogic {
       showProfileMenu: false, qrStoreCode: null, qrDataUrl: '', storeEditCode: null, userManageEditName: null,
       empDetailOpen: null, storeDetailOpen: null, loading: false, submitting: false,
       apiError: message,
-      cashError: false, manualPick: false, justSubmitted: false, screen: 'scan', screenStack: [], evidencePhoto: null,
+      cashError: false, manualPick: false, manualPickAllowed: false, justSubmitted: false, screen: 'scan', screenStack: [], evidencePhoto: null,
     });
   };
 
@@ -1958,7 +1962,8 @@ class Component extends DCLogic {
 
       scannerOpen: s.scannerOpen, startScan: this.startScan, stopScan: this.stopScan,
       simulateScan: this.simulateScan, demoStoreLabel: 'D1.1 กร แก้ว ผ้าปูโต๊ะ',
-      toggleManualPick: this.toggleManualPick, manualPick: s.manualPick, stores,
+      toggleManualPick: this.toggleManualPick, manualPickAllowed: s.manualPickAllowed,
+      manualPickOpen: s.manualPickAllowed && s.manualPick, stores,
 
       doLogin: this.doLogin,
       devLoginStaff: this.devLoginStaff, devLoginAdmin: this.devLoginAdmin,

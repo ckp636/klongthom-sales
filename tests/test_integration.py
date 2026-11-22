@@ -209,6 +209,18 @@ class IntegrationTests(unittest.TestCase):
         self.login()
         self.assertEqual(self.submit().status_code, 201)
 
+    def test_manual_store_pick_switch(self):
+        self.assertFalse(self.login().json()["manualStorePick"])
+        self.assertEqual(self.submit(qrSig=None).status_code, 403)
+        with patch.object(settings, "ALLOW_MANUAL_STORE_PICK", True):
+            self.assertTrue(self.client.get("/api/auth/me").json()["manualStorePick"])
+            self.assertEqual(self.submit(qrSig="0" * 32).status_code, 403)  # a bad QR is still rejected
+            created = self.submit(qrSig=None)
+            self.assertEqual(created.status_code, 201, created.text)
+        with self.session() as db:
+            log = db.scalar(select(Log).where(Log.l9Action == "create"))
+            self.assertIn('"storeVia": "manual"', log.l9NewVal)
+
     def test_upload_authorization_bytes_and_retention(self):
         self.login()
         tid = self.submit().json()["t1TID"]

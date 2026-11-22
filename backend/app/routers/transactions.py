@@ -4,6 +4,7 @@ from typing import Literal
 from fastapi import APIRouter, HTTPException, Query, Request, status
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.models.transaction import Transaction
 from app.models.personnel import Personnel
 from app.repositories import store_repo, transaction_repo
@@ -76,7 +77,8 @@ def create_transaction(data: TransactionCreate, request: Request, db: Database, 
     store = store_repo.get_by_code(db, data.storeCode)
     if not store or not store.s7Status:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "ไม่พบร้านค้า หรือร้านถูกปิดใช้งาน")
-    if not verify_qr(store.s7Code, store.s7QrVer, data.qrSig):
+    manual = not data.qrSig and settings.ALLOW_MANUAL_STORE_PICK
+    if not manual and not verify_qr(store.s7Code, store.s7QrVer, data.qrSig):
         raise HTTPException(status.HTTP_403_FORBIDDEN, "QR code ไม่ถูกต้องหรือหมดอายุ กรุณาสแกนใหม่")
     try:
         txn = transaction_repo.create(db, store, data, person.p7PID)
@@ -89,7 +91,7 @@ def create_transaction(data: TransactionCreate, request: Request, db: Database, 
         l9Type="audit", l9Module="transaction", l9Action="create",
         l9Page="/form", l9Component="btn_submit",
         l9Sid=txn.t1Sid, l9Pid=txn.t1Pid, l9RefTable=_REF, l9RefID=txn.t1TID,
-        l9NewVal=_amounts(txn),
+        l9NewVal={**_amounts(txn), "storeVia": "manual" if manual else "qr"},
     ), request)
     return txn
 

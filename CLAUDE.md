@@ -5,7 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | Path | What it is |
 |---|---|
 | `app.html` | The app (staff mobile screens + admin dashboard), served by Vercel and opened from LINE (LIFF) |
-| `index.html` | Landing page; embeds `app.html` in an iframe preview |
+| `index.html` | Landing page + user guide (static example screens, no iframe) |
 | `support.js` | Claude Design runtime used by `app.html` — generated, do not edit |
 | `api/index.py` | Vercel entry point: exports the native FastAPI ASGI app |
 | `vercel.json` | Routes `/api/*` to Python; explicitly builds only the three public static assets; schedules daily photo cleanup |
