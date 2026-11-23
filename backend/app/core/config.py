@@ -53,5 +53,9 @@ class Settings(BaseSettings):
     # storeVia="manual"). Turn off once every user has their QR set up.
     ALLOW_MANUAL_STORE_PICK: bool = False
 
+    # Username/password login (p7User + p7PwdHash) for dev and staff training.
+    # LINE login stays the normal way in; keep this off unless needed.
+    PASSWORD_LOGIN_ENABLED: bool = False
+
 
 settings = Settings()

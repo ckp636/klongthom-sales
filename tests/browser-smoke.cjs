@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const { chromium } = require('playwright');
 
 (async () => {
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({ headless: true, channel: process.env.PW_CHANNEL || undefined });
   try {
     const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
     const errors = [];
@@ -27,7 +27,12 @@ const { chromium } = require('playwright');
         ...headers, 'Access-Control-Allow-Methods': 'GET,POST', 'Access-Control-Allow-Headers': 'content-type',
       } });
       if (pathname.endsWith('/auth/me')) return loggedIn ? json({ personnel }) : json({ detail: 'login required' }, 401);
-      if (pathname.endsWith('/auth/login-dev')) { loggedIn = true; return json({ personnel }); }
+      if (pathname.endsWith('/auth/options')) return json({ passwordLogin: true });
+      if (pathname.endsWith('/auth/login-password')) {
+        const { username, password } = request.postDataJSON();
+        if (username !== 'staff01' || password !== 'demo1234') return json({ detail: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' }, 401);
+        loggedIn = true; return json({ personnel });
+      }
       if (pathname.endsWith('/stores/')) return json([{ s7Sid: 1, s7Code: 'A1', s7Name: 'ร้านทดสอบ', s7Status: true }]);
       if (pathname.endsWith('/files/1/content')) {
         return route.fulfill({ headers, contentType: 'image/jpeg', body: storedImage });
@@ -60,7 +65,9 @@ const { chromium } = require('playwright');
     });
 
     await page.goto(origin + '/app.html?shop=A1&sig=fixture', { waitUntil: 'networkidle' });
-    await page.getByText('พนักงานทั่วไป', { exact: true }).click();
+    await page.getByPlaceholder('ชื่อผู้ใช้').fill('staff01');
+    await page.getByPlaceholder('รหัสผ่าน').fill('demo1234');
+    await page.getByText('เข้าสู่ระบบ', { exact: true }).last().click();
     const inputs = page.getByPlaceholder('0', { exact: true });
     await inputs.nth(0).fill('100.25');
     await inputs.nth(1).fill('10.10');

@@ -13,6 +13,7 @@ from app.schemas.log import LogCreate
 from app.schemas.personnel import PersonnelOut
 from app.schemas.store import StoreOut
 from app.services import log_service
+from app.services.security import hash_password, verify_password
 from app.services.auth_service import (
     CurrentPerson, Database, clear_session, issue_session, verify_line_token,
 )
@@ -22,6 +23,18 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 class LoginRequest(BaseModel):
     id_token: str = Field(min_length=1, max_length=8192)
+
+
+class PasswordLoginRequest(BaseModel):
+    username: str = Field(min_length=1, max_length=50)
+    password: str = Field(min_length=1, max_length=128)
+
+
+class LoginOptions(BaseModel):
+    passwordLogin: bool
+
+
+_dummy_hash: str | None = None  # compared against when the username is unknown (same timing)
 
 
 class DevLoginRequest(BaseModel):
@@ -50,7 +63,7 @@ def _finish_login(db: Session, person: Personnel, method: str, request: Request,
     db.flush()
     log_service.write(db, LogCreate(
         l9Type="audit", l9Module="auth", l9Action="login",
-        l9Page="/login", l9Component="btn_line_login" if method == "line" else "btn_dev_login",
+        l9Page="/login", l9Component={"line": "btn_line_login", "password": "btn_password_login"}.get(method, "btn_dev_login"),
         l9Pid=person.p7PID, l9Sid=person.p7Sid, l9NewVal={"method": method},
     ), request)
     issue_session(response, person.p7PID)
@@ -84,6 +97,27 @@ def login_dev(body: DevLoginRequest, request: Request, response: Response, db: D
     if not person:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Personnel not found")
     return _finish_login(db, person, "dev", request, response)
+
+
+@router.get("/options", response_model=LoginOptions)
+def login_options():
+    """Public: which login methods the login screen should offer."""
+    return LoginOptions(passwordLogin=settings.PASSWORD_LOGIN_ENABLED)
+
+
+@router.post("/login-password", response_model=LoginResponse)
+def login_password(body: PasswordLoginRequest, request: Request, response: Response, db: Database):
+    """Username + password (PASSWORD_LOGIN_ENABLED=true) — dev and staff training."""
+    global _dummy_hash
+    if not settings.PASSWORD_LOGIN_ENABLED:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Not Found")
+    person = personnel_repo.get_by_user(db, body.username.strip())
+    if person is None and _dummy_hash is None:
+        _dummy_hash = hash_password("not-a-real-password")
+    valid = verify_password(body.password, person.p7PwdHash if person else _dummy_hash)
+    if not person or not valid:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง")
+    return _finish_login(db, person, "password", request, response)
 
 
 @router.get("/me", response_model=LoginResponse)

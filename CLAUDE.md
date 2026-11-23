@@ -11,6 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | `vercel.json` | Routes `/api/*` to Python; explicitly builds only the three public static assets; schedules daily photo cleanup |
 | `backend/` | FastAPI + SQLAlchemy API and SQL scripts (see Backend) |
 | `docs/database-design.md` | Database design and rationale |
+| `_work/` | Local scratch for processing, experiments and ad-hoc tests — git-ignored and not deployed |
 
 ## How to run the frontend
 Serve the repo root with any static server and open `app.html`:
@@ -144,5 +145,6 @@ mod9$_Logging — no FKs; l9Pid, l9Sid, l9RefTable + l9RefID are soft references
 
 ### Validation and operations
 - Run `python -m unittest discover -s tests -p 'test_*.py' -v` and `node --test tests/frontend.test.cjs` from the root. Tests use isolated data, never Azure credentials.
+- End-to-end (real Chrome → real API → in-memory DB, never Azure): once `cd tests && npm install`, then `node --test --test-concurrency=1 tests/e2e/app.e2e.cjs`. It starts `tests/e2e/server.py` itself (port 8180, production mode with LIFF stubbed), walks staff and admin success/failure paths, and audits every screen for UX (sideways scroll, tap targets ≥ 32px, inputs ≥ 16px, money inputs `inputmode=decimal`). Screenshots + `ux-report.json` land in `tests/e2e/screenshots/` (git-ignored). Run it, and look at the screenshots, before handing over any UI change.
 - Photos: JPEG/PNG/WebP, 2 MB maximum; browser targets 500 KB. Retain bytes 365 days; authenticated daily cleanup purges bytes but preserves metadata/reports/audits.
 - Existing databases need scripts 04 and 05, not reseeding. Deployment settings, storage capacity and the separate live acceptance gate are in `docs/database-design.md`.

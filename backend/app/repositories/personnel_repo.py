@@ -23,6 +23,10 @@ def get_by_line_uid(db: Session, line_uid: str) -> Personnel | None:
     return db.execute(select(Personnel).where(Personnel.p7LineUID == line_uid)).scalar_one_or_none()
 
 
+def get_by_user(db: Session, username: str) -> Personnel | None:
+    return db.execute(select(Personnel).where(Personnel.p7User == username)).scalar_one_or_none()
+
+
 def get_first_by_role(db: Session, role: str) -> Personnel | None:
     return db.execute(
         select(Personnel)

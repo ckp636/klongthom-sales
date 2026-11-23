@@ -11,3 +11,10 @@ Thumbs.db
 .vercel/
 __pycache__/
 *.py[cod]
+
+# Local scratch: processing, experiments, ad-hoc tests (never committed)
+_work/
+
+# test tooling
+tests/node_modules/
+tests/e2e/screenshots/
