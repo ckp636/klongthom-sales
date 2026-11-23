@@ -1,0 +1,12 @@
+{
+  "name": "klongthom-sales-tests",
+  "private": true,
+  "description": "Test tooling only (not deployed). npm install here, then run from the repo root.",
+  "scripts": {
+    "e2e": "node --test e2e/app.e2e.cjs",
+    "unit": "node --test frontend.test.cjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.55.0"
+  }
+}

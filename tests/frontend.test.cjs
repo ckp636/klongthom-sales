@@ -17,7 +17,7 @@ function setup(fetcher = async () => { throw Error('offline'); }, hostname = 'lo
   const location = { hostname, search: '', origin: `http://${hostname}:8080`, href: `http://${hostname}:8080/app.html` };
   const context = {
     DCLogic: class { setState(update) { Object.assign(this.state, typeof update === 'function' ? update(this.state) : update); } },
-    location, window: { location }, URL, URLSearchParams, Intl, Date, FormData, Blob,
+    location, window: { location }, URL, URLSearchParams, Intl, Date, FormData, Blob, setTimeout, clearTimeout,
     console: { error() {} },
     fetch: async (...args) => { calls.push(args); return fetcher(...args); },
   };

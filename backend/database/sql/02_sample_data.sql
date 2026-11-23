@@ -30,18 +30,18 @@ INSERT INTO [mod7$_Store] (s7Code, s7Name, s7Type) VALUES
 INSERT INTO [mod7$_Personnel] (p7Sid, p7EmpCode, p7LineUID, p7FName, p7LName, p7Nick, p7Role)
 SELECT s.s7Sid, v.code, v.uid, v.fname, v.lname, v.nick, v.role
 FROM (VALUES
- (N'EMP001', N'LINE_TEST_001',   N'สมชาย',     N'ใจดี',      N'ชาย',   N'staff', N'A3'),
- (N'EMP002', N'LINE_TEST_002',   N'วันดี',      N'ศรีสุข',     N'ดี',    N'staff', N'A2'),
- (N'EMP003', N'LINE_TEST_003',   N'คำแพง',     N'สายบัว',    N'แพง',  N'staff', N'A1'),
- (N'EMP004', N'LINE_TEST_004',   N'อองมิน',     N'',          NULL,    N'staff', N'D1'),
- (N'EMP005', N'LINE_TEST_005',   N'จันทร์เพ็ญ',  N'ทองดี',     N'เพ็ญ',  N'staff', N'D2'),
- (N'EMP006', N'LINE_TEST_006',   N'มยุรี',       N'แก้วมณี',    N'ยุ',    N'staff', N'H1'),
- (N'EMP007', N'LINE_TEST_007',   N'ทองสุข',     N'แสงจันทร์',  N'สุข',   N'staff', N'K3'),
- (N'EMP008', N'LINE_TEST_008',   N'บัวลอย',     N'คำมี',       N'บัว',   N'staff', N'K8'),
- (N'EMP009', N'LINE_TEST_009',   N'สมหญิง',     N'ใจงาม',     N'หญิง',  N'staff', N'K9'),
- (N'EMP010', N'LINE_TEST_010',   N'คำสิงห์',     N'วงศ์ษา',     N'สิงห์',  N'staff', N'X1'),
- (N'EMP011', N'LINE_TEST_011',   N'ประยูร',     N'มั่นคง',      N'ยูร',   N'staff', N'SB'),
- (N'ADM001', N'LINE_TEST_ADMIN', N'อรทัย',      N'จัดการ',     N'อร',    N'admin', NULL)
+ (N'EMP001', N'LINE_TEST_001', N'สตาฟ', N'หนึ่ง', NULL, N'staff', N'A3'),
+ (N'EMP002', N'LINE_TEST_002', N'สตาฟ', N'สอง', NULL, N'staff', N'A2'),
+ (N'EMP003', N'LINE_TEST_003', N'สตาฟ', N'สาม', NULL, N'staff', N'A1'),
+ (N'EMP004', N'LINE_TEST_004', N'สตาฟ', N'สี่', NULL, N'staff', N'D1'),
+ (N'EMP005', N'LINE_TEST_005', N'สตาฟ', N'ห้า', NULL, N'staff', N'D2'),
+ (N'EMP006', N'LINE_TEST_006', N'สตาฟ', N'หก', NULL, N'staff', N'H1'),
+ (N'EMP007', N'LINE_TEST_007', N'สตาฟ', N'เจ็ด', NULL, N'staff', N'K3'),
+ (N'EMP008', N'LINE_TEST_008', N'สตาฟ', N'แปด', NULL, N'staff', N'K8'),
+ (N'EMP009', N'LINE_TEST_009', N'สตาฟ', N'เก้า', NULL, N'staff', N'K9'),
+ (N'EMP010', N'LINE_TEST_010', N'สตาฟ', N'สิบ', NULL, N'staff', N'X1'),
+ (N'EMP011', N'LINE_TEST_011', N'สตาฟ', N'สิบเอ็ด', NULL, N'staff', N'SB'),
+ (N'ADM001', N'LINE_TEST_ADMIN', N'แอดมิน', N'หนึ่ง', NULL, N'admin', NULL)
 ) v(code, uid, fname, lname, nick, role, home)
 LEFT JOIN [mod7$_Store] s ON s.s7Code = v.home;
 

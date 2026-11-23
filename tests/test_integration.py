@@ -209,6 +209,24 @@ class IntegrationTests(unittest.TestCase):
         self.login()
         self.assertEqual(self.submit().status_code, 201)
 
+    def test_password_login_switch(self):
+        from app.services.security import hash_password
+        with self.session.begin() as db:
+            person = db.get(Personnel, 2)
+            person.p7User, person.p7PwdHash = "staff02", hash_password("demo1234")
+        creds = {"username": "staff02", "password": "demo1234"}
+        self.assertFalse(self.client.get("/api/auth/options").json()["passwordLogin"])
+        self.assertEqual(self.client.post("/api/auth/login-password", json=creds).status_code, 404)
+        with patch.object(settings, "PASSWORD_LOGIN_ENABLED", True):
+            self.assertTrue(self.client.get("/api/auth/options").json()["passwordLogin"])
+            for bad in ({**creds, "password": "wrong"}, {**creds, "username": "nobody"}):
+                self.assertEqual(self.client.post("/api/auth/login-password", json=bad).status_code, 401)
+            ok = self.client.post("/api/auth/login-password", json=creds)
+            self.assertEqual(ok.status_code, 200, ok.text)
+            self.assertEqual(ok.json()["personnel"]["p7PID"], 2)
+            self.assertNotIn("p7PwdHash", ok.text)
+            self.assertEqual(self.client.get("/api/auth/me").json()["personnel"]["p7PID"], 2)
+
     def test_manual_store_pick_switch(self):
         self.assertFalse(self.login().json()["manualStorePick"])
         self.assertEqual(self.submit(qrSig=None).status_code, 403)
